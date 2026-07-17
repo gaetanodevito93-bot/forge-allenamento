@@ -169,6 +169,11 @@ body.dragging-active{cursor:grabbing;user-select:none}
 .ic-opt .ic-tx span{font-size:12px;color:var(--muted);line-height:1.4}
 .modal-text{color:var(--muted);font-size:14px;line-height:1.55;margin-bottom:18px}
 .modal-foot.stack{flex-direction:column;gap:10px}
+.or-sep{display:flex;align-items:center;gap:12px;margin:16px 0 12px;color:var(--muted);font-size:12px;font-weight:700;letter-spacing:.2px}
+.or-sep::before,.or-sep::after{content:"";height:1px;flex:1;background:var(--border)}
+.paste-json{width:100%;min-height:130px;resize:vertical;background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:12px 14px;color:var(--text);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;line-height:1.5}
+.paste-json:focus{outline:none;border-color:var(--volt)}
+.paste-json::placeholder{color:var(--muted)}
 .sheet-btn{width:100%;padding:15px 16px;display:flex;align-items:center;gap:14px;font-size:15px;font-weight:700;border-radius:12px;transition:background .15s;text-align:left}
 .sheet-btn:hover{background:var(--surface2)}
 .sheet-btn svg{width:20px;height:20px;stroke:var(--muted);flex-shrink:0}
@@ -865,7 +870,10 @@ function openImport() {
       <h4>Trascina qui il file .json</h4>
       <p>oppure tocca per sceglierlo</p>
     </div>
-    <div class="hint">Dopo il caricamento potrai scegliere se <b>sostituire</b> la scheda o <b>aggiungere</b> i giorni. Formato: <code>{"programName":"…","days":[{"name":"…","exercises":[…]}]}</code> — scarica le istruzioni per l'AI dal menu per il formato completo.</div>`);
+    <div class="or-sep">oppure incolla il testo</div>
+    <textarea id="pasteJson" class="paste-json" spellcheck="false" autocapitalize="off" autocorrect="off" placeholder='Incolla qui tutto il testo JSON…&#10;{"programName":"…","days":[…]}'></textarea>
+    <button class="btn btn-primary btn-block" id="pasteLoad" style="margin-top:10px">Carica dal testo incollato</button>
+    <div class="hint">Comodo da telefono: se la tua AI ti ha dato solo il <b>testo</b> (non un file), incollalo qui. Poi potrai scegliere se <b>sostituire</b> la scheda o <b>aggiungere</b> i giorni. Formato: <code>{"programName":"…","days":[{"name":"…","exercises":[…]}]}</code> — scarica le istruzioni per l'AI dal menu per il formato completo.</div>`);
   const dz = b.querySelector('#dz');
   dz.onclick = () => $('fileInput').click();
   dz.ondragover = e => { e.preventDefault(); dz.classList.add('drag'); };
@@ -875,6 +883,11 @@ function openImport() {
     const f = e.dataTransfer.files && e.dataTransfer.files[0];
     if (f) readImportFile(f);
   };
+  b.querySelector('#pasteLoad').onclick = () => {
+    const txt = b.querySelector('#pasteJson').value;
+    if (!txt.trim()) { toast('Incolla prima il testo JSON'); return; }
+    tryImportText(txt);
+  };
 }
 $('fileInput').addEventListener('change', function () {
   if (this.files && this.files[0]) readImportFile(this.files[0]);
@@ -882,18 +895,34 @@ $('fileInput').addEventListener('change', function () {
 });
 function readImportFile(file) {
   const r = new FileReader();
-  r.onload = () => {
-    let parsed;
-    try {
-      parsed = parseProgram(JSON.parse(r.result));
-    } catch (err) {
-      toast('Import fallito: ' + err.message);
-      return;
-    }
-    openImportChoice(parsed);
-  };
+  r.onload = () => tryImportText(r.result);
   r.onerror = () => toast('Import fallito: impossibile leggere il file');
   r.readAsText(file);
+}
+
+/* Ripulisce il testo incollato: toglie spazi e gli eventuali recinti
+   markdown ```json … ``` che le AI aggiungono spesso. */
+function cleanJsonText(t) {
+  return String(t == null ? '' : t)
+    .replace(/^﻿/, '')
+    .trim()
+    .replace(/^```(?:json)?[ \t]*\r?\n?/i, '')
+    .replace(/\r?\n?```$/, '')
+    .trim();
+}
+
+/* Valida un testo JSON (da file o incollato) e apre la scelta di caricamento. */
+function tryImportText(text) {
+  const src = cleanJsonText(text);
+  if (!src) { toast('Import fallito: testo vuoto'); return; }
+  let parsed;
+  try {
+    parsed = parseProgram(JSON.parse(src));
+  } catch (err) {
+    toast('JSON non valido: ' + err.message);
+    return;
+  }
+  openImportChoice(parsed);
 }
 
 /* Chiede come applicare la scheda caricata: sostituire o aggiungere i giorni. */
