@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>FORGE — Allenamento</title>
 <meta name="description" content="La tua scheda di allenamento: giorni, esercizi, serie e progressi. Funziona anche offline.">
 <!-- PWA -->
@@ -258,6 +258,11 @@ body:not([data-view="progress"]) #fabAddMeas{display:none!important}
 .prog-chip .pc-v{font-size:16px;font-weight:800;margin-top:3px;display:flex;align-items:baseline;gap:5px}
 .prog-chip .pc-v .unit{font-size:11px;color:var(--muted);font-weight:700}
 .prog-sec-title{font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin:24px 2px 11px}
+.wchart{background:linear-gradient(180deg,var(--surface),var(--bg2));border:1px solid var(--border);border-radius:var(--radius);padding:14px 12px 8px}
+.wchart svg{width:100%;height:auto;display:block}
+.wchart .wc-cap{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin:0 4px 6px}
+.wchart .wc-cap .t{font-size:12px;color:var(--muted);font-weight:700}
+.wchart .wc-cap .d{font-size:13.5px;font-weight:800;white-space:nowrap}
 .dl{font-weight:800;color:#9AA0AE;font-size:.8em;white-space:nowrap}
 .dl.eq{opacity:.6}
 .ph-weight .dl{font-size:15px}
@@ -526,7 +531,7 @@ function parseRest(v) {
   const n = parseFloat(v.replace(',', '.'));
   return isNaN(n) ? 90 : Math.max(0, Math.round(n));
 }
-function fmtDate(ts) { return new Date(ts).toLocaleDateString('it-IT', { day: 'numeric', month: 'short' }); }
+function fmtDateTs(ts) { return new Date(ts).toLocaleDateString('it-IT', { day: 'numeric', month: 'short' }); }
 function firstNum(v) { const m = String(v == null ? '' : v).replace(',', '.').match(/-?\d+(\.\d+)?/); return m ? parseFloat(m[0]) : null; }
 // ultima sessione salvata per questo giorno; se possibile una di un giorno
 // precedente a oggi (così "oggi vs ultima volta" resta sensato dopo il salvataggio)
@@ -584,7 +589,7 @@ function renderDayHead() {
   $('dayHead').innerHTML = `
     <div class="title-block">
       <h2 data-testid="day-title" title="${esc(d.name)}">${esc(d.name)}</h2>
-      <p>${n} ${n === 1 ? 'esercizio' : 'esercizi'} · ${done}/${tot} serie completate${last ? ` · ultima volta ${fmtDate(last.ts)}` : ''}</p>
+      <p>${n} ${n === 1 ? 'esercizio' : 'esercizi'} · ${done}/${tot} serie completate${last ? ` · ultima volta ${fmtDateTs(last.ts)}` : ''}</p>
     </div>
     <div class="day-progress"><div class="ring">
       <svg width="58" height="58"><circle cx="29" cy="29" r="24" fill="none" stroke="#1D1D2A" stroke-width="6"></circle>
@@ -758,11 +763,51 @@ function nextLabel(i, j) {
 
 /* ── timer di recupero ── */
 const T = { remain: 0, total: 90, running: false, last: 0, iv: null };
+
+/* Suono: la vibrazione non funziona su iOS, quindi a fine recupero suona un beep.
+   Il contesto audio va creato/ripreso durante un tocco (spunta serie): lo facciamo
+   all'avvio del timer, così il beep finale può suonare senza altro gesto. */
+let audioCtx = null;
+function ensureAudio() {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+  } catch (_) {}
+}
+function beep() {
+  if (!audioCtx) return;
+  try {
+    const now = audioCtx.currentTime;
+    [0, 0.18, 0.36].forEach((t, k) => {
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.type = 'sine';
+      o.frequency.value = k === 2 ? 1320 : 880;
+      g.gain.setValueAtTime(0.0001, now + t);
+      g.gain.exponentialRampToValueAtTime(0.35, now + t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + t + 0.15);
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start(now + t); o.stop(now + t + 0.16);
+    });
+  } catch (_) {}
+}
+
+/* Wake Lock: tiene acceso lo schermo durante il recupero (dove supportato). */
+let wakeLock = null;
+async function acquireWake() {
+  try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (_) {}
+}
+function releaseWake() { try { if (wakeLock) { wakeLock.release(); wakeLock = null; } } catch (_) {} }
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && T.running && $('timerOverlay').classList.contains('open')) acquireWake();
+});
+
 function startRestTimer(sec, next) {
   T.remain = sec; T.total = sec; T.running = true; T.last = Date.now();
   $('timerNext').textContent = next || '';
   $('timerPause').textContent = 'Pausa';
   $('timerOverlay').classList.add('open');
+  ensureAudio();
+  acquireWake();
   clearInterval(T.iv);
   T.iv = setInterval(tickTimer, 200);
   paintTimer();
@@ -773,6 +818,7 @@ function tickTimer() {
   T.last = now;
   if (T.remain <= 0) {
     stopTimer();
+    beep();
     buzz([200, 100, 200]);
     toast('Recupero completato 💪');
     return;
@@ -784,7 +830,7 @@ function paintTimer() {
   const C = 339.29;
   $('timerArc').style.strokeDashoffset = C * (1 - Math.max(0, T.remain) / Math.max(1, T.total));
 }
-function stopTimer() { clearInterval(T.iv); T.iv = null; $('timerOverlay').classList.remove('open'); }
+function stopTimer() { clearInterval(T.iv); T.iv = null; T.running = false; $('timerOverlay').classList.remove('open'); releaseWake(); }
 $('timerSkip').onclick = stopTimer;
 $('timerMinus').onclick = () => { T.remain = Math.max(0.5, T.remain - 15); paintTimer(); };
 $('timerPlus').onclick = () => { T.remain += 15; T.total = Math.max(T.total, T.remain); paintTimer(); };
@@ -934,6 +980,14 @@ function openModal(title, bodyHTML) {
 }
 function closeModal() { $('overlay').classList.remove('open'); }
 $('overlay').addEventListener('click', e => { if (e.target === $('overlay')) closeModal(); });
+$('modal').setAttribute('role', 'dialog');
+$('modal').setAttribute('aria-modal', 'true');
+// Esc: chiude prima il timer di recupero, poi un'eventuale finestra aperta
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  if ($('timerOverlay').classList.contains('open')) { stopTimer(); return; }
+  if ($('overlay').classList.contains('open')) closeModal();
+});
 
 function confirmModal(title, text, label, cb) {
   const b = openModal(title, `<p style="color:var(--muted);font-size:14px;margin-bottom:18px">${esc(text)}</p>
@@ -986,15 +1040,29 @@ function openExerciseForm(idx) {
 }
 
 /* ── menu opzioni esercizio ── */
+function moveExercise(i, dir) {
+  const exs = day().exercises;
+  const j = i + dir;
+  if (j < 0 || j >= exs.length) return;
+  [exs[i], exs[j]] = [exs[j], exs[i]];
+  activeEx = j;
+  save(); closeModal(); render(); buzz(15);
+  toast(dir < 0 ? 'Spostato su' : 'Spostato giù');
+}
 function openExMenu(i) {
   const ex = day().exercises[i];
+  const n = day().exercises.length;
   const b = openModal(ex.name, `<div style="display:flex;flex-direction:column;gap:4px">
     <button class="sheet-btn" id="mEdit"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"></path></svg>Modifica esercizio</button>
+    ${i > 0 ? `<button class="sheet-btn" id="mUp"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"></path></svg>Sposta su</button>` : ''}
+    ${i < n - 1 ? `<button class="sheet-btn" id="mDown"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"></path></svg>Sposta giù</button>` : ''}
     <button class="sheet-btn" id="mDup"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>Duplica esercizio</button>
     <button class="sheet-btn" id="mClear"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 4v4h4"></path></svg>Azzera serie completate</button>
     <button class="sheet-btn danger" id="mDel"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path></svg>Elimina esercizio</button>
   </div>`);
   b.querySelector('#mEdit').onclick = () => { closeModal(); openExerciseForm(i); };
+  const up = b.querySelector('#mUp'); if (up) up.onclick = () => moveExercise(i, -1);
+  const dn = b.querySelector('#mDown'); if (dn) dn.onclick = () => moveExercise(i, 1);
   b.querySelector('#mDup').onclick = () => {
     const copy = JSON.parse(JSON.stringify(ex));
     copy.log.forEach(l => { l.done = false; l.reps = ''; l.weight = ''; });
@@ -1065,7 +1133,7 @@ function openCompare() {
       return `<div class="cmp-row"><div class="n">${j + 1}</div><div class="v prev">${esc(fmtSet(ps))}</div>${arrow}<div class="v">${esc(fmtSet(today))}</div></div>`;
     }).join('');
     return `<div class="cmp-ex"><h4>${esc(ex.name)}</h4>
-      <div class="cmp-head"><span></span><span style="text-align:center">${esc(fmtDate(last.ts))}</span><span></span><span style="text-align:center">Oggi</span></div>${rows}</div>`;
+      <div class="cmp-head"><span></span><span style="text-align:center">${esc(fmtDateTs(last.ts))}</span><span></span><span style="text-align:center">Oggi</span></div>${rows}</div>`;
   }).join('');
   openModal('Confronto con l\'ultima volta', blocks ||
     '<p style="color:var(--muted);font-size:14px">Nessun esercizio di oggi compare nella sessione salvata.</p>');
@@ -1081,6 +1149,7 @@ function openAppMenu() {
     <button class="sheet-btn" id="aRename"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"></path></svg>Rinomina giorno / programma</button>
     <button class="sheet-btn" data-testid="menu-import" id="aImport"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="M12 3v13m0 0-4-4m4 4 4-4"></path></svg>Importa scheda JSON</button>
     <button class="sheet-btn" data-testid="menu-export" id="aExport"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="M12 16V3m0 13 4-4m-4 4-4-4"></path></svg>Esporta scheda JSON</button>
+    <button class="sheet-btn" data-testid="menu-backup" id="aBackup"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6"></path><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2M9 13h6"></path></svg>Esporta backup completo</button>
     <button class="sheet-btn" data-testid="menu-docs" id="aDocs"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg>Scarica istruzioni per l'AI</button>
     <button class="sheet-btn" id="aResetDay"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 4v4h4"></path></svg>Azzera progressi del giorno</button>
     ${canDelDay ? `<button class="sheet-btn danger" id="aDelDay"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path></svg>Elimina questo giorno</button>` : ''}
@@ -1091,6 +1160,7 @@ function openAppMenu() {
   b.querySelector('#aRename').onclick = () => { closeModal(); openRename(); };
   b.querySelector('#aImport').onclick = () => { closeModal(); openImport(); };
   b.querySelector('#aExport').onclick = () => { closeModal(); exportJSON(); };
+  b.querySelector('#aBackup').onclick = () => { closeModal(); exportBackup(); };
   b.querySelector('#aDocs').onclick = () => { closeModal(); downloadDocs(); };
   b.querySelector('#aResetDay').onclick = () => confirmModal('Azzera progressi', 'Azzerare tutte le serie completate di questo giorno?', 'Azzera', () => {
     day().exercises.forEach(ex => ex.log.forEach(l => { l.done = false; l.reps = ''; l.weight = ''; }));
@@ -1145,7 +1215,7 @@ function openImport() {
     </button>
     <textarea id="pasteJson" class="paste-json" spellcheck="false" autocapitalize="off" autocorrect="off" placeholder='Incolla qui tutto il testo JSON…&#10;{"programName":"…","days":[…]}'></textarea>
     <button class="btn btn-primary btn-block" id="pasteLoad" style="margin-top:10px">Carica dal testo incollato</button>
-    <div class="hint">Comodo da telefono: se la tua AI ti ha dato solo il <b>testo</b> (non un file), incollalo qui. Poi potrai scegliere se <b>sostituire</b> la scheda o <b>aggiungere</b> i giorni. Formato: <code>{"programName":"…","days":[{"name":"…","exercises":[…]}]}</code> — scarica le istruzioni per l'AI dal menu per il formato completo.</div>`);
+    <div class="hint">Comodo da telefono: se la tua AI ti ha dato solo il <b>testo</b> (non un file), incollalo qui. Poi potrai scegliere se <b>sostituire</b> la scheda o <b>aggiungere</b> i giorni. Formato: <code>{"programName":"…","days":[{"name":"…","exercises":[…]}]}</code> — scarica le istruzioni per l'AI dal menu per il formato completo. Puoi caricare qui anche un <b>backup completo</b> esportato da FORGE (riconosciuto in automatico).</div>`);
   const dz = b.querySelector('#dz');
   dz.onclick = () => $('fileInput').click();
   dz.ondragover = e => { e.preventDefault(); dz.classList.add('drag'); };
@@ -1205,14 +1275,38 @@ function cleanJsonText(t) {
 function tryImportText(text) {
   const src = cleanJsonText(text);
   if (!src) { toast('Import fallito: testo vuoto'); return; }
+  let obj;
+  try {
+    obj = JSON.parse(src);
+  } catch (err) {
+    toast('JSON non valido: ' + err.message);
+    return;
+  }
+  // backup completo dell'app (scheda + storico + misure): ripristino diretto
+  if (obj && obj.__forgeBackup && obj.state) { openBackupRestore(obj.state); return; }
   let parsed;
   try {
-    parsed = parseProgram(JSON.parse(src));
+    parsed = parseProgram(obj);
   } catch (err) {
     toast('JSON non valido: ' + err.message);
     return;
   }
   openImportChoice(parsed);
+}
+
+/* Ripristina un backup completo (scheda + storico + misure), previa conferma. */
+function openBackupRestore(raw) {
+  let restored;
+  try { restored = normalizeState(JSON.parse(JSON.stringify(raw))); }
+  catch (_) { toast('Backup non valido'); return; }
+  const nd = restored.days.length, nm = restored.measurements.length;
+  confirmModal('Ripristina backup',
+    `Ripristinare il backup completo? Sostituirà scheda, storico e misure attuali (${nd} ${nd === 1 ? 'giorno' : 'giorni'}, ${nm} ${nm === 1 ? 'misurazione' : 'misurazioni'}).`,
+    'Ripristina', () => {
+      state = restored; state.exportSig = null;
+      save(); render(); renderProgress();
+      toast('Backup ripristinato ✔');
+    });
 }
 
 /* Chiede come applicare la scheda caricata: sostituire o aggiungere i giorni. */
@@ -1282,7 +1376,8 @@ function applyImportReplace(parsed) {
     programName: parsed.programName,
     activeDay: 0,
     days: parsed.days,
-    history: state.history
+    history: state.history,
+    measurements: state.measurements   // le misure corporee non c'entrano con la scheda: conservale
   });
   state.exportSig = null; // nuova scheda: non ancora salvata
   save();
@@ -1353,6 +1448,14 @@ function exportJSON() {
   state.exportSig = scheduleSig(); // ricorda che la scheda è stata salvata
   save();
   toast('Scheda esportata');
+}
+
+/* Backup completo: tutto lo stato (scheda + storico sessioni + misure).
+   Re-importabile dalla stessa schermata di import (riconosciuto in automatico). */
+function exportBackup() {
+  const out = { __forgeBackup: 1, exportedAt: new Date().toISOString(), state };
+  downloadText('forge-backup-completo.json', JSON.stringify(out), 'application/json');
+  toast('Backup completo esportato');
 }
 
 /* ── istruzioni per l'AI ── */
@@ -1478,7 +1581,7 @@ const sortedMeas = () => measList().slice().sort((a, b) =>
   a.date < b.date ? -1 : a.date > b.date ? 1 : (a.id < b.id ? -1 : 1)); // cronologico crescente
 
 function fmtNum(n) { if (n == null || isNaN(n)) return '—'; return (Math.round(n * 10) / 10).toString().replace('.', ','); }
-function fmtDate(iso) { const p = String(iso).split('-'); return p.length === 3 ? `${p[2]}/${p[1]}/${p[0].slice(2)}` : String(iso); }
+function fmtDateISO(iso) { const p = String(iso).split('-'); return p.length === 3 ? `${p[2]}/${p[1]}/${p[0].slice(2)}` : String(iso); }
 function todayISO() { const d = new Date(), p = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`; }
 
 /* Δ di list[idx] rispetto al precedente valore non vuoto della stessa misura. */
@@ -1523,14 +1626,56 @@ function renderProgress() {
   const chips = ['waist', 'chest', 'arm', 'thigh'].filter(k => latest.values[k] != null).map(k =>
     `<div class="prog-chip"><div class="pc-l">${esc(MEAS_LABEL(k))}</div><div class="pc-v">${fmtNum(latest.values[k])}<span class="unit">${MEAS_UNIT(k)}</span>${deltaHTML(list, i, k)}</div></div>`).join('');
   const hero = `<div class="prog-hero">
-    <div class="ph-top"><div class="ph-date">Ultima · ${esc(fmtDate(latest.date))}</div><div class="ph-count">${list.length} ${list.length === 1 ? 'rilevazione' : 'rilevazioni'}</div></div>
+    <div class="ph-top"><div class="ph-date">Ultima · ${esc(fmtDateISO(latest.date))}</div><div class="ph-count">${list.length} ${list.length === 1 ? 'rilevazione' : 'rilevazioni'}</div></div>
     <div class="ph-weight">${w != null ? `<span class="val">${fmtNum(w)}</span><span class="u">kg</span> ${deltaHTML(list, i, 'weight')}` : `<span class="u">Nessun peso in questa rilevazione</span>`}</div>
     ${chips ? `<div class="prog-chips">${chips}</div>` : ''}
     ${latest.note ? `<div class="hint" style="margin-top:14px">${esc(latest.note)}</div>` : ''}
   </div>`;
-  main.innerHTML = hero + `<div class="prog-sec-title">Tabella comparativa</div>` + buildMeasTable(list) +
+  main.innerHTML = hero + weightChart(list) + `<div class="prog-sec-title">Tabella comparativa</div>` + buildMeasTable(list) +
     `<div class="hint" style="margin-top:14px">Tocca una data nella tabella per modificare o eliminare quella rilevazione. Le variazioni (▲▼) sono rispetto alla misura precedente.</div>`;
   main.querySelectorAll('th[data-mid]').forEach(el => el.onclick = () => openMeasurementForm(el.dataset.mid));
+}
+
+/* Andamento del peso nel tempo: line chart (una sola serie, colore volt). */
+function weightChart(list) {
+  const pts = list.filter(e => e.values.weight != null && !isNaN(e.values.weight))
+                  .map(e => ({ date: e.date, w: e.values.weight }));
+  if (pts.length < 2) return '';
+  const W = 320, H = 150, L = 30, R = 12, TOP = 14, BOT = 24;
+  const plotW = W - L - R, plotH = H - TOP - BOT, baseY = TOP + plotH;
+  let min = Math.min(...pts.map(p => p.w)), max = Math.max(...pts.map(p => p.w));
+  if (min === max) { min -= 1; max += 1; }
+  const pad = (max - min) * 0.12; min -= pad; max += pad;
+  const X = i => L + (i / (pts.length - 1)) * plotW;
+  const Y = w => TOP + (1 - (w - min) / (max - min)) * plotH;
+  const line = pts.map((p, i) => `${i ? 'L' : 'M'}${X(i).toFixed(1)} ${Y(p.w).toFixed(1)}`).join(' ');
+  const area = `${line} L${X(pts.length - 1).toFixed(1)} ${baseY} L${X(0).toFixed(1)} ${baseY} Z`;
+  const first = pts[0], last = pts[pts.length - 1];
+  const dots = pts.map((p, i) =>
+    `<circle cx="${X(i).toFixed(1)}" cy="${Y(p.w).toFixed(1)}" r="2.3" fill="#0A0A0F" stroke="#C6FF3D" stroke-width="1.5"><title>${esc(fmtDateISO(p.date))}: ${fmtNum(p.w)} kg</title></circle>`).join('');
+  const delta = Math.round((last.w - first.w) * 10) / 10;
+  const dTxt = delta === 0 ? '±0 kg' : `${delta > 0 ? '▲' : '▼'} ${fmtNum(Math.abs(delta))} kg`;
+  const dCol = delta === 0 ? 'var(--muted)' : (delta > 0 ? 'var(--amber)' : 'var(--volt)');
+  return `<div class="prog-sec-title">Andamento peso</div>
+  <div class="wchart">
+    <div class="wc-cap"><span class="t">${pts.length} rilevazioni con peso</span><span class="d" style="color:${dCol}">${dTxt} <span style="color:var(--muted);font-weight:600;font-size:11px">dal primo</span></span></div>
+    <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Andamento del peso corporeo nel tempo">
+      <defs><linearGradient id="wcg" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#C6FF3D" stop-opacity="0.20"></stop>
+        <stop offset="1" stop-color="#C6FF3D" stop-opacity="0"></stop>
+      </linearGradient></defs>
+      <line x1="${L}" y1="${TOP}" x2="${W - R}" y2="${TOP}" stroke="#2A2A3A" stroke-width="1"></line>
+      <line x1="${L}" y1="${baseY}" x2="${W - R}" y2="${baseY}" stroke="#2A2A3A" stroke-width="1"></line>
+      <path d="${area}" fill="url(#wcg)"></path>
+      <path d="${line}" fill="none" stroke="#C6FF3D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path>
+      ${dots}
+      <circle cx="${X(pts.length - 1).toFixed(1)}" cy="${Y(last.w).toFixed(1)}" r="3.8" fill="#C6FF3D" stroke="#15151F" stroke-width="2"></circle>
+      <text x="${L - 4}" y="${TOP + 3}" fill="#8A8A9A" font-size="9" font-weight="700" text-anchor="end">${fmtNum(max)}</text>
+      <text x="${L - 4}" y="${baseY + 3}" fill="#8A8A9A" font-size="9" font-weight="700" text-anchor="end">${fmtNum(min)}</text>
+      <text x="${L}" y="${H - 5}" fill="#8A8A9A" font-size="9.5" font-weight="700">${esc(fmtDateISO(first.date))}</text>
+      <text x="${W - R}" y="${H - 5}" fill="#8A8A9A" font-size="9.5" font-weight="700" text-anchor="end">${esc(fmtDateISO(last.date))}</text>
+    </svg>
+  </div>`;
 }
 
 function buildMeasTable(list) {
@@ -1538,7 +1683,7 @@ function buildMeasTable(list) {
   const fields = MEAS_FIELDS.filter(f => list.some(e => e.values[f.key] != null && !isNaN(e.values[f.key])));
   if (!fields.length) return '';
   const head = `<thead><tr><th class="metric">Misura</th>${cols.map((e, ci) =>
-    `<th class="${ci === 0 ? 'latest' : ''}" data-mid="${esc(e.id)}">${esc(fmtDate(e.date))}</th>`).join('')}</tr></thead>`;
+    `<th class="${ci === 0 ? 'latest' : ''}" data-mid="${esc(e.id)}">${esc(fmtDateISO(e.date))}</th>`).join('')}</tr></thead>`;
   const body = fields.map(f => {
     const cells = cols.map((e, ci) => {
       const idxAsc = list.length - 1 - ci;
@@ -1585,7 +1730,7 @@ function openMeasurementForm(id) {
     toast(editing ? 'Misurazione aggiornata ✔' : 'Misurazione salvata ✔');
   };
   if (editing) b.querySelector('#mfDel').onclick = () =>
-    confirmModal('Elimina misurazione', `Eliminare la rilevazione del ${fmtDate(editing.date)}?`, 'Elimina', () => {
+    confirmModal('Elimina misurazione', `Eliminare la rilevazione del ${fmtDateISO(editing.date)}?`, 'Elimina', () => {
       state.measurements = measList().filter(m => m.id !== id);
       save(); closeModal(); renderProgress(); toast('Misurazione eliminata');
     });
