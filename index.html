@@ -331,6 +331,87 @@ table.cmp2{border-collapse:collapse;width:100%;font-size:13px}
 .cel-spark{position:absolute;top:44%;left:50%;width:9px;height:9px;border-radius:2px;opacity:0;animation:celSpark .95s ease-out forwards}
 @keyframes celSpark{0%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(.3)}}
 @media(prefers-reduced-motion:reduce){.cel-ring,.cel-in{animation:none}.cel-spark{display:none}}
+
+/* ══════════════════════════════════════════════════════════════════
+   POLISH LAYER — sistema di design: movimento, profondità, materiali,
+   focus accessibili, tipografia numerica. Livello sopra le regole base.
+   ══════════════════════════════════════════════════════════════════ */
+:root{
+  /* movimento */
+  --e-out:cubic-bezier(.22,.8,.28,1);
+  --e-in-out:cubic-bezier(.5,0,.2,1);
+  --t-fast:.13s;--t:.22s;--t-slow:.36s;
+  /* profondità */
+  --sh-1:0 1px 2px rgba(0,0,0,.35);
+  --sh-2:0 10px 28px rgba(0,0,0,.45);
+  --sh-3:0 22px 60px rgba(0,0,0,.6);
+  --hair:inset 0 1px 0 rgba(255,255,255,.05);       /* luce dall'alto */
+  --hair-strong:inset 0 1px 0 rgba(255,255,255,.14);
+  --ring:0 0 0 3px rgba(198,255,61,.4);             /* focus da tastiera */
+  --glow-volt:0 8px 26px rgba(198,255,61,.32);
+}
+
+/* — texture sottilissima di fondo (profondità, niente banding) — */
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.035;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+/* — tipografia: cifre tabulari (numeri che non "ballano") — */
+.ex-nav-count,.day-progress .pct,.timer-ring .num .t,.timer-adjust button,.chip,.set-idx,
+.ex-num,.ex-tab-num,.cmp2 td,.cmp2 th,.cmp-row .n,.prog-hero .ph-weight .val,.prog-hero .ph-count,
+.prog-chip .pc-v,.dl,.set-prev{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+input,textarea{caret-color:var(--volt)}
+
+/* — FOCUS accessibile: niente anello col mouse, anello volt da tastiera — */
+:focus{outline:none}
+button:focus-visible,a:focus-visible,.set-check:focus-visible,.icon-btn:focus-visible,
+.day-tab:focus-visible,.ex-tab:focus-visible,.sheet-btn:focus-visible,.home-btn:focus-visible,
+.ic-opt:focus-visible,.cmp2 thead th:focus-visible,.dropzone:focus-visible{box-shadow:var(--ring)}
+.set-input:focus-visible,.field input:focus-visible,.field textarea:focus-visible,
+.field select:focus-visible,.paste-json:focus-visible{border-color:var(--volt);box-shadow:var(--ring)}
+
+/* — materiali: profondità coerente + luce dall'alto — */
+.ex-card{box-shadow:var(--sh-2),var(--hair);transition:border-color var(--t),opacity var(--t),box-shadow var(--t-slow) var(--e-out),transform var(--t) var(--e-out)}
+.ex-card.done{box-shadow:var(--sh-2),0 0 0 1px rgba(198,255,61,.15),var(--hair)}
+.home-btn,.prog-hero,.prog-chip,.import-summary,.hint{box-shadow:var(--sh-1),var(--hair)}
+.modal{box-shadow:var(--sh-3),var(--hair)}
+.icon-btn,.ex-opts-btn,.btn-ghost,.day-tab,.ex-tab,.timer-adjust button{box-shadow:var(--hair)}
+
+/* — sheen sottile sugli elementi in volt (superficie "illuminata") — */
+.btn-primary,.fab:not(.fab-save),.ex-nav-btn.next,.day-tab.active,.set-check.on{
+  background-image:linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,255,255,0));box-shadow:var(--hair-strong)}
+.day-tab.active{box-shadow:var(--glow-volt),var(--hair-strong)}
+.fab:not(.fab-save){box-shadow:var(--glow-volt),var(--hair-strong)}
+.btn-primary:hover{box-shadow:var(--glow-volt)}
+
+/* — micro-interazioni (solo dispositivi con puntatore preciso) — */
+@media(pointer:fine){
+  .fab:hover{transform:translateY(-2px)}
+  .home-btn:hover{transform:translateY(-2px)}
+  .ex-card.active:hover{transform:translateY(-1px);box-shadow:var(--sh-3),var(--hair)}
+  .sheet-btn:hover{transform:translateX(2px)}
+}
+
+/* — timer & anelli: leggero bagliore volt — */
+#timerArc{filter:drop-shadow(0 0 7px rgba(198,255,61,.55))}
+.timer-ring .num small{letter-spacing:2px}
+
+/* — scrollbar discrete su desktop (le strip a tab restano senza) — */
+@media(pointer:fine){
+  html{scrollbar-width:thin;scrollbar-color:var(--surface2) transparent}
+  ::-webkit-scrollbar{width:11px;height:11px}
+  ::-webkit-scrollbar-thumb{background:var(--surface2);border-radius:99px;border:3px solid var(--bg)}
+  ::-webkit-scrollbar-thumb:hover{background:var(--border)}
+  ::-webkit-scrollbar-track{background:transparent}
+}
+
+/* — set completata: riga più viva — */
+.set-row.on .set-check.on{box-shadow:var(--glow-volt),var(--hair-strong)}
+
+/* — rispetto globale di chi preferisce meno movimento — */
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;
+    transition-duration:.001ms!important;scroll-behavior:auto!important}
+}
 </style>
 </head>
 <body>
