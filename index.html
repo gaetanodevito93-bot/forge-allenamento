@@ -591,7 +591,7 @@ function renderDayHead() {
   const C = 2 * Math.PI * 24;
   const p = tot ? done / tot : 0;
   const last = lastSessionFor(d.name);
-  $('fabSave').style.display = done > 0 ? 'flex' : 'none';
+  updateFabSave();
   $('dayHead').innerHTML = `
     <div class="title-block">
       <h2 data-testid="day-title" title="${esc(d.name)}">${esc(d.name)}</h2>
@@ -680,11 +680,26 @@ function renderExTabs() {
 
 function renderExNav() {
   const n = day().exercises.length;
+  const last = activeEx >= n - 1;
+  // sull'ultimo esercizio, se c'è progresso, il tasto destro chiude l'allenamento
+  const right = (last && dayCounts().done > 0)
+    ? `<button class="ex-nav-btn next fin" id="exFinish">Fine ✓</button>`
+    : `<button class="ex-nav-btn next" id="exNext" ${last ? 'disabled' : ''}>Successivo ›</button>`;
   $('exNav').innerHTML = `<div class="ex-nav-inner">
     <button class="ex-nav-btn" id="exPrev" ${activeEx <= 0 ? 'disabled' : ''}>‹ Precedente</button>
     <span class="ex-nav-count">${activeEx + 1} / ${n}</span>
-    <button class="ex-nav-btn next" id="exNext" ${activeEx >= n - 1 ? 'disabled' : ''}>Successivo ›</button>
+    ${right}
   </div>`;
+  updateFabSave();
+}
+
+/* Il FAB "Fine" si mostra quando c'è progresso, ma non sull'ultimo esercizio:
+   lì la stessa azione è già offerta come "Fine ✓" nella barra (niente doppioni). */
+function updateFabSave() {
+  const done = dayCounts().done;
+  const n = day().exercises.length;
+  const last = activeEx >= n - 1;
+  $('fabSave').style.display = (done > 0 && !last) ? 'flex' : 'none';
 }
 
 /* Passa alla scheda dell'esercizio i senza ricostruire tutta la lista. */
@@ -718,6 +733,7 @@ $('exTabs').addEventListener('click', e => {
 $('exNav').addEventListener('click', e => {
   if (e.target.closest('#exPrev')) selectEx(activeEx - 1);
   else if (e.target.closest('#exNext')) selectEx(activeEx + 1);
+  else if (e.target.closest('#exFinish')) openFinishModal();
 });
 
 /* Mentre si digita in un campo serie la tastiera copre il fondo: nascondi la
@@ -762,6 +778,7 @@ function toggleSet(i, j, btn) {
   card.classList.toggle('done', ex.log.every(x => x.done));
   renderDayHead();
   renderExTabs();
+  renderExNav();
   if (l.done) {
     buzz(20);
     if (ex.restSec > 0) startRestTimer(ex.restSec, nextLabel(i, j));
@@ -879,6 +896,24 @@ $('exList').addEventListener('pointerdown', e => {
   document.addEventListener('pointermove', dragMove);
   document.addEventListener('pointerup', dragEnd);
   document.addEventListener('pointercancel', dragEnd);
+});
+
+/* ── swipe orizzontale sulla card: cambia esercizio. Non intralcia il riordino,
+      che richiede pressione prolungata (350 ms) + trascinamento verticale. ── */
+let swipe = null;
+$('exList').addEventListener('pointerdown', e => {
+  if (e.pointerType === 'mouse' || e.button > 0) return;     // solo tocco/penna
+  if (e.target.closest('button, input, select, textarea, a')) return;
+  swipe = { x: e.clientX, y: e.clientY, t: Date.now(), id: e.pointerId };
+});
+$('exList').addEventListener('pointerup', e => {
+  const s = swipe; swipe = null;
+  if (!s || e.pointerId !== s.id) return;
+  if (drag && drag.armed) return;                            // stavo riordinando
+  const dx = e.clientX - s.x, dy = e.clientY - s.y;
+  if (Date.now() - s.t < 500 && Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.8) {
+    selectEx(activeEx + (dx < 0 ? 1 : -1));                   // ← successivo · → precedente
+  }
 });
 
 function armDrag() {
@@ -1794,7 +1829,16 @@ $('btnProgMenu').onclick = openProgressMenu;
 /* ── avvio ── */
 render();
 setView('home');
-setTimeout(() => { const s = $('splash'); if (s) s.classList.add('hide'); }, 1300);
+// Splash solo al primo avvio della sessione: reload e navigazioni interne
+// non la rimostrano (niente attrito a ogni apertura della scheda).
+(function () {
+  const s = $('splash');
+  if (!s) return;
+  let seen = false;
+  try { seen = sessionStorage.getItem('forge_splash') === '1'; sessionStorage.setItem('forge_splash', '1'); } catch (_) {}
+  if (seen) { s.style.transition = 'none'; s.classList.add('hide'); }
+  else { setTimeout(() => s.classList.add('hide'), 1100); }
+})();
 
 /* ── PWA: registrazione service worker ── */
 if ('serviceWorker' in navigator) {
