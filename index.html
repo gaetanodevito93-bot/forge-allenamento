@@ -38,7 +38,7 @@ header{position:sticky;top:0;z-index:40;backdrop-filter:blur(18px);background:rg
 .icon-btn{width:42px;height:42px;border-radius:12px;background:var(--surface);border:1px solid var(--border);display:grid;place-items:center;transition:background-color .2s,border-color .2s,transform .12s}
 .icon-btn:hover{background:var(--surface2);border-color:#3A3A4D}
 .icon-btn:active{transform:scale(.94)}
-.icon-btn svg{width:19px;height:19px;stroke:var(--text)}
+.icon-btn svg{width:21px;height:21px;stroke:var(--text);stroke-width:2.1}
 .day-bar{max-width:900px;margin:0 auto;padding:12px 18px 0;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}
 .day-bar::-webkit-scrollbar{display:none}
 .day-tab{white-space:nowrap;padding:9px 16px;border-radius:999px;background:var(--surface);border:1px solid var(--border);color:var(--muted);font-weight:700;font-size:13px;transition:.2s;display:flex;align-items:center;gap:7px;flex-shrink:0}
@@ -155,6 +155,20 @@ body.dragging-active{cursor:grabbing;user-select:none}
 .dropzone p{font-size:12.5px;color:var(--muted)}
 .hint{font-size:12px;color:var(--muted);background:var(--bg);border-radius:11px;padding:12px 14px;margin-top:14px;border:1px solid var(--border)}
 .hint code{color:var(--volt);font-family:ui-monospace,monospace;font-size:11.5px}
+.import-summary{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:13px 15px;margin-bottom:16px}
+.import-summary .is-name{font-weight:800;font-size:15px}
+.import-summary .is-days{font-size:12.5px;color:var(--muted);margin-top:3px;line-height:1.45}
+.import-choices{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
+.ic-opt{display:flex;align-items:center;gap:13px;text-align:left;width:100%;padding:14px 15px;border-radius:13px;background:var(--surface2);border:1px solid var(--border);transition:.18s}
+.ic-opt:hover{border-color:var(--volt);background:#26263A}
+.ic-opt:active{transform:scale(.985)}
+.ic-opt .ic-ic{width:40px;height:40px;flex-shrink:0;border-radius:11px;background:var(--surface);display:grid;place-items:center}
+.ic-opt .ic-ic svg{width:21px;height:21px;stroke:var(--volt);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ic-opt .ic-tx{display:flex;flex-direction:column;gap:2px;min-width:0}
+.ic-opt .ic-tx strong{font-size:14.5px;font-weight:800}
+.ic-opt .ic-tx span{font-size:12px;color:var(--muted);line-height:1.4}
+.modal-text{color:var(--muted);font-size:14px;line-height:1.55;margin-bottom:18px}
+.modal-foot.stack{flex-direction:column;gap:10px}
 .sheet-btn{width:100%;padding:15px 16px;display:flex;align-items:center;gap:14px;font-size:15px;font-weight:700;border-radius:12px;transition:background .15s;text-align:left}
 .sheet-btn:hover{background:var(--surface2)}
 .sheet-btn svg{width:20px;height:20px;stroke:var(--muted);flex-shrink:0}
@@ -194,14 +208,14 @@ body.dragging-active{cursor:grabbing;user-select:none}
       </div>
     </div>
     <div class="header-actions">
-      <button class="icon-btn" id="btnImport" data-testid="import-btn" title="Importa JSON">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="M12 3v13m0 0-4-4m4 4 4-4"></path></svg>
+      <button class="icon-btn" id="btnImport" data-testid="import-btn" title="Carica scheda (JSON)" aria-label="Carica scheda">
+        <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"></path><path d="m7 8 5-5 5 5"></path><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"></path></svg>
       </button>
-      <button class="icon-btn" id="btnDocs" data-testid="docs-btn" title="Istruzioni per l'AI">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6M9 13h6M9 17h4"></path></svg>
+      <button class="icon-btn" id="btnDocs" data-testid="docs-btn" title="Istruzioni per l'AI" aria-label="Istruzioni per l'AI">
+        <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6M9 13h6M9 17h4"></path></svg>
       </button>
-      <button class="icon-btn" id="btnMenu" data-testid="app-menu-btn" title="Menu">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1.5"></circle><circle cx="12" cy="12" r="1.5"></circle><circle cx="12" cy="19" r="1.5"></circle></svg>
+      <button class="icon-btn" id="btnMenu" data-testid="app-menu-btn" title="Menu" aria-label="Menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>
       </button>
     </div>
   </div>
@@ -261,7 +275,9 @@ const ICONS = {
   rest: '<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>',
   check: '<svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>',
   dots: '<svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.7"></circle><circle cx="12" cy="12" r="1.7"></circle><circle cx="19" cy="12" r="1.7"></circle></svg>',
-  close: '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg>'
+  close: '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg>',
+  replace: '<svg viewBox="0 0 24 24"><path d="M17 2l4 4-4 4"></path><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><path d="M7 22l-4-4 4-4"></path><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>',
+  append: '<svg viewBox="0 0 24 24"><path d="M3 6h13M3 12h8M3 18h8"></path><path d="M18 10v8M22 14h-8"></path></svg>'
 };
 
 const DEFAULT_STATE = () => ({
@@ -849,7 +865,7 @@ function openImport() {
       <h4>Trascina qui il file .json</h4>
       <p>oppure tocca per sceglierlo</p>
     </div>
-    <div class="hint">Il file sostituisce l'intera scheda. Formato: <code>{"programName":"…","days":[{"name":"…","exercises":[…]}]}</code> — scarica le istruzioni per l'AI dal menu per il formato completo.</div>`);
+    <div class="hint">Dopo il caricamento potrai scegliere se <b>sostituire</b> la scheda o <b>aggiungere</b> i giorni. Formato: <code>{"programName":"…","days":[{"name":"…","exercises":[…]}]}</code> — scarica le istruzioni per l'AI dal menu per il formato completo.</div>`);
   const dz = b.querySelector('#dz');
   dz.onclick = () => $('fileInput').click();
   dz.ondragover = e => { e.preventDefault(); dz.classList.add('drag'); };
@@ -867,18 +883,110 @@ $('fileInput').addEventListener('change', function () {
 function readImportFile(file) {
   const r = new FileReader();
   r.onload = () => {
+    let parsed;
     try {
-      importProgram(JSON.parse(r.result));
-      closeModal(); render();
-      toast('Scheda importata ✔');
+      parsed = parseProgram(JSON.parse(r.result));
     } catch (err) {
       toast('Import fallito: ' + err.message);
+      return;
     }
+    openImportChoice(parsed);
   };
+  r.onerror = () => toast('Import fallito: impossibile leggere il file');
   r.readAsText(file);
 }
 
-function importProgram(obj) {
+/* Chiede come applicare la scheda caricata: sostituire o aggiungere i giorni. */
+function openImportChoice(parsed) {
+  const n = parsed.days.length;
+  const names = parsed.days.map(d => d.name).join(' · ');
+  const dayWord = n === 1 ? '1 giorno' : `${n} giorni`;
+  const b = openModal('Come vuoi caricarla?', `
+    <div class="import-summary">
+      <div class="is-name">${esc(parsed.programName)}</div>
+      <div class="is-days">${esc(dayWord)}: ${esc(names)}</div>
+    </div>
+    <div class="import-choices">
+      <button class="ic-opt" id="icReplace">
+        <div class="ic-ic">${ICONS.replace}</div>
+        <div class="ic-tx"><strong>Sostituisci l'intera scheda</strong><span>Rimuove i giorni attuali e carica questa scheda al loro posto</span></div>
+      </button>
+      <button class="ic-opt" id="icAppend">
+        <div class="ic-ic">${ICONS.append}</div>
+        <div class="ic-tx"><strong>Aggiungi ${n === 1 ? 'il giorno' : 'i ' + n + ' giorni'}</strong><span>Mantiene la scheda attuale e accoda ${n === 1 ? 'il nuovo giorno' : 'i nuovi giorni'}</span></div>
+      </button>
+    </div>
+    <div class="modal-foot"><button class="btn btn-ghost btn-block" id="icCancel">Annulla</button></div>`);
+  b.querySelector('#icCancel').onclick = closeModal;
+  b.querySelector('#icAppend').onclick = () => {
+    applyImportAppend(parsed); closeModal(); render();
+    toast(n === 1 ? 'Giorno aggiunto ✔' : `${n} giorni aggiunti ✔`);
+  };
+  b.querySelector('#icReplace').onclick = () => confirmOverwrite(parsed);
+}
+
+/* Prima di sovrascrivere, offre di salvare un backup della scheda attuale
+   (solo se non è già stata esportata così com'è). */
+function confirmOverwrite(parsed) {
+  const doReplace = () => {
+    applyImportReplace(parsed); closeModal(); render();
+    toast('Scheda sostituita ✔');
+  };
+  if (isScheduleSaved()) { doReplace(); return; }
+  const b = openModal('Salvare la scheda attuale?', `
+    <p class="modal-text">La scheda attuale verrà sovrascritta e i suoi dati andranno persi. Vuoi scaricarne prima una copia di backup (file JSON)?</p>
+    <div class="modal-foot stack">
+      <button class="btn btn-primary btn-block" id="ovBackup">Scarica backup e sostituisci</button>
+      <button class="btn btn-danger btn-block" id="ovNo">Sostituisci senza salvare</button>
+      <button class="btn btn-ghost btn-block" id="ovCancel">Annulla</button>
+    </div>`);
+  b.querySelector('#ovCancel').onclick = closeModal;
+  b.querySelector('#ovNo').onclick = doReplace;
+  b.querySelector('#ovBackup').onclick = () => { exportJSON(); doReplace(); };
+}
+
+/* Firma della scheda: serve a capire se è già stata salvata/esportata così com'è. */
+function scheduleSig() {
+  return JSON.stringify({
+    programName: state.programName,
+    days: state.days.map(d => ({
+      name: d.name,
+      exercises: d.exercises.map(e => ({ name: e.name, sets: e.sets, reps: e.reps, weight: e.weight, restSec: e.restSec, note: e.note }))
+    }))
+  });
+}
+function isScheduleSaved() { return !!state.exportSig && state.exportSig === scheduleSig(); }
+
+/* Sostituisce l'intera scheda con quella caricata (lo storico sopravvive). */
+function applyImportReplace(parsed) {
+  state = normalizeState({
+    programName: parsed.programName,
+    activeDay: 0,
+    days: parsed.days,
+    history: state.history
+  });
+  state.exportSig = null; // nuova scheda: non ancora salvata
+  save();
+}
+
+/* Accoda i giorni caricati alla scheda attuale, evitando nomi duplicati. */
+function applyImportAppend(parsed) {
+  const names = new Set(state.days.map(d => d.name));
+  const firstNew = state.days.length;
+  parsed.days.forEach(d => {
+    let name = d.name, k = 2;
+    while (names.has(name)) name = `${d.name} (${k++})`;
+    names.add(name);
+    state.days.push({ name, exercises: d.exercises });
+  });
+  state.activeDay = firstNew; // mostra il primo giorno appena aggiunto
+  state.exportSig = null;     // la scheda è cambiata
+  state = normalizeState(state);
+  save();
+}
+
+/* Valida il JSON caricato e restituisce { programName, days } senza toccare lo stato. */
+function parseProgram(obj) {
   if (!obj || typeof obj !== 'object') throw new Error('il file non contiene un oggetto JSON');
   const days = obj.days || obj.giorni;
   if (!Array.isArray(days) || !days.length) throw new Error('manca l\'elenco "days" con almeno un giorno');
@@ -906,15 +1014,12 @@ function importProgram(obj) {
         note: String(e.note != null ? e.note : (e.nota != null ? e.nota : '')).trim()
       });
     });
-    return { name: String(d.name || d.nome || `Giorno ${String.fromCharCode(65 + di)}`).trim(), exercises };
+    return { name: String(d.name || d.nome || `Giorno ${String.fromCharCode(65 + di)}`).trim() || `Giorno ${di + 1}`, exercises };
   });
-  state = normalizeState({
-    programName: String(obj.programName || obj.program || obj.nome || 'Il mio programma').trim(),
-    activeDay: 0,
-    days: outDays,
-    history: state.history // lo storico sessioni sopravvive all'import (chiave: nome giorno)
-  });
-  save();
+  return {
+    programName: String(obj.programName || obj.program || obj.nome || 'Il mio programma').trim() || 'Il mio programma',
+    days: outDays
+  };
 }
 
 function exportJSON() {
@@ -926,6 +1031,8 @@ function exportJSON() {
     }))
   };
   downloadText('forge-scheda.json', JSON.stringify(out, null, 2), 'application/json');
+  state.exportSig = scheduleSig(); // ricorda che la scheda è stata salvata
+  save();
   toast('Scheda esportata');
 }
 
