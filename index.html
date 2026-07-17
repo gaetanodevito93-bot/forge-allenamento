@@ -88,6 +88,11 @@ body.kb .ex-nav{transform:translateY(130%)}
 .ex-list.tabs:not(.compact) > .ex-card:not(.active){display:none}
 .ex-card{background:linear-gradient(180deg,var(--surface),var(--bg2));border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:border-color .25s,opacity .25s;animation:rise .45s cubic-bezier(.2,.8,.2,1) both}
 @keyframes rise{0%{opacity:0;transform:translateY(14px)}100%{opacity:1;transform:none}}
+/* transizione al cambio esercizio (swipe / tab / avanti-indietro) */
+.ex-card.anim-next{animation:slideNext .26s cubic-bezier(.2,.8,.2,1)}
+.ex-card.anim-prev{animation:slidePrev .26s cubic-bezier(.2,.8,.2,1)}
+@keyframes slideNext{0%{opacity:0;transform:translateX(30px)}100%{opacity:1;transform:none}}
+@keyframes slidePrev{0%{opacity:0;transform:translateX(-30px)}100%{opacity:1;transform:none}}
 .ex-card.done{border-color:rgba(198,255,61,.5)}
 .ex-card.done .ex-top{background:rgba(198,255,61,.05)}
 .ex-top{padding:16px 16px 12px;display:flex;gap:12px;align-items:flex-start}
@@ -311,6 +316,21 @@ table.cmp2{border-collapse:collapse;width:100%;font-size:13px}
 #toast{position:fixed;bottom:calc(92px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(20px);z-index:90;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:12px 20px;border-radius:999px;font-weight:700;font-size:13.5px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:.3s;display:flex;align-items:center;gap:9px}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 #toast svg{width:17px;height:17px;stroke:var(--volt)}
+/* ── festa di fine giornata ── */
+.celebrate{position:fixed;inset:0;z-index:95;display:grid;place-items:center;overflow:hidden;background:radial-gradient(circle at 50% 45%,rgba(198,255,61,.14),rgba(5,5,9,.74));backdrop-filter:blur(5px);animation:celIn .28s ease both}
+.celebrate.out{animation:celOut .36s ease both}
+@keyframes celIn{from{opacity:0}to{opacity:1}}
+@keyframes celOut{from{opacity:1}to{opacity:0}}
+.cel-in{display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;animation:celPop .5s cubic-bezier(.2,.9,.2,1) both}
+@keyframes celPop{0%{opacity:0;transform:scale(.6) translateY(10px)}60%{transform:scale(1.06)}100%{opacity:1;transform:none}}
+.cel-ring{width:112px;height:112px;border-radius:50%;background:linear-gradient(145deg,var(--volt),var(--volt-dim));display:grid;place-items:center;box-shadow:0 18px 60px rgba(198,255,61,.5);animation:celPulse 1.2s ease-in-out infinite}
+@keyframes celPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+.cel-ring svg{width:58px;height:58px;stroke:#0A0A0F;stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.cel-t{font-family:Anton,sans-serif;font-size:28px;letter-spacing:.5px}
+.cel-s{color:var(--muted);font-weight:700;font-size:14px}
+.cel-spark{position:absolute;top:44%;left:50%;width:9px;height:9px;border-radius:2px;opacity:0;animation:celSpark .95s ease-out forwards}
+@keyframes celSpark{0%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(.3)}}
+@media(prefers-reduced-motion:reduce){.cel-ring,.cel-in{animation:none}.cel-spark{display:none}}
 </style>
 </head>
 <body>
@@ -706,9 +726,18 @@ function updateFabSave() {
 function selectEx(i) {
   const exs = day().exercises;
   if (!exs.length) return;
+  const prev = activeEx;
   activeEx = Math.max(0, Math.min(exs.length - 1, i));
+  const dir = activeEx > prev ? 1 : activeEx < prev ? -1 : 0;
   [...$('exList').children].forEach((c, idx) => c.classList.toggle('active', idx === activeEx));
   [...$('exTabs').children].forEach((c, idx) => c.classList.toggle('active', idx === activeEx));
+  // micro-animazione di ingresso nella direzione dello spostamento
+  const card = $('exList').children[activeEx];
+  if (card && dir !== 0) {
+    card.classList.remove('anim-next', 'anim-prev');
+    void card.offsetWidth; // forza il reflow per rilanciare l'animazione
+    card.classList.add(dir > 0 ? 'anim-next' : 'anim-prev');
+  }
   renderExNav();
   const at = $('exTabs').children[activeEx];
   if (at) at.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
@@ -781,13 +810,43 @@ function toggleSet(i, j, btn) {
   renderExNav();
   if (l.done) {
     buzz(20);
-    if (ex.restSec > 0) startRestTimer(ex.restSec, nextLabel(i, j));
-    // esercizio completato: passa alla scheda del successivo ancora da fare
-    if (exDone(ex)) {
-      const nx = nextIncompleteEx(i);
-      if (nx >= 0 && nx !== i) selectEx(nx);
+    const c = dayCounts();
+    if (c.tot > 0 && c.done === c.tot) {
+      // intera giornata completata: niente recupero, si festeggia
+      celebrateDay();
+    } else {
+      if (ex.restSec > 0) startRestTimer(ex.restSec, nextLabel(i, j));
+      // esercizio completato: passa alla scheda del successivo ancora da fare
+      if (exDone(ex)) {
+        const nx = nextIncompleteEx(i);
+        if (nx >= 0 && nx !== i) selectEx(nx);
+      }
     }
   }
+}
+
+/* Festa di fine giornata: feedback aptico marcato + overlay celebrativo. */
+function celebrateDay() {
+  buzz([90, 50, 90, 50, 180]);
+  ensureAudio(); beep();
+  let sparks = '';
+  const cols = ['var(--volt)', 'var(--coral)', 'var(--amber)'];
+  for (let k = 0; k < 12; k++) {
+    const a = (k / 12) * Math.PI * 2, d = 120 + Math.random() * 90;
+    sparks += `<span class="cel-spark" style="--dx:${(Math.cos(a) * d).toFixed(0)}px;--dy:${(Math.sin(a) * d).toFixed(0)}px;background:${cols[k % 3]};animation-delay:${(Math.random() * .12).toFixed(2)}s"></span>`;
+  }
+  const el = document.createElement('div');
+  el.className = 'celebrate';
+  el.innerHTML = `${sparks}<div class="cel-in">
+    <div class="cel-ring">${ICONS.check}</div>
+    <div class="cel-t">Giornata completata!</div>
+    <div class="cel-s">Ottimo lavoro 💪</div>
+  </div>`;
+  document.body.appendChild(el);
+  let closed = false;
+  const close = () => { if (closed) return; closed = true; el.classList.add('out'); setTimeout(() => el.remove(), 380); };
+  el.addEventListener('click', close);
+  setTimeout(close, 2400);
 }
 
 function nextLabel(i, j) {
