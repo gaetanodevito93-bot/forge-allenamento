@@ -954,7 +954,7 @@ function openExerciseForm(idx) {
       <div class="field"><label>Ripetizioni</label><input id="fReps" type="text" placeholder="8-12 / 45s" value="${esc(ex.reps)}"></div>
       <div class="field"><label>Peso (kg)</label><input id="fWeight" type="text" inputmode="decimal" placeholder="—" value="${ex.weight != null ? esc(ex.weight) : ''}"></div>
     </div>
-    <div class="field"><label>Recupero (min:sec o secondi)</label><input id="fRest" type="text" placeholder="1:30" value="${fmtRest(ex.restSec)}"></div>
+    <div class="field"><label>Recupero (secondi)</label><input id="fRest" type="number" min="0" max="900" inputmode="numeric" placeholder="90" value="${ex.restSec}"></div>
     <div class="field"><label>Note (facoltative)</label><textarea id="fNote" placeholder="Es. controlla la discesa">${esc(ex.note)}</textarea></div>
     <div class="modal-foot"><button class="btn btn-primary btn-block" id="fSave">Salva</button></div>`);
   const nameInput = b.querySelector('#fName');
@@ -967,7 +967,7 @@ function openExerciseForm(idx) {
       sets: Math.min(20, Math.max(1, parseInt(b.querySelector('#fSets').value, 10) || 3)),
       reps: b.querySelector('#fReps').value.trim() || '8-12',
       weight: w === '' || isNaN(parseFloat(w)) ? null : parseFloat(w),
-      restSec: parseRest(b.querySelector('#fRest').value),
+      restSec: Math.max(0, Math.min(900, parseInt(b.querySelector('#fRest').value, 10) || 0)),
       note: b.querySelector('#fNote').value.trim()
     };
     let addedToOther = false;
