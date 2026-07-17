@@ -180,6 +180,9 @@ body.dragging-active{cursor:grabbing;user-select:none}
 .field input,.field textarea,.field select{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:11px;padding:12px 13px;color:var(--text);font-size:15px;font-weight:600;transition:border-color .2s}
 .field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:var(--volt)}
 .field textarea{resize:vertical;min-height:70px}
+.fname-row{display:flex;align-items:center;gap:10px}
+.fname-row input{flex:1;min-width:0}
+.fname-ext{color:var(--muted);font-weight:700;font-size:15px;flex-shrink:0}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
 .modal-foot{display:flex;gap:10px;margin-top:8px}
@@ -1553,7 +1556,7 @@ function confirmOverwrite(parsed) {
     </div>`);
   b.querySelector('#ovCancel').onclick = closeModal;
   b.querySelector('#ovNo').onclick = doReplace;
-  b.querySelector('#ovBackup').onclick = () => { exportJSON(); doReplace(); };
+  b.querySelector('#ovBackup').onclick = () => { downloadSchedule('forge-scheda.json'); doReplace(); };
 }
 
 /* Firma della scheda: serve a capire se è già stata salvata/esportata così com'è. */
@@ -1634,7 +1637,35 @@ function parseProgram(obj) {
   };
 }
 
-function exportJSON() {
+/* Chiede il nome del file, poi invoca cb(nomeConEstensione). */
+function askFileName(title, defName, ext, cb) {
+  const b = openModal(title, `
+    <div class="field"><label>Nome del file</label>
+      <div class="fname-row">
+        <input id="fnInput" type="text" value="${esc(defName)}" spellcheck="false" autocapitalize="off" autocorrect="off" autocomplete="off">
+        <span class="fname-ext">.${esc(ext)}</span>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost btn-block" id="fnCancel">Annulla</button>
+      <button class="btn btn-primary btn-block" id="fnGo">Scarica</button>
+    </div>`);
+  const input = b.querySelector('#fnInput');
+  const go = () => {
+    // rimuove i caratteri non validi in un nome di file e l'estensione doppia
+    let name = input.value.trim().replace(/[\\/:*?"<>|\u0000-\u001f]+/g, '').replace(/\.+$/, '').trim();
+    if (!name) name = defName;
+    if (!new RegExp('\\.' + ext + '$', 'i').test(name)) name += '.' + ext;
+    closeModal(); cb(name);
+  };
+  b.querySelector('#fnGo').onclick = go;
+  b.querySelector('#fnCancel').onclick = closeModal;
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); go(); } });
+  setTimeout(() => { input.focus(); input.select(); }, 250);
+}
+
+/* Scarica la scheda (giorni + esercizi) con il nome indicato. */
+function downloadSchedule(filename) {
   const out = {
     programName: state.programName,
     days: state.days.map(d => ({
@@ -1642,18 +1673,26 @@ function exportJSON() {
       exercises: d.exercises.map(e => ({ name: e.name, sets: e.sets, reps: e.reps, weight: e.weight, restSec: e.restSec, note: e.note }))
     }))
   };
-  downloadText('forge-scheda.json', JSON.stringify(out, null, 2), 'application/json');
+  downloadText(filename, JSON.stringify(out, null, 2), 'application/json');
   state.exportSig = scheduleSig(); // ricorda che la scheda è stata salvata
   save();
-  toast('Scheda esportata');
+}
+
+function exportJSON() {
+  askFileName('Esporta scheda', 'forge-scheda', 'json', name => {
+    downloadSchedule(name);
+    toast('Scheda esportata');
+  });
 }
 
 /* Backup completo: tutto lo stato (scheda + storico sessioni + misure).
    Re-importabile dalla stessa schermata di import (riconosciuto in automatico). */
 function exportBackup() {
-  const out = { __forgeBackup: 1, exportedAt: new Date().toISOString(), state };
-  downloadText('forge-backup-completo.json', JSON.stringify(out), 'application/json');
-  toast('Backup completo esportato');
+  askFileName('Esporta backup completo', 'forge-backup-completo', 'json', name => {
+    const out = { __forgeBackup: 1, exportedAt: new Date().toISOString(), state };
+    downloadText(name, JSON.stringify(out), 'application/json');
+    toast('Backup completo esportato');
+  });
 }
 
 /* ── istruzioni per l'AI ── */
@@ -1954,8 +1993,10 @@ function exportMeasCSV() {
   const header = ['Data', ...cols.map(f => `${f.label} (${f.unit})`), 'Note'];
   const rows = list.map(e => [e.date, ...cols.map(f => e.values[f.key] != null ? String(e.values[f.key]).replace('.', ',') : ''), (e.note || '').replace(/[\r\n;]+/g, ' ')]);
   const csv = [header, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(';')).join('\r\n');
-  downloadText('forge-progressi.csv', '﻿' + csv, 'text/csv;charset=utf-8');
-  toast('Progressi esportati (CSV)');
+  askFileName('Esporta progressi', 'forge-progressi', 'csv', name => {
+    downloadText(name, '﻿' + csv, 'text/csv;charset=utf-8');
+    toast('Progressi esportati (CSV)');
+  });
 }
 
 /* ── wiring viste ── */
