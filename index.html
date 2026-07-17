@@ -56,7 +56,30 @@ main{max-width:900px;margin:0 auto;padding:20px 18px 140px}
 .day-progress .ring{position:relative;width:58px;height:58px;margin-left:auto}
 .day-progress .ring svg{transform:rotate(-90deg)}
 .day-progress .ring .pct{position:absolute;inset:0;display:grid;place-items:center;font-family:Anton,sans-serif;font-size:15px}
+/* ── strip a schede degli esercizi ── */
+.ex-tabs{display:none;gap:8px;overflow-x:auto;scrollbar-width:none;padding:2px 2px 4px;margin-bottom:14px;scroll-padding:0 40px}
+.ex-tabs::-webkit-scrollbar{display:none}
+.ex-tabs:not(:empty){display:flex}
+.ex-tab{white-space:nowrap;max-width:220px;padding:8px 14px 8px 8px;border-radius:999px;background:var(--surface);border:1px solid var(--border);color:var(--muted);font-weight:700;font-size:13px;transition:.2s;display:flex;align-items:center;gap:8px;flex-shrink:0}
+.ex-tab:hover{color:var(--text);border-color:#3A3A4D}
+.ex-tab.active{background:var(--surface2);color:var(--text);border-color:var(--volt)}
+.ex-tab-num{font-family:Anton,sans-serif;font-size:12px;width:24px;height:24px;flex-shrink:0;border-radius:50%;background:var(--bg);display:grid;place-items:center;color:var(--volt)}
+.ex-tab.active .ex-tab-num{background:var(--volt);color:#0A0A0F}
+.ex-tab.done .ex-tab-num{background:var(--volt);color:#0A0A0F}
+.ex-tab-num svg{width:14px;height:14px;stroke:currentColor;stroke-width:3;fill:none}
+.ex-tab-name{overflow:hidden;text-overflow:ellipsis}
+/* ── barra di navigazione tra le schede ── */
+.ex-nav{display:none;align-items:center;justify-content:space-between;gap:12px;margin-top:16px}
+.ex-nav:not(:empty){display:flex}
+.ex-nav-btn{flex:1;padding:12px 10px;border-radius:12px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-weight:700;font-size:14px;transition:.18s}
+.ex-nav-btn:hover:not(:disabled){border-color:var(--volt-dim)}
+.ex-nav-btn:active:not(:disabled){transform:scale(.97)}
+.ex-nav-btn:disabled{opacity:.35;cursor:default}
+.ex-nav-btn.next{background:var(--volt);color:#0A0A0F;border-color:var(--volt)}
+.ex-nav-count{font-family:Anton,sans-serif;font-size:14px;color:var(--muted);flex-shrink:0;letter-spacing:.5px}
 .ex-list{display:flex;flex-direction:column;gap:14px}
+/* schede: mostra solo l'esercizio attivo (tranne durante il riordino) */
+.ex-list.tabs:not(.compact) > .ex-card:not(.active){display:none}
 .ex-card{background:linear-gradient(180deg,var(--surface),var(--bg2));border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:border-color .25s,opacity .25s;animation:rise .45s cubic-bezier(.2,.8,.2,1) both}
 @keyframes rise{0%{opacity:0;transform:translateY(14px)}100%{opacity:1;transform:none}}
 .ex-card.done{border-color:rgba(198,255,61,.5)}
@@ -349,7 +372,9 @@ table.cmp2{border-collapse:collapse;width:100%;font-size:13px}
 
 <main>
   <div class="day-head" id="dayHead"></div>
+  <div class="ex-tabs" id="exTabs" data-testid="ex-tabs"></div>
   <div class="ex-list" id="exList"></div>
+  <div class="ex-nav" id="exNav"></div>
 </main>
 </div><!-- /trainingView -->
 
@@ -573,7 +598,7 @@ function renderDayHead() {
     </div></div>`;
 }
 
-function cardHTML(ex, i, session) {
+function cardHTML(ex, i, session, isActive) {
   const chips = [
     `<span class="chip">${ICONS.reps}${ex.sets}×${esc(ex.reps)}</span>`,
     ex.weight != null && ex.weight !== '' ? `<span class="chip">${ICONS.weight}${esc(ex.weight)} kg</span>` : '',
@@ -595,7 +620,7 @@ function cardHTML(ex, i, session) {
     <button class="set-check${l.done ? ' on' : ''}" data-testid="set-check-${i}-${j}" data-ex="${i}" data-set="${j}">${ICONS.check}</button>${prevLine}</div>`;
   }).join('');
   const allDone = ex.sets > 0 && ex.log.every(l => l.done);
-  return `<div class="ex-card${allDone ? ' done' : ''}" data-testid="exercise-card-${i}" data-exidx="${i}" style="animation-delay:${i * 0.05}s" title="Tieni premuto per spostare">
+  return `<div class="ex-card${allDone ? ' done' : ''}${isActive ? ' active' : ''}" data-testid="exercise-card-${i}" data-exidx="${i}" title="Tieni premuto per spostare">
     <div class="ex-top">
       <div class="ex-num">${i + 1}</div>
       <div class="ex-info">
@@ -611,20 +636,82 @@ function cardHTML(ex, i, session) {
     </div></div>`;
 }
 
+let activeEx = 0;
+function exDone(ex) { return ex.sets > 0 && ex.log.every(l => l.done); }
+
 function renderList() {
   const exs = day().exercises;
   if (!exs.length) {
+    $('exList').classList.remove('tabs', 'compact');
     $('exList').innerHTML = `<div class="empty">
       <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5 17.5 17.5"></path><rect x="2.5" y="9" width="4" height="6" rx="1"></rect><rect x="17.5" y="9" width="4" height="6" rx="1"></rect><path d="M6.5 12h11"></path></svg>
       <h3>Nessun esercizio</h3>
       <p>Aggiungi il primo esercizio di questo giorno oppure importa una scheda JSON.</p>
       <button class="btn btn-primary" id="emptyAdd">+ Aggiungi esercizio</button></div>`;
+    $('exTabs').innerHTML = '';
+    $('exNav').innerHTML = '';
     const b = $('emptyAdd'); if (b) b.onclick = () => openExerciseForm(null);
     return;
   }
+  if (activeEx >= exs.length) activeEx = exs.length - 1;
+  if (activeEx < 0) activeEx = 0;
   const session = lastSessionFor(day().name);
-  $('exList').innerHTML = exs.map((ex, i) => cardHTML(ex, i, session)).join('');
+  $('exList').classList.add('tabs');
+  $('exList').innerHTML = exs.map((ex, i) => cardHTML(ex, i, session, i === activeEx)).join('');
+  renderExTabs();
+  renderExNav();
 }
+
+/* ── schede degli esercizi: strip in alto + navigazione ── */
+function renderExTabs() {
+  const exs = day().exercises;
+  $('exTabs').innerHTML = exs.map((ex, i) =>
+    `<button class="ex-tab${i === activeEx ? ' active' : ''}${exDone(ex) ? ' done' : ''}" data-ex="${i}" data-testid="ex-tab-${i}">
+      <span class="ex-tab-num">${exDone(ex) ? ICONS.check : (i + 1)}</span>
+      <span class="ex-tab-name">${esc(ex.name)}</span></button>`
+  ).join('');
+}
+
+function renderExNav() {
+  const n = day().exercises.length;
+  $('exNav').innerHTML = `
+    <button class="ex-nav-btn" id="exPrev" ${activeEx <= 0 ? 'disabled' : ''}>‹ Precedente</button>
+    <span class="ex-nav-count">${activeEx + 1} / ${n}</span>
+    <button class="ex-nav-btn next" id="exNext" ${activeEx >= n - 1 ? 'disabled' : ''}>Successivo ›</button>`;
+}
+
+/* Passa alla scheda dell'esercizio i senza ricostruire tutta la lista. */
+function selectEx(i) {
+  const exs = day().exercises;
+  if (!exs.length) return;
+  activeEx = Math.max(0, Math.min(exs.length - 1, i));
+  [...$('exList').children].forEach((c, idx) => c.classList.toggle('active', idx === activeEx));
+  [...$('exTabs').children].forEach((c, idx) => c.classList.toggle('active', idx === activeEx));
+  renderExNav();
+  const at = $('exTabs').children[activeEx];
+  if (at) at.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* Prossimo esercizio non ancora completato dopo "from" (-1 se non esiste). */
+function nextIncompleteEx(from) {
+  const exs = day().exercises;
+  for (let n = 1; n <= exs.length; n++) {
+    const k = (from + n) % exs.length;
+    if (!exDone(exs[k])) return k;
+  }
+  return -1;
+}
+
+/* Navigazione tra le schede degli esercizi. */
+$('exTabs').addEventListener('click', e => {
+  const t = e.target.closest('.ex-tab');
+  if (t) selectEx(+t.dataset.ex);
+});
+$('exNav').addEventListener('click', e => {
+  if (e.target.closest('#exPrev')) selectEx(activeEx - 1);
+  else if (e.target.closest('#exNext')) selectEx(activeEx + 1);
+});
 
 /* ── serie: input e spunte ── */
 $('exList').addEventListener('input', e => {
@@ -651,9 +738,15 @@ function toggleSet(i, j, btn) {
   const card = btn.closest('.ex-card');
   card.classList.toggle('done', ex.log.every(x => x.done));
   renderDayHead();
+  renderExTabs();
   if (l.done) {
     buzz(20);
     if (ex.restSec > 0) startRestTimer(ex.restSec, nextLabel(i, j));
+    // esercizio completato: passa alla scheda del successivo ancora da fare
+    if (exDone(ex)) {
+      const nx = nextIncompleteEx(i);
+      if (nx >= 0 && nx !== i) selectEx(nx);
+    }
   }
 }
 
@@ -792,6 +885,9 @@ function dragEnd() {
     const order = [...$('exList').querySelectorAll('.ex-card')].map(c => +c.dataset.exidx);
     const exs = day().exercises;
     day().exercises = order.map(i => exs[i]);
+    // mantieni attiva la scheda che stavi spostando
+    const newActive = order.indexOf(activeEx);
+    if (newActive >= 0) activeEx = newActive;
     save();
     buzz(15);
     renderList();
@@ -823,11 +919,12 @@ $('dayBar').addEventListener('click', e => {
   if (add) {
     state.days.push({ name: 'Giorno ' + String.fromCharCode(65 + state.days.length), exercises: [] });
     state.activeDay = state.days.length - 1;
+    activeEx = 0;
     save(); render();
     return;
   }
   const tab = e.target.closest('.day-tab[data-day]');
-  if (tab) { state.activeDay = +tab.dataset.day; save(); render(); }
+  if (tab) { state.activeDay = +tab.dataset.day; activeEx = 0; save(); render(); }
 });
 
 /* ── modali ── */
@@ -877,8 +974,8 @@ function openExerciseForm(idx) {
       restSec: parseRest(b.querySelector('#fRest').value),
       note: b.querySelector('#fNote').value.trim()
     };
-    if (idx == null) day().exercises.push(ensureLog(data));
-    else { Object.assign(day().exercises[idx], data); ensureLog(day().exercises[idx]); }
+    if (idx == null) { day().exercises.push(ensureLog(data)); activeEx = day().exercises.length - 1; }
+    else { Object.assign(day().exercises[idx], data); ensureLog(day().exercises[idx]); activeEx = idx; }
     save(); closeModal(); render();
     toast(idx == null ? 'Esercizio aggiunto' : 'Esercizio aggiornato');
   };
@@ -899,6 +996,7 @@ function openExMenu(i) {
     const copy = JSON.parse(JSON.stringify(ex));
     copy.log.forEach(l => { l.done = false; l.reps = ''; l.weight = ''; });
     day().exercises.splice(i + 1, 0, copy);
+    activeEx = i + 1;
     save(); closeModal(); render(); toast('Esercizio duplicato');
   };
   b.querySelector('#mClear').onclick = () => {
