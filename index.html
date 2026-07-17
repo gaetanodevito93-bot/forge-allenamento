@@ -48,8 +48,9 @@ header{position:sticky;top:0;z-index:40;backdrop-filter:blur(18px);background:rg
 .day-tab.active .dot{background:#0A0A0F;opacity:1}
 .day-tab.add-day{background:transparent;border-style:dashed;color:var(--volt)}
 main{max-width:900px;margin:0 auto;padding:20px 18px 140px}
-.day-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:8px 0 20px}
-.day-head .title-block h2{font-family:Anton,sans-serif;font-size:32px;letter-spacing:.5px;line-height:1.05}
+.day-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin:8px 0 20px}
+.day-head .title-block{min-width:0;flex:1}
+.day-head .title-block h2{font-family:Anton,sans-serif;font-size:clamp(21px,6vw,32px);letter-spacing:.5px;line-height:1.08;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .day-head .title-block p{color:var(--muted);font-size:13px;font-weight:600;margin-top:4px}
 .day-progress{text-align:right;flex-shrink:0}
 .day-progress .ring{position:relative;width:58px;height:58px;margin-left:auto}
@@ -65,7 +66,7 @@ main{max-width:900px;margin:0 auto;padding:20px 18px 140px}
 .ex-num{font-family:Anton,sans-serif;font-size:15px;width:34px;height:34px;flex-shrink:0;border-radius:10px;background:var(--surface2);display:grid;place-items:center;color:var(--volt)}
 .ex-card.done .ex-num{background:var(--volt);color:#0A0A0F}
 .ex-info{flex:1;min-width:0}
-.ex-info h3{font-size:17px;font-weight:800;letter-spacing:-.2px}
+.ex-info h3{font-size:17px;font-weight:800;letter-spacing:-.2px;overflow-wrap:anywhere}
 .ex-meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .chip{font-size:12px;font-weight:700;padding:4px 10px;border-radius:8px;background:var(--surface2);color:var(--muted);display:inline-flex;align-items:center;gap:5px}
 .chip svg{width:13px;height:13px;stroke:var(--volt-dim)}
@@ -562,7 +563,7 @@ function renderDayHead() {
   $('fabSave').style.display = done > 0 ? 'flex' : 'none';
   $('dayHead').innerHTML = `
     <div class="title-block">
-      <h2 data-testid="day-title">${esc(d.name)}</h2>
+      <h2 data-testid="day-title" title="${esc(d.name)}">${esc(d.name)}</h2>
       <p>${n} ${n === 1 ? 'esercizio' : 'esercizi'} · ${done}/${tot} serie completate${last ? ` · ultima volta ${fmtDate(last.ts)}` : ''}</p>
     </div>
     <div class="day-progress"><div class="ring">
