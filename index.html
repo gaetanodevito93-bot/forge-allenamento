@@ -68,9 +68,15 @@ main{max-width:900px;margin:0 auto;padding:20px 18px 140px}
 .ex-tab.done .ex-tab-num{background:var(--volt);color:#0A0A0F}
 .ex-tab-num svg{width:14px;height:14px;stroke:currentColor;stroke-width:3;fill:none}
 .ex-tab-name{overflow:hidden;text-overflow:ellipsis}
-/* ── barra di navigazione tra le schede ── */
-.ex-nav{display:none;align-items:center;justify-content:space-between;gap:12px;margin-top:16px}
+/* ── barra di navigazione tra le schede: fissata in basso ── */
+.ex-nav{display:none;position:fixed;left:0;right:0;bottom:0;z-index:36;justify-content:center;
+  padding:10px 18px calc(10px + env(safe-area-inset-bottom));
+  background:rgba(10,10,15,.82);backdrop-filter:blur(18px);border-top:1px solid var(--border);
+  transition:transform .22s cubic-bezier(.2,.8,.2,1)}
 .ex-nav:not(:empty){display:flex}
+.ex-nav-inner{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;max-width:900px}
+/* mentre si digita (tastiera aperta) la barra scende per non intralciare */
+body.kb .ex-nav{transform:translateY(130%)}
 .ex-nav-btn{flex:1;padding:12px 10px;border-radius:12px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-weight:700;font-size:14px;transition:.18s}
 .ex-nav-btn:hover:not(:disabled){border-color:var(--volt-dim)}
 .ex-nav-btn:active:not(:disabled){transform:scale(.97)}
@@ -131,7 +137,7 @@ body.dragging-active{cursor:grabbing;user-select:none}
 .fab{position:fixed;right:20px;bottom:24px;z-index:35;height:56px;padding:0 22px 0 18px;border-radius:999px;background:var(--volt);color:#0A0A0F;font-weight:800;font-size:15px;display:flex;align-items:center;gap:9px;box-shadow:0 12px 34px rgba(198,255,61,.4);transition:transform .15s}
 .fab:active{transform:scale(.95)}
 .fab svg{width:22px;height:22px;stroke:#0A0A0F;stroke-width:2.5}
-.fab-save{left:20px;right:auto;background:var(--surface);color:var(--text);border:1px solid var(--volt);box-shadow:0 12px 34px rgba(0,0,0,.5)}
+.fab-save{left:20px;right:auto;bottom:calc(80px + env(safe-area-inset-bottom));background:var(--surface);color:var(--text);border:1px solid var(--volt);box-shadow:0 12px 34px rgba(0,0,0,.5)}
 .fab-save svg{stroke:var(--volt)}
 .cmp-ex{margin-bottom:18px}
 .cmp-ex h4{font-size:14px;font-weight:800;margin-bottom:8px}
@@ -302,7 +308,7 @@ table.cmp2{border-collapse:collapse;width:100%;font-size:13px}
 .timer-skip{margin-top:26px;padding:15px 40px;border-radius:999px;background:var(--volt);color:#0A0A0F;font-weight:800;font-size:16px;transition:.15s}
 .timer-skip:active{transform:scale(.96)}
 .timer-pause{margin-top:14px;color:var(--muted);font-weight:700;font-size:13px}
-#toast{position:fixed;bottom:96px;left:50%;transform:translateX(-50%) translateY(20px);z-index:90;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:12px 20px;border-radius:999px;font-weight:700;font-size:13.5px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:.3s;display:flex;align-items:center;gap:9px}
+#toast{position:fixed;bottom:calc(92px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(20px);z-index:90;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:12px 20px;border-radius:999px;font-weight:700;font-size:13.5px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:.3s;display:flex;align-items:center;gap:9px}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 #toast svg{width:17px;height:17px;stroke:var(--volt)}
 </style>
@@ -674,10 +680,11 @@ function renderExTabs() {
 
 function renderExNav() {
   const n = day().exercises.length;
-  $('exNav').innerHTML = `
+  $('exNav').innerHTML = `<div class="ex-nav-inner">
     <button class="ex-nav-btn" id="exPrev" ${activeEx <= 0 ? 'disabled' : ''}>‹ Precedente</button>
     <span class="ex-nav-count">${activeEx + 1} / ${n}</span>
-    <button class="ex-nav-btn next" id="exNext" ${activeEx >= n - 1 ? 'disabled' : ''}>Successivo ›</button>`;
+    <button class="ex-nav-btn next" id="exNext" ${activeEx >= n - 1 ? 'disabled' : ''}>Successivo ›</button>
+  </div>`;
 }
 
 /* Passa alla scheda dell'esercizio i senza ricostruire tutta la lista. */
@@ -711,6 +718,22 @@ $('exTabs').addEventListener('click', e => {
 $('exNav').addEventListener('click', e => {
   if (e.target.closest('#exPrev')) selectEx(activeEx - 1);
   else if (e.target.closest('#exNext')) selectEx(activeEx + 1);
+});
+
+/* Mentre si digita in un campo serie la tastiera copre il fondo: nascondi la
+   barra fissa. Piccolo debounce per non farla lampeggiare quando si passa da
+   un campo all'altro. */
+let kbTimer = null;
+document.addEventListener('focusin', e => {
+  if (e.target.classList && e.target.classList.contains('set-input')) {
+    clearTimeout(kbTimer); document.body.classList.add('kb');
+  }
+});
+document.addEventListener('focusout', e => {
+  if (e.target.classList && e.target.classList.contains('set-input')) {
+    clearTimeout(kbTimer);
+    kbTimer = setTimeout(() => document.body.classList.remove('kb'), 150);
+  }
 });
 
 /* ── serie: input e spunte ── */
