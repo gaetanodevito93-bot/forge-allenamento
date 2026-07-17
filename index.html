@@ -174,6 +174,84 @@ body.dragging-active{cursor:grabbing;user-select:none}
 .paste-json{width:100%;min-height:130px;resize:vertical;background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:12px 14px;color:var(--text);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;line-height:1.5}
 .paste-json:focus{outline:none;border-color:var(--volt)}
 .paste-json::placeholder{color:var(--muted)}
+/* ── viste: home / allenamento / progressi ── */
+#homeView,#progressView{display:none}
+body[data-view="home"] #homeView{display:flex}
+body[data-view="training"] #trainingView{display:block}
+body[data-view="progress"] #progressView{display:block}
+body[data-view="home"] #trainingView,body[data-view="home"] #progressView,
+body[data-view="training"] #homeView,body[data-view="training"] #progressView,
+body[data-view="progress"] #homeView,body[data-view="progress"] #trainingView{display:none}
+body:not([data-view="training"]) #fabSave,body:not([data-view="training"]) #fabAdd{display:none!important}
+body:not([data-view="progress"]) #fabAddMeas{display:none!important}
+/* ── splash ── */
+#splash{position:fixed;inset:0;z-index:100;background:var(--bg);display:grid;place-items:center;transition:opacity .5s ease,visibility .5s}
+#splash.hide{opacity:0;visibility:hidden}
+.splash-in{display:flex;flex-direction:column;align-items:center;gap:16px;animation:splashPop .6s cubic-bezier(.2,.8,.2,1) both}
+@keyframes splashPop{0%{opacity:0;transform:translateY(10px) scale(.96)}100%{opacity:1;transform:none}}
+.splash-mark{width:96px;height:96px;border-radius:26px;display:grid;place-items:center;background:linear-gradient(145deg,var(--volt),var(--volt-dim));box-shadow:0 18px 50px rgba(198,255,61,.4);animation:splashPulse 1.6s ease-in-out infinite}
+@keyframes splashPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+.splash-mark svg{width:52px;height:52px}
+.splash-in .sw{font-family:Anton,sans-serif;font-size:42px;letter-spacing:2px;line-height:1}
+.splash-in .st{font-size:12.5px;color:var(--muted);font-weight:700;letter-spacing:1px;text-transform:uppercase}
+.splash-load{width:120px;height:4px;border-radius:99px;background:var(--surface2);overflow:hidden;margin-top:6px}
+.splash-load i{display:block;height:100%;width:40%;border-radius:99px;background:var(--volt);animation:splashBar 1.05s ease-in-out infinite}
+@keyframes splashBar{0%{transform:translateX(-130%)}100%{transform:translateX(330%)}}
+/* ── home ── */
+#homeView{min-height:100vh;min-height:100dvh;flex-direction:column;justify-content:center;max-width:560px;margin:0 auto;padding:40px 22px calc(48px + env(safe-area-inset-bottom))}
+.home-brand{display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px;margin-bottom:38px}
+.home-mark{width:74px;height:74px;border-radius:21px;display:grid;place-items:center;background:linear-gradient(145deg,var(--volt),var(--volt-dim));box-shadow:0 14px 40px rgba(198,255,61,.35)}
+.home-mark svg{width:42px;height:42px}
+.home-brand h1{font-family:Anton,sans-serif;font-size:46px;letter-spacing:1.5px;line-height:1}
+.home-brand p{color:var(--muted);font-size:14px;font-weight:600}
+.home-btns{display:flex;flex-direction:column;gap:15px}
+.home-btn{display:flex;align-items:center;gap:17px;text-align:left;padding:20px;border-radius:20px;border:1px solid var(--border);background:linear-gradient(180deg,var(--surface),var(--bg2));transition:border-color .18s,transform .12s}
+.home-btn:hover{border-color:#3A3A4D}
+.home-btn:active{transform:scale(.98)}
+.home-btn .hb-ic{width:54px;height:54px;flex-shrink:0;border-radius:16px;display:grid;place-items:center}
+.home-btn .hb-ic svg{width:27px;height:27px;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.home-btn.train .hb-ic{background:var(--volt)}
+.home-btn.train .hb-ic svg{stroke:#0A0A0F}
+.home-btn.prog .hb-ic{background:var(--surface2)}
+.home-btn.prog .hb-ic svg{stroke:var(--volt)}
+.home-btn .hb-tx{min-width:0;flex:1}
+.home-btn .hb-tx strong{display:block;font-size:20px;font-weight:800;letter-spacing:-.2px}
+.home-btn .hb-tx span{font-size:12.5px;color:var(--muted);font-weight:600}
+.home-btn .hb-arrow{color:var(--muted);display:flex}
+.home-btn .hb-arrow svg{width:22px;height:22px;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+/* ── progressi ── */
+#progressMain{max-width:900px;margin:0 auto;padding:20px 18px calc(120px + env(safe-area-inset-bottom))}
+.prog-hero{background:linear-gradient(180deg,var(--surface),var(--bg2));border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+.prog-hero .ph-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:12px}
+.prog-hero .ph-date{font-size:11.5px;color:var(--volt-dim);font-weight:800;text-transform:uppercase;letter-spacing:.6px}
+.prog-hero .ph-count{font-size:12px;color:var(--muted);font-weight:700}
+.prog-hero .ph-weight{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.prog-hero .ph-weight .val{font-family:Anton,sans-serif;font-size:46px;line-height:1}
+.prog-hero .ph-weight .u{font-size:15px;color:var(--muted);font-weight:700}
+.prog-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.prog-chip{background:var(--surface2);border-radius:12px;padding:9px 12px}
+.prog-chip .pc-l{font-size:10.5px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.4px}
+.prog-chip .pc-v{font-size:16px;font-weight:800;margin-top:3px;display:flex;align-items:baseline;gap:5px}
+.prog-chip .pc-v .unit{font-size:11px;color:var(--muted);font-weight:700}
+.prog-sec-title{font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin:24px 2px 11px}
+.dl{font-weight:800;color:#9AA0AE;font-size:.8em;white-space:nowrap}
+.dl.eq{opacity:.6}
+.ph-weight .dl{font-size:15px}
+.cmp2-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:14px;-webkit-overflow-scrolling:touch}
+table.cmp2{border-collapse:collapse;width:100%;font-size:13px}
+.cmp2 th,.cmp2 td{padding:11px 13px;text-align:right;white-space:nowrap;border-bottom:1px solid rgba(42,42,58,.6)}
+.cmp2 thead th{position:sticky;top:0;background:var(--surface2);font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:800;cursor:pointer}
+.cmp2 th.metric,.cmp2 td.metric{position:sticky;left:0;text-align:left;background:var(--surface);font-weight:800;z-index:1}
+.cmp2 thead th.metric{background:var(--surface2);z-index:3;cursor:default}
+.cmp2 td .cv{font-weight:800}
+.cmp2 td .dl{display:block;margin-top:3px}
+.cmp2 td.latest,.cmp2 thead th.latest{background:rgba(198,255,61,.07)}
+.cmp2 td.metric .unit{color:var(--muted);font-weight:700;font-size:11px}
+.cmp2 tbody tr:last-child th,.cmp2 tbody tr:last-child td{border-bottom:none}
+.meas-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.meas-grid .field{margin-bottom:0}
+.field label .u2{color:var(--muted);font-weight:700;text-transform:none;letter-spacing:0}
+.menu-list{display:flex;flex-direction:column;gap:4px}
 .sheet-btn{width:100%;padding:15px 16px;display:flex;align-items:center;gap:14px;font-size:15px;font-weight:700;border-radius:12px;transition:background .15s;text-align:left}
 .sheet-btn:hover{background:var(--surface2)}
 .sheet-btn svg{width:20px;height:20px;stroke:var(--muted);flex-shrink:0}
@@ -201,8 +279,49 @@ body.dragging-active{cursor:grabbing;user-select:none}
 </style>
 </head>
 <body>
+
+<!-- SPLASH -->
+<div id="splash" aria-hidden="true">
+  <div class="splash-in">
+    <div class="splash-mark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#0A0A0F" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5 17.5 17.5M4 8l1-1M20 16l-1 1M7 4l1 1M17 19l-1-1"></path><rect x="2.5" y="9" width="4" height="6" rx="1"></rect><rect x="17.5" y="9" width="4" height="6" rx="1"></rect><path d="M6.5 12h11"></path></svg>
+    </div>
+    <div class="sw">FORGE</div>
+    <div class="st">Allenati · Misura · Progredisci</div>
+    <div class="splash-load"><i></i></div>
+  </div>
+</div>
+
+<!-- HOME -->
+<div id="homeView">
+  <div class="home-brand">
+    <div class="home-mark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#0A0A0F" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5 17.5 17.5M4 8l1-1M20 16l-1 1M7 4l1 1M17 19l-1-1"></path><rect x="2.5" y="9" width="4" height="6" rx="1"></rect><rect x="17.5" y="9" width="4" height="6" rx="1"></rect><path d="M6.5 12h11"></path></svg>
+    </div>
+    <h1>FORGE</h1>
+    <p>Cosa vuoi fare oggi?</p>
+  </div>
+  <div class="home-btns">
+    <button class="home-btn train" id="goTraining" data-testid="home-training">
+      <span class="hb-ic"><svg viewBox="0 0 24 24"><path d="M6.5 8v8M9.5 6.5v11M14.5 6.5v11M17.5 8v8M9.5 12h5M3.5 10.5v3M20.5 10.5v3"></path></svg></span>
+      <span class="hb-tx"><strong>Allenamento</strong><span>La tua scheda: serie, carichi e recuperi</span></span>
+      <span class="hb-arrow"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"></path></svg></span>
+    </button>
+    <button class="home-btn prog" id="goProgress" data-testid="home-progress">
+      <span class="hb-ic"><svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8"></path><path d="M15 7h6v6"></path></svg></span>
+      <span class="hb-tx"><strong>Progressi</strong><span>Peso, misure e confronto nel tempo</span></span>
+      <span class="hb-arrow"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"></path></svg></span>
+    </button>
+  </div>
+</div>
+
+<!-- ALLENAMENTO -->
+<div id="trainingView">
 <header>
   <div class="header-inner">
+    <button class="icon-btn" id="btnHome" title="Home" aria-label="Home">
+      <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"></path><path d="M5 10v10h5v-6h4v6h5V10"></path></svg>
+    </button>
     <div class="logo">
       <div class="logo-mark">
         <svg viewBox="0 0 24 24" fill="none" stroke="#0A0A0F" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5 17.5 17.5M4 8l1-1M20 16l-1 1M7 4l1 1M17 19l-1-1"></path><rect x="2.5" y="9" width="4" height="6" rx="1"></rect><rect x="17.5" y="9" width="4" height="6" rx="1"></rect><path d="M6.5 12h11"></path></svg>
@@ -231,6 +350,7 @@ body.dragging-active{cursor:grabbing;user-select:none}
   <div class="day-head" id="dayHead"></div>
   <div class="ex-list" id="exList"></div>
 </main>
+</div><!-- /trainingView -->
 
 <button class="fab fab-save" id="fabSave" data-testid="save-session-btn" style="display:none">
   <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><path d="M4 22v-7"></path></svg>
@@ -241,6 +361,36 @@ body.dragging-active{cursor:grabbing;user-select:none}
   <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
   Esercizio
 </button>
+
+<!-- PROGRESSI -->
+<div id="progressView">
+<header>
+  <div class="header-inner">
+    <button class="icon-btn" id="btnHomeP" title="Home" aria-label="Home">
+      <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"></path><path d="M5 10v10h5v-6h4v6h5V10"></path></svg>
+    </button>
+    <div class="logo">
+      <div class="logo-mark" style="background:var(--surface2);box-shadow:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--volt)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"></path><path d="M15 7h6v6"></path></svg>
+      </div>
+      <div>
+        <h1 style="font-size:22px">PROGRESSI</h1>
+        <div class="prog-name">Peso &amp; misure</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn" id="btnProgMenu" title="Opzioni" aria-label="Opzioni">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1.5"></circle><circle cx="12" cy="12" r="1.5"></circle><circle cx="12" cy="19" r="1.5"></circle></svg>
+      </button>
+    </div>
+  </div>
+</header>
+<main id="progressMain"></main>
+<button class="fab" id="fabAddMeas" data-testid="add-measurement-btn">
+  <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+  Misurazione
+</button>
+</div><!-- /progressView -->
 
 <input type="file" id="fileInput" accept="application/json,.json" style="display:none">
 
@@ -314,6 +464,21 @@ function normalizeState(s) {
   s.activeDay = Math.min(Math.max(0, s.activeDay | 0), s.days.length - 1);
   s.days.forEach(d => { d.name = String(d.name || 'Giorno'); (d.exercises || (d.exercises = [])).forEach(ensureLog); });
   if (!s.history || typeof s.history !== 'object' || Array.isArray(s.history)) s.history = {};
+  if (!Array.isArray(s.measurements)) s.measurements = [];
+  s.measurements = s.measurements
+    .filter(m => m && typeof m === 'object' && m.date)
+    .map(m => {
+      const values = {};
+      if (m.values && typeof m.values === 'object') {
+        for (const k in m.values) { const n = parseFloat(m.values[k]); if (!isNaN(n)) values[k] = n; }
+      }
+      return {
+        id: String(m.id || ('m' + Math.random().toString(36).slice(2, 9))),
+        date: String(m.date),
+        values,
+        note: String(m.note || '')
+      };
+    });
   return s;
 }
 function load() {
@@ -1190,8 +1355,175 @@ function downloadDocs() {
   toast('Istruzioni scaricate');
 }
 
+/* ═══════════════ PROGRESSI — peso & misure ═══════════════ */
+const MEAS_FIELDS = [
+  { key: 'weight',  label: 'Peso',         unit: 'kg' },
+  { key: 'bodyFat', label: 'Massa grassa', unit: '%'  },
+  { key: 'neck',    label: 'Collo',        unit: 'cm' },
+  { key: 'chest',   label: 'Petto',        unit: 'cm' },
+  { key: 'waist',   label: 'Vita',         unit: 'cm' },
+  { key: 'hips',    label: 'Fianchi',      unit: 'cm' },
+  { key: 'arm',     label: 'Braccio',      unit: 'cm' },
+  { key: 'thigh',   label: 'Coscia',       unit: 'cm' },
+  { key: 'calf',    label: 'Polpaccio',    unit: 'cm' }
+];
+const MEAS_LABEL = k => (MEAS_FIELDS.find(f => f.key === k) || {}).label || k;
+const MEAS_UNIT  = k => (MEAS_FIELDS.find(f => f.key === k) || {}).unit || '';
+
+const measList = () => state.measurements;
+const sortedMeas = () => measList().slice().sort((a, b) =>
+  a.date < b.date ? -1 : a.date > b.date ? 1 : (a.id < b.id ? -1 : 1)); // cronologico crescente
+
+function fmtNum(n) { if (n == null || isNaN(n)) return '—'; return (Math.round(n * 10) / 10).toString().replace('.', ','); }
+function fmtDate(iso) { const p = String(iso).split('-'); return p.length === 3 ? `${p[2]}/${p[1]}/${p[0].slice(2)}` : String(iso); }
+function todayISO() { const d = new Date(), p = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`; }
+
+/* Δ di list[idx] rispetto al precedente valore non vuoto della stessa misura. */
+function prevValue(list, idx, key) {
+  for (let i = idx - 1; i >= 0; i--) { const v = list[i].values[key]; if (v != null && !isNaN(v)) return v; }
+  return null;
+}
+function deltaHTML(list, idx, key) {
+  const cur = list[idx].values[key];
+  if (cur == null || isNaN(cur)) return '';
+  const pv = prevValue(list, idx, key);
+  if (pv == null) return '';
+  const d = Math.round((cur - pv) * 10) / 10;
+  if (d === 0) return `<span class="dl eq">±0</span>`;
+  return `<span class="dl">${d > 0 ? '▲' : '▼'} ${fmtNum(Math.abs(d))}</span>`;
+}
+
+/* ── navigazione tra le viste ── */
+function setView(v) {
+  document.body.setAttribute('data-view', v);
+  if (v === 'training') render();
+  if (v === 'progress') renderProgress();
+  window.scrollTo(0, 0);
+}
+
+function renderProgress() {
+  const main = $('progressMain');
+  const list = sortedMeas();
+  if (!list.length) {
+    main.innerHTML = `<div class="empty">
+      <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"></path><path d="M15 7h6v6"></path></svg>
+      <h3>Inizia a monitorare</h3>
+      <p>Registra peso e misure con costanza per vedere i progressi reali nel tempo. Bastano pochi secondi: puoi compilare solo i valori che ti interessano.</p>
+      <button class="btn btn-primary" id="emptyAdd">Prima misurazione</button>
+    </div>`;
+    $('emptyAdd').onclick = () => openMeasurementForm();
+    return;
+  }
+  const i = list.length - 1;
+  const latest = list[i];
+  const w = latest.values.weight;
+  const chips = ['waist', 'chest', 'arm', 'thigh'].filter(k => latest.values[k] != null).map(k =>
+    `<div class="prog-chip"><div class="pc-l">${esc(MEAS_LABEL(k))}</div><div class="pc-v">${fmtNum(latest.values[k])}<span class="unit">${MEAS_UNIT(k)}</span>${deltaHTML(list, i, k)}</div></div>`).join('');
+  const hero = `<div class="prog-hero">
+    <div class="ph-top"><div class="ph-date">Ultima · ${esc(fmtDate(latest.date))}</div><div class="ph-count">${list.length} ${list.length === 1 ? 'rilevazione' : 'rilevazioni'}</div></div>
+    <div class="ph-weight">${w != null ? `<span class="val">${fmtNum(w)}</span><span class="u">kg</span> ${deltaHTML(list, i, 'weight')}` : `<span class="u">Nessun peso in questa rilevazione</span>`}</div>
+    ${chips ? `<div class="prog-chips">${chips}</div>` : ''}
+    ${latest.note ? `<div class="hint" style="margin-top:14px">${esc(latest.note)}</div>` : ''}
+  </div>`;
+  main.innerHTML = hero + `<div class="prog-sec-title">Tabella comparativa</div>` + buildMeasTable(list) +
+    `<div class="hint" style="margin-top:14px">Tocca una data nella tabella per modificare o eliminare quella rilevazione. Le variazioni (▲▼) sono rispetto alla misura precedente.</div>`;
+  main.querySelectorAll('th[data-mid]').forEach(el => el.onclick = () => openMeasurementForm(el.dataset.mid));
+}
+
+function buildMeasTable(list) {
+  const cols = list.slice().reverse(); // più recente a sinistra
+  const fields = MEAS_FIELDS.filter(f => list.some(e => e.values[f.key] != null && !isNaN(e.values[f.key])));
+  if (!fields.length) return '';
+  const head = `<thead><tr><th class="metric">Misura</th>${cols.map((e, ci) =>
+    `<th class="${ci === 0 ? 'latest' : ''}" data-mid="${esc(e.id)}">${esc(fmtDate(e.date))}</th>`).join('')}</tr></thead>`;
+  const body = fields.map(f => {
+    const cells = cols.map((e, ci) => {
+      const idxAsc = list.length - 1 - ci;
+      const v = e.values[f.key];
+      const cell = (v == null || isNaN(v))
+        ? `<span class="cv" style="color:var(--muted)">—</span>`
+        : `<span class="cv">${fmtNum(v)}</span>${deltaHTML(list, idxAsc, f.key)}`;
+      return `<td class="${ci === 0 ? 'latest' : ''}">${cell}</td>`;
+    }).join('');
+    return `<tr><th class="metric">${esc(f.label)} <span class="unit">${f.unit}</span></th>${cells}</tr>`;
+  }).join('');
+  return `<div class="cmp2-wrap"><table class="cmp2">${head}<tbody>${body}</tbody></table></div>`;
+}
+
+function openMeasurementForm(id) {
+  const editing = id ? measList().find(m => m.id === id) : null;
+  const v = editing ? editing.values : {};
+  const grid = MEAS_FIELDS.map(f => `
+    <div class="field">
+      <label>${esc(f.label)} <span class="u2">(${f.unit})</span></label>
+      <input type="number" inputmode="decimal" step="0.1" min="0" id="mf_${f.key}" value="${v[f.key] != null ? String(v[f.key]) : ''}" placeholder="—">
+    </div>`).join('');
+  const b = openModal(editing ? 'Modifica misurazione' : 'Nuova misurazione', `
+    <div class="field"><label>Data</label><input type="date" id="mf_date" value="${esc(editing ? editing.date : todayISO())}" max="${todayISO()}"></div>
+    <div class="meas-grid">${grid}</div>
+    <div class="field"><label>Note</label><textarea id="mf_note" placeholder="Es. a digiuno, fase di scarico…">${esc(editing ? editing.note || '' : '')}</textarea></div>
+    <div class="modal-foot${editing ? '' : ' stack'}">
+      ${editing ? `<button class="btn btn-danger" id="mfDel">Elimina</button>` : ''}
+      <button class="btn btn-primary btn-block" id="mfSave">Salva misurazione</button>
+    </div>
+    <div class="hint" style="margin-top:14px">Consiglio da coach: misura sempre nelle <b>stesse condizioni</b> (appena sveglio, a digiuno) e con il metro ben aderente ma non stretto. Per gli arti misura sempre lo <b>stesso lato</b>. La costanza conta più della precisione assoluta.</div>`);
+  b.querySelector('#mfSave').onclick = () => {
+    const date = b.querySelector('#mf_date').value || todayISO();
+    const values = {}; let any = false;
+    MEAS_FIELDS.forEach(f => {
+      const raw = b.querySelector('#mf_' + f.key).value.trim().replace(',', '.');
+      if (raw !== '') { const n = parseFloat(raw); if (!isNaN(n) && n >= 0) { values[f.key] = Math.round(n * 100) / 100; any = true; } }
+    });
+    if (!any) { toast('Inserisci almeno un valore'); return; }
+    const note = b.querySelector('#mf_note').value.trim();
+    if (editing) { editing.date = date; editing.values = values; editing.note = note; }
+    else { measList().push({ id: 'm' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), date, values, note }); }
+    save(); closeModal(); renderProgress();
+    toast(editing ? 'Misurazione aggiornata ✔' : 'Misurazione salvata ✔');
+  };
+  if (editing) b.querySelector('#mfDel').onclick = () =>
+    confirmModal('Elimina misurazione', `Eliminare la rilevazione del ${fmtDate(editing.date)}?`, 'Elimina', () => {
+      state.measurements = measList().filter(m => m.id !== id);
+      save(); closeModal(); renderProgress(); toast('Misurazione eliminata');
+    });
+}
+
+function openProgressMenu() {
+  const b = openModal('Progressi', `<div class="menu-list">
+    <button class="btn btn-ghost btn-block" id="pAdd">Nuova misurazione</button>
+    <button class="btn btn-ghost btn-block" id="pCsv">Esporta in CSV</button>
+    <button class="btn btn-danger btn-block" id="pReset">Azzera tutte le misurazioni</button>
+  </div>`);
+  b.querySelector('#pAdd').onclick = () => { closeModal(); openMeasurementForm(); };
+  b.querySelector('#pCsv').onclick = () => { closeModal(); exportMeasCSV(); };
+  b.querySelector('#pReset').onclick = () => confirmModal('Azzera misurazioni', 'Eliminare tutte le misurazioni salvate? L\'operazione non è reversibile.', 'Azzera', () => {
+    state.measurements = []; save(); closeModal(); renderProgress(); toast('Misurazioni azzerate');
+  });
+}
+
+function exportMeasCSV() {
+  const list = sortedMeas();
+  if (!list.length) { toast('Nessuna misurazione da esportare'); return; }
+  const cols = MEAS_FIELDS.filter(f => list.some(e => e.values[f.key] != null));
+  const header = ['Data', ...cols.map(f => `${f.label} (${f.unit})`), 'Note'];
+  const rows = list.map(e => [e.date, ...cols.map(f => e.values[f.key] != null ? String(e.values[f.key]).replace('.', ',') : ''), (e.note || '').replace(/[\r\n;]+/g, ' ')]);
+  const csv = [header, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(';')).join('\r\n');
+  downloadText('forge-progressi.csv', '﻿' + csv, 'text/csv;charset=utf-8');
+  toast('Progressi esportati (CSV)');
+}
+
+/* ── wiring viste ── */
+$('goTraining').onclick = () => setView('training');
+$('goProgress').onclick = () => setView('progress');
+$('btnHome').onclick = () => setView('home');
+$('btnHomeP').onclick = () => setView('home');
+$('fabAddMeas').onclick = () => openMeasurementForm();
+$('btnProgMenu').onclick = openProgressMenu;
+
 /* ── avvio ── */
 render();
+setView('home');
+setTimeout(() => { const s = $('splash'); if (s) s.classList.add('hide'); }, 1300);
 
 /* ── PWA: registrazione service worker ── */
 if ('serviceWorker' in navigator) {
