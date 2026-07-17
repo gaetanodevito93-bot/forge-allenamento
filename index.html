@@ -871,6 +871,10 @@ function openImport() {
       <p>oppure tocca per sceglierlo</p>
     </div>
     <div class="or-sep">oppure incolla il testo</div>
+    <button class="btn btn-ghost btn-block" id="pasteClip" style="margin-bottom:10px">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path></svg>
+      Incolla dagli appunti
+    </button>
     <textarea id="pasteJson" class="paste-json" spellcheck="false" autocapitalize="off" autocorrect="off" placeholder='Incolla qui tutto il testo JSON…&#10;{"programName":"…","days":[…]}'></textarea>
     <button class="btn btn-primary btn-block" id="pasteLoad" style="margin-top:10px">Carica dal testo incollato</button>
     <div class="hint">Comodo da telefono: se la tua AI ti ha dato solo il <b>testo</b> (non un file), incollalo qui. Poi potrai scegliere se <b>sostituire</b> la scheda o <b>aggiungere</b> i giorni. Formato: <code>{"programName":"…","days":[{"name":"…","exercises":[…]}]}</code> — scarica le istruzioni per l'AI dal menu per il formato completo.</div>`);
@@ -888,6 +892,24 @@ function openImport() {
     if (!txt.trim()) { toast('Incolla prima il testo JSON'); return; }
     tryImportText(txt);
   };
+  const clipBtn = b.querySelector('#pasteClip');
+  if (navigator.clipboard && navigator.clipboard.readText) {
+    clipBtn.onclick = async () => {
+      let txt;
+      try {
+        txt = await navigator.clipboard.readText();
+      } catch (_) {
+        b.querySelector('#pasteJson').focus();
+        toast('Permesso appunti negato: incolla nel riquadro');
+        return;
+      }
+      if (!txt || !txt.trim()) { toast('Gli appunti sono vuoti'); return; }
+      b.querySelector('#pasteJson').value = txt;
+      tryImportText(txt);
+    };
+  } else {
+    clipBtn.style.display = 'none'; // browser senza accesso agli appunti (es. Firefox)
+  }
 }
 $('fileInput').addEventListener('change', function () {
   if (this.files && this.files[0]) readImportFile(this.files[0]);
