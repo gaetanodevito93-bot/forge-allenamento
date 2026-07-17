@@ -1286,10 +1286,10 @@ function openFinishModal() {
   const b = openModal('Fine allenamento', `
     <p style="color:var(--muted);font-size:14px;margin-bottom:18px">Hai completato <b style="color:var(--text)">${done} serie su ${tot}</b>.
     La sessione di oggi (ripetizioni e pesi inseriti) viene salvata nello storico di "${esc(day().name)}" e la ritroverai come "ultima volta" al prossimo allenamento.</p>
-    <button class="btn btn-primary btn-block" id="finSaveClear" style="margin-bottom:10px">Salva e prepara la prossima</button>
-    <button class="btn btn-ghost btn-block" id="finSaveOnly">Salva soltanto</button>`);
+    <button class="btn btn-primary btn-block" id="finSaveClear" style="margin-bottom:10px">Salva e resetta giornata</button>
+    <button class="btn btn-ghost btn-block" id="finBack">Indietro</button>`);
   b.querySelector('#finSaveClear').onclick = () => { saveSession(true); closeModal(); };
-  b.querySelector('#finSaveOnly').onclick = () => { saveSession(false); closeModal(); };
+  b.querySelector('#finBack').onclick = () => closeModal();
 }
 
 function saveSession(clearAfter) {
