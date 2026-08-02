@@ -809,11 +809,13 @@ const DEFAULT_STATE = () => ({
     name: 'Giorno A — Full Body',
     exercises: [
       { name: 'Panca piana', sets: 4, reps: '8-12', weight: 50, restSec: 90, note: 'Controlla la discesa' },
-      { name: 'Plank', sets: 3, reps: '45s', weight: null, restSec: 60, note: 'Addome contratto' },
       { name: 'Squat con bilanciere', sets: 4, reps: '8-10', weight: 60, restSec: 120, note: 'Schiena dritta, scendi sotto il parallelo' },
-      { name: 'Rematore manubrio', sets: 3, reps: '10-12', weight: 22, restSec: 75, note: '' }
+      { name: 'Rematore manubrio', sets: 3, reps: '10-12', weight: 22, restSec: 75, note: '' },
+      { name: 'Plank', sets: 3, reps: '45s', weight: null, restSec: 60, note: 'Addome contratto' }
     ]
-  }]
+  }],
+  history: {},
+  measurements: []
 });
 
 /* ── libreria di esercizi predefiniti ── */
@@ -3031,25 +3033,6 @@ function openCoachBookingModal(planName) {
     buzz([80, 40, 80]);
     toast('Richiesta inviata col Coach! Ti ricontatteremo a breve 💪');
   };
-}
-
-/* ── seed misurazioni di test (RIMUOVERE dopo il test) ── */
-if (!state.measurements || !state.measurements.length) {
-  state.measurements = [
-    { id:'s01', date:'2026-02-01', values:{ weight:88.2, bodyFat:22.5, neck:39, chest:104, waist:92, hips:102, arm:33.5, thigh:58, calf:38 }, note:'Inizio programma, a digiuno' },
-    { id:'s02', date:'2026-02-15', values:{ weight:87.5, bodyFat:22, chest:104, waist:91, arm:33.5, thigh:58.2 }, note:'' },
-    { id:'s03', date:'2026-03-01', values:{ weight:86.8, bodyFat:21.2, neck:39, chest:104.5, waist:90, hips:101.5, arm:34, thigh:58.5, calf:38 }, note:'Primo mese completato' },
-    { id:'s04', date:'2026-03-15', values:{ weight:86, bodyFat:20.5, chest:104.5, waist:89.5, arm:34, thigh:58.5 }, note:'' },
-    { id:'s05', date:'2026-04-01', values:{ weight:85.1, bodyFat:19.8, neck:39.5, chest:105, waist:88, hips:100.5, arm:34.5, thigh:59, calf:38.2 }, note:'Secondo mese, buoni progressi' },
-    { id:'s06', date:'2026-04-15', values:{ weight:84.6, bodyFat:19.2, chest:105, waist:87.5, arm:34.5, thigh:59 }, note:'Aumentato volume gambe' },
-    { id:'s07', date:'2026-05-01', values:{ weight:83.9, bodyFat:18.5, neck:39.5, chest:105.5, waist:86.5, hips:99.5, arm:35, thigh:59.5, calf:38.5 }, note:'Terzo mese, definizione visibile' },
-    { id:'s08', date:'2026-05-15', values:{ weight:83.4, bodyFat:18, chest:106, waist:86, arm:35.2, thigh:59.5 }, note:'' },
-    { id:'s09', date:'2026-06-01', values:{ weight:82.7, bodyFat:17.2, neck:40, chest:106, waist:85, hips:99, arm:35.5, thigh:60, calf:38.8 }, note:'Quarto mese, panca +10kg dal primo giorno' },
-    { id:'s10', date:'2026-06-15', values:{ weight:82.3, bodyFat:16.8, chest:106.5, waist:84.5, arm:35.5, thigh:60 }, note:'' },
-    { id:'s11', date:'2026-07-01', values:{ weight:81.5, bodyFat:16, neck:40, chest:107, waist:83.5, hips:98, arm:36, thigh:60.5, calf:39 }, note:'Quinto mese, fase di mantenimento' },
-    { id:'s12', date:'2026-08-01', values:{ weight:81, bodyFat:15.5, neck:40.5, chest:107.5, waist:83, hips:97.5, arm:36.5, thigh:61, calf:39.2 }, note:'Sesto mese — risultato finale 🔥' }
-  ];
-  save();
 }
 
 function renderCloudAuthUI(user) {
