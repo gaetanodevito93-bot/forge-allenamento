@@ -1,7 +1,7 @@
 /* FORGE — service worker (offline-first PWA) */
 'use strict';
 
-const VERSION = 'forge-v12';
+const VERSION = 'forge-v15';
 const APP_SHELL = `${VERSION}-shell`;
 const RUNTIME = `${VERSION}-runtime`;
 
@@ -9,6 +9,7 @@ const RUNTIME = `${VERSION}-runtime`;
 const PRECACHE_URLS = [
   './',
   './index.html',
+  './firebase-config.js',
   './manifest.webmanifest',
   './icon-192.png',
   './icon-512.png',
