@@ -1797,7 +1797,7 @@ function openAppMenu() {
   const b = openModal('Menu', `
     <div style="display:flex;flex-direction:column;gap:16px">
       <div>
-        <div class="prog-sec-title" style="margin:0 0 8px 2px">☁️ Account &amp; Sincronizzazione Cloud</div>
+        <div class="prog-sec-title" style="margin:0 0 8px 2px">☁️ Gestione Cloud</div>
         <div class="menu-list">
           <button class="sheet-btn" id="aCloudAccount">
             <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
@@ -1809,13 +1809,27 @@ function openAppMenu() {
           </button>
           <button class="sheet-btn" id="aLoadFromCloudBtn">
             <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="M7 10l5 5 5-5"></path><path d="M12 15V3"></path></svg>
-            Carica scheda dal Cloud 📥
+            Seleziona / Carica scheda dal Cloud 📥
           </button>
         </div>
       </div>
 
       <div>
-        <div class="prog-sec-title" style="margin:0 0 8px 2px">🏋️ Allenamento &amp; Libreria</div>
+        <div class="prog-sec-title" style="margin:0 0 8px 2px">💾 Scheda Locale (Offline)</div>
+        <div class="menu-list">
+          <button class="sheet-btn" id="aSaveLocalBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+            Salva scheda in locale
+          </button>
+          <button class="sheet-btn" id="aLoadLocalBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+            Carica scheda da file locale
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <div class="prog-sec-title" style="margin:0 0 8px 2px">🏋️ Esercizi &amp; Giorni</div>
         <div class="menu-list">
           <button class="sheet-btn" data-testid="menu-add-exercise" id="aAddEx"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg>Aggiungi esercizio a questa giornata</button>
           <button class="sheet-btn" id="aManageLib"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>Gestisci Libreria Esercizi</button>
@@ -1825,17 +1839,7 @@ function openAppMenu() {
       </div>
 
       <div>
-        <div class="prog-sec-title" style="margin:0 0 8px 2px">💾 Dati, Import &amp; Backup</div>
-        <div class="menu-list">
-          <button class="sheet-btn" data-testid="menu-import" id="aImport"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="M12 3v13m0 0-4-4m4 4 4-4"></path></svg>Importa scheda JSON</button>
-          <button class="sheet-btn" data-testid="menu-export" id="aExport"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="M12 16V3m0 13 4-4m-4 4-4-4"></path></svg>Esporta scheda JSON</button>
-          <button class="sheet-btn" data-testid="menu-backup" id="aBackup"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6"></path><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2M9 13h6"></path></svg>Esporta backup completo</button>
-          <button class="sheet-btn" data-testid="menu-docs" id="aDocs"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg>Scarica istruzioni per l'AI</button>
-        </div>
-      </div>
-
-      <div>
-        <div class="prog-sec-title" style="margin:0 0 8px 2px">⚠️ Zona Pericolo &amp; Reset</div>
+        <div class="prog-sec-title" style="margin:0 0 8px 2px">⚠️ Reset</div>
         <div class="menu-list">
           <button class="sheet-btn" id="aResetDay"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 4v4h4"></path></svg>Azzera progressi del giorno</button>
           ${canDelDay ? `<button class="sheet-btn danger" id="aDelDay"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path></svg>Elimina questo giorno</button>` : ''}
@@ -1849,7 +1853,11 @@ function openAppMenu() {
   const btnSaveC = b.querySelector('#aSaveToCloudBtn');
   if (btnSaveC) btnSaveC.onclick = () => { closeModal(); saveSchedaToCloud(); };
   const btnLoadC = b.querySelector('#aLoadFromCloudBtn');
-  if (btnLoadC) btnLoadC.onclick = () => { closeModal(); loadSchedaFromCloud(); };
+  if (btnLoadC) btnLoadC.onclick = () => { closeModal(); openCloudProgramSelector(); };
+  const btnSaveL = b.querySelector('#aSaveLocalBtn');
+  if (btnSaveL) btnSaveL.onclick = () => { closeModal(); exportJSON(); };
+  const btnLoadL = b.querySelector('#aLoadLocalBtn');
+  if (btnLoadL) btnLoadL.onclick = () => { closeModal(); openImport(); };
   b.querySelector('#aAddEx').onclick = () => { closeModal(); openExerciseForm(null); };
   b.querySelector('#aManageLib').onclick = () => { closeModal(); openLibraryManager(); };
   b.querySelector('#aCompare').onclick = () => { closeModal(); openCompare(); };
@@ -1880,29 +1888,81 @@ async function saveSchedaToCloud() {
   const user = window.FORGE_CLOUD ? FORGE_CLOUD.getUser() : null;
   if (!user) { openCloudAccountModal(); return; }
   updateCloudDot('syncing');
-  const ok = await FORGE_CLOUD.saveStateToCloud(state);
+  const ok = await FORGE_CLOUD.saveSchedaToCloudList(state.programName, state);
   updateCloudDot(ok ? 'synced' : 'offline');
-  if (ok) toast('Scheda salvata nel Cloud! ☁️');
+  if (ok) toast(`Scheda "${state.programName}" salvata nel Cloud! ☁️`);
   else toast('Errore salva Cloud: verifica regole Firestore');
 }
 
-async function loadSchedaFromCloud() {
+async function openCloudProgramSelector() {
   const user = window.FORGE_CLOUD ? FORGE_CLOUD.getUser() : null;
   if (!user) { openCloudAccountModal(); return; }
-  confirmModal('Carica scheda dal Cloud 📥', 'Vuoi caricare l\'ultima scheda salvata nel Cloud? La scheda attuale sul browser verrà sostituita con quella salvata online.', 'Carica dal Cloud', async () => {
-    updateCloudDot('syncing');
-    const cloudState = await FORGE_CLOUD.fetchCloudState();
-    if (cloudState && cloudState.days && cloudState.days.length) {
-      state = normalizeState(cloudState);
-      save(true);
-      render();
-      if (document.body.getAttribute('data-view') === 'progress') renderProgress();
-      updateCloudDot('synced');
-      toast('Scheda caricata dal Cloud! 📥');
-    } else {
-      updateCloudDot('synced');
-      toast('Nessuna scheda trovata nel Cloud per questo account.');
-    }
+
+  toast('Recupero schede dal Cloud...');
+  const schede = await FORGE_CLOUD.fetchCloudSchedeList();
+
+  if (!schede || !schede.length) {
+    openModal('Schede nel Cloud 📥', `
+      <p style="color:var(--muted);font-size:14px;margin-bottom:18px">Nessuna scheda salvata nel tuo account Cloud.</p>
+      <button class="btn btn-primary btn-block" id="btnSaveNowCloud">☁️ Salva la scheda attuale nel Cloud</button>`);
+    const btnS = document.querySelector('#btnSaveNowCloud');
+    if (btnS) btnS.onclick = () => { closeModal(); saveSchedaToCloud(); };
+    return;
+  }
+
+  let html = `<p style="font-size:13.5px;color:var(--muted);margin-bottom:16px">Scegli quale scheda salvata nel tuo profilo Google caricare sull'app:</p><div style="display:flex;flex-direction:column;gap:10px;max-height:360px;overflow-y:auto;padding-right:4px">`;
+
+  schede.forEach((s) => {
+    const dt = s.updatedAt ? new Date(s.updatedAt).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' }) : 'Data n.d.';
+    const daysN = s.daysCount || (s.state && s.state.days ? s.state.days.length : 0);
+
+    html += `
+      <div style="background:var(--surface2);border-radius:14px;padding:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid rgba(255,255,255,.05)">
+        <div style="min-width:0;flex:1">
+          <div style="font-weight:800;font-size:15px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.name || 'Scheda')}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">${daysN} giorni · Salvata il ${dt}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <button class="btn btn-primary btn-sm btnSelectCloud" data-id="${esc(s.id)}" style="font-size:12.5px;padding:6px 12px">Carica</button>
+          <button class="btn btn-ghost btn-sm btnDelCloud" data-id="${esc(s.id)}" data-name="${esc(s.name)}" style="color:var(--coral);padding:6px 8px" title="Elimina dal Cloud">🗑️</button>
+        </div>
+      </div>`;
+  });
+
+  html += `</div>`;
+
+  const b = openModal('Seleziona Scheda dal Cloud 📥', html);
+
+  b.querySelectorAll('.btnSelectCloud').forEach(btn => {
+    btn.onclick = () => {
+      const id = btn.getAttribute('data-id');
+      const target = schede.find(x => x.id === id);
+      if (target && target.state) {
+        confirmModal('Carica Scheda', `Caricare la scheda "${target.name}"? La scheda locale attuale verrà sostituita.`, 'Carica', () => {
+          closeModal();
+          state = normalizeState(target.state);
+          save(true);
+          render();
+          if (document.body.getAttribute('data-view') === 'progress') renderProgress();
+          toast(`Scheda "${target.name}" caricata con successo! 📥`);
+        });
+      }
+    };
+  });
+
+  b.querySelectorAll('.btnDelCloud').forEach(btn => {
+    btn.onclick = () => {
+      const id = btn.getAttribute('data-id');
+      const name = btn.getAttribute('data-name');
+      confirmModal('Elimina Scheda Cloud', `Eliminare definitivamente la scheda "${name}" dal Cloud?`, 'Elimina', async () => {
+        closeModal();
+        const ok = await FORGE_CLOUD.deleteCloudScheda(id);
+        if (ok) {
+          toast('Scheda eliminata dal Cloud');
+          openCloudProgramSelector();
+        }
+      });
+    };
   });
 }
 
@@ -1932,7 +1992,7 @@ function openCloudAccountModal() {
       </div>`);
 
     b.querySelector('#caSaveCloud').onclick = () => { closeModal(); saveSchedaToCloud(); };
-    b.querySelector('#caLoadCloud').onclick = () => { closeModal(); loadSchedaFromCloud(); };
+    b.querySelector('#caLoadCloud').onclick = () => { closeModal(); openCloudProgramSelector(); };
     b.querySelector('#caLogout').onclick = () => {
       confirmModal('Disconnetti', 'Vuoi disconnetterti dal tuo account Google? I dati locali rimarranno sul browser.', 'Disconnetti', async () => {
         if (window.FORGE_CLOUD) await FORGE_CLOUD.logOut();

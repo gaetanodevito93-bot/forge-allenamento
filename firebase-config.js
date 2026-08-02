@@ -168,6 +168,79 @@
     }
   }
 
+  // Salva una scheda specifica nel Cloud con nome e id
+  async function saveSchedaToCloudList(schedaName, state) {
+    if (!db || !currentUser) return false;
+    try {
+      const userRef = db.collection('users').doc(currentUser.uid);
+      const name = schedaName || state.programName || 'La mia Scheda';
+      const safeId = 'scheda_' + String(name).toLowerCase().replace(/[^a-z0-9]/g, '_');
+
+      const entry = {
+        id: safeId,
+        name: name,
+        updatedAt: Date.now(),
+        daysCount: (state.days || []).length,
+        state: state
+      };
+
+      await userRef.set({
+        activeSchedaId: safeId,
+        state: state,
+        [`schede.${safeId}`]: entry
+      }, { merge: true });
+
+      return true;
+    } catch (err) {
+      console.error('Errore salvataggio scheda Cloud:', err);
+      if (err.code === 'permission-denied' && typeof toast === 'function') {
+        toast('Errore salva cloud: Attiva le Regole su Firestore Console');
+      }
+      return false;
+    }
+  }
+
+  // Ottiene la lista di tutte le schede salvate nel Cloud dall'utente
+  async function fetchCloudSchedeList() {
+    if (!db || !currentUser) return [];
+    try {
+      const doc = await db.collection('users').doc(currentUser.uid).get();
+      if (doc.exists) {
+        const data = doc.data();
+        if (data && data.schede && typeof data.schede === 'object') {
+          return Object.values(data.schede).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+        } else if (data && data.state) {
+          return [{
+            id: 'scheda_default',
+            name: data.state.programName || 'La mia Scheda',
+            updatedAt: Date.now(),
+            daysCount: (data.state.days || []).length,
+            state: data.state
+          }];
+        }
+      }
+      return [];
+    } catch (err) {
+      console.error('Errore lista schede Cloud:', err);
+      return [];
+    }
+  }
+
+  // Elimina una scheda specifica dal Cloud
+  async function deleteCloudScheda(schedaId) {
+    if (!db || !currentUser || !schedaId) return false;
+    try {
+      const userRef = db.collection('users').doc(currentUser.uid);
+      await userRef.update({
+        [`schede.${schedaId}`]: firebase.firestore.FieldValue.delete()
+      });
+      return true;
+    } catch (err) {
+      console.error('Errore eliminazione scheda Cloud:', err);
+      return false;
+    }
+  }
+
   // Oggetto globale FORGE_CLOUD
   window.FORGE_CLOUD = {
     getStoredConfig,
@@ -177,6 +250,9 @@
     signInWithGoogle,
     logOut,
     saveStateToCloud,
+    saveSchedaToCloudList,
+    fetchCloudSchedeList,
+    deleteCloudScheda,
     fetchCloudState,
     listenToCloudState,
     getUser: () => currentUser,
