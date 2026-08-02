@@ -25,7 +25,7 @@
 :root{--bg:#0A0A0F;--bg2:#0E0E15;--surface:#15151F;--surface2:#1D1D2A;--border:#2A2A3A;--text:#F2F2F5;--muted:#8A8A9A;--volt:#C6FF3D;--volt-dim:#9FCF2E;--coral:#FF5468;--amber:#FFB020;--radius:16px;--shadow:0 18px 50px rgba(0,0,0,.55)}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%}
-body{font-family:Manrope,system-ui,-apple-system,sans-serif;background-color:var(--bg);color:var(--text);line-height:1.5;overflow-x:hidden;background-image:radial-gradient(circle at 15% -10%,rgba(198,255,61,.1),transparent 40%),radial-gradient(circle at 100% 0%,rgba(255,84,104,.06),transparent 35%)}
+body{font-family:Manrope,system-ui,-apple-system,sans-serif;background-color:var(--bg);color:var(--text);line-height:1.5;overflow-x:hidden}
 ::selection{background:var(--volt);color:#000}
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
 input,select,textarea{font-family:inherit}
@@ -58,44 +58,28 @@ main{max-width:900px;margin:0 auto;padding:20px 18px 140px}
 .day-progress .ring{position:relative;width:58px;height:58px;margin-left:auto}
 .day-progress .ring svg{transform:rotate(-90deg)}
 .day-progress .ring .pct{position:absolute;inset:0;display:grid;place-items:center;font-family:Anton,sans-serif;font-size:15px}
-/* ── strip a schede degli esercizi ── */
-.ex-tabs{display:none;gap:8px;overflow-x:auto;scrollbar-width:none;padding:2px 2px 4px;margin-bottom:14px;scroll-padding:0 40px}
-.ex-tabs::-webkit-scrollbar{display:none}
-.ex-tabs:not(:empty){display:flex}
-.ex-tab{white-space:nowrap;max-width:220px;padding:8px 14px 8px 8px;border-radius:999px;background:var(--surface);border:1px solid var(--border);color:var(--muted);font-weight:700;font-size:13px;transition:.2s;display:flex;align-items:center;gap:8px;flex-shrink:0}
-.ex-tab:hover{color:var(--text);border-color:#3A3A4D}
-.ex-tab.active{background:var(--surface2);color:var(--text);border-color:var(--volt)}
-.ex-tab-num{font-family:Anton,sans-serif;font-size:12px;width:24px;height:24px;flex-shrink:0;border-radius:50%;background:var(--bg);display:grid;place-items:center;color:var(--volt)}
-.ex-tab.active .ex-tab-num{background:var(--volt);color:#0A0A0F}
-.ex-tab.done .ex-tab-num{background:var(--volt);color:#0A0A0F}
-.ex-tab-num svg{width:14px;height:14px;stroke:currentColor;stroke-width:3;fill:none}
-.ex-tab-name{overflow:hidden;text-overflow:ellipsis}
-/* ── barra di navigazione tra le schede: fissata in basso ── */
-.ex-nav{display:none;position:fixed;left:0;right:0;bottom:0;z-index:36;justify-content:center;
-  padding:10px 18px calc(10px + env(safe-area-inset-bottom));
-  background:rgba(10,10,15,.82);backdrop-filter:blur(18px);border-top:1px solid var(--border);
-  transition:transform .22s cubic-bezier(.2,.8,.2,1)}
-.ex-nav:not(:empty){display:flex}
-.ex-nav-inner{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;max-width:900px}
-/* mentre si digita (tastiera aperta) la barra scende per non intralciare */
-body.kb .ex-nav{transform:translateY(130%)}
-.ex-nav-btn{flex:1;padding:12px 10px;border-radius:12px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-weight:700;font-size:14px;transition:.18s}
-.ex-nav-btn:hover:not(:disabled){border-color:var(--volt-dim)}
-.ex-nav-btn:active:not(:disabled){transform:scale(.97)}
-.ex-nav-btn:disabled{opacity:.35;cursor:default}
+
+/* ── session banner ── */
+.session-banner{margin:12px 0 8px;padding:14px 16px;border-radius:var(--radius);background:var(--surface);border:1px solid var(--border);animation:rise .4s cubic-bezier(.2,.8,.2,1) both}
+.session-banner .sb-title{font-size:15px;font-weight:800;margin-bottom:10px}
+.session-banner .sb-actions{display:flex;gap:10px}
+.session-banner .sb-btn{flex:1;padding:12px 16px;border-radius:12px;font-weight:800;font-size:14px;transition:.18s}
+.session-banner .sb-btn.primary{background:var(--volt);color:#0A0A0F}
+.session-banner .sb-btn.primary:hover{background:#D4FF5F}
+.session-banner .sb-btn.ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
+.session-banner .sb-btn.ghost:hover{background:#26263A;border-color:var(--volt-dim)}
+.session-banner .sb-session{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:10px;border-top:1px solid var(--border)}
+.session-banner .sb-session-name{font-weight:800;font-size:15px}
+.session-banner .sb-session-meta{font-size:12px;color:var(--muted)}
+.session-banner .sb-change{font-size:12px;font-weight:700;color:var(--volt);background:none;border:none;padding:6px 10px;border-radius:8px}
+.session-banner .sb-change:hover{background:rgba(198,255,61,.1)}
+
 .ex-nav-btn.next{background:var(--volt);color:#0A0A0F;border-color:var(--volt)}
 .ex-nav-count{font-family:Anton,sans-serif;font-size:14px;color:var(--muted);flex-shrink:0;letter-spacing:.5px}
 .ex-list{display:flex;flex-direction:column;gap:14px}
-/* schede: mostra solo l'esercizio attivo (tranne durante il riordino) */
-.ex-list.tabs:not(.compact) > .ex-card:not(.active){display:none}
-.ex-card{background:linear-gradient(180deg,var(--surface),var(--bg2));border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:border-color .25s,opacity .25s;animation:rise .45s cubic-bezier(.2,.8,.2,1) both}
+.ex-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:border-color .25s,opacity .25s,background-color .25s;animation:rise .45s cubic-bezier(.2,.8,.2,1) both}
 @keyframes rise{0%{opacity:0;transform:translateY(14px)}100%{opacity:1;transform:none}}
-/* transizione al cambio esercizio (swipe / tab / avanti-indietro) */
-.ex-card.anim-next{animation:slideNext .26s cubic-bezier(.2,.8,.2,1)}
-.ex-card.anim-prev{animation:slidePrev .26s cubic-bezier(.2,.8,.2,1)}
-@keyframes slideNext{0%{opacity:0;transform:translateX(30px)}100%{opacity:1;transform:none}}
-@keyframes slidePrev{0%{opacity:0;transform:translateX(-30px)}100%{opacity:1;transform:none}}
-.ex-card.done{border-color:rgba(198,255,61,.5)}
+.ex-card.done{border-color:rgba(198,255,61,.5);background:rgba(198,255,61,.03)}
 .ex-card.done .ex-top{background:rgba(198,255,61,.05)}
 .ex-top{padding:16px 16px 12px;display:flex;gap:12px;align-items:flex-start}
 .ex-top,.set-idx,.sets-head{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
@@ -214,14 +198,16 @@ body.dragging-active{cursor:grabbing;user-select:none}
 .paste-json{width:100%;min-height:130px;resize:vertical;background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:12px 14px;color:var(--text);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;line-height:1.5}
 .paste-json:focus{outline:none;border-color:var(--volt)}
 .paste-json::placeholder{color:var(--muted)}
-/* ── viste: home / allenamento / progressi ── */
-#homeView,#progressView{display:none}
+/* ── viste: home / allenamento / progressi / coach ── */
+#homeView,#progressView,#coachView{display:none}
 body[data-view="home"] #homeView{display:flex}
 body[data-view="training"] #trainingView{display:block}
 body[data-view="progress"] #progressView{display:block}
-body[data-view="home"] #trainingView,body[data-view="home"] #progressView,
-body[data-view="training"] #homeView,body[data-view="training"] #progressView,
-body[data-view="progress"] #homeView,body[data-view="progress"] #trainingView{display:none}
+body[data-view="coach"] #coachView{display:block}
+body[data-view="home"] #trainingView,body[data-view="home"] #progressView,body[data-view="home"] #coachView,
+body[data-view="training"] #homeView,body[data-view="training"] #progressView,body[data-view="training"] #coachView,
+body[data-view="progress"] #homeView,body[data-view="progress"] #trainingView,body[data-view="progress"] #coachView,
+body[data-view="coach"] #homeView,body[data-view="coach"] #trainingView,body[data-view="coach"] #progressView{display:none}
 body:not([data-view="training"]) #fabSave{display:none!important}
 body:not([data-view="progress"]) #fabAddMeas{display:none!important}
 /* ── splash ── */
@@ -409,8 +395,77 @@ button:focus-visible,a:focus-visible,.set-check:focus-visible,.icon-btn:focus-vi
   ::-webkit-scrollbar-track{background:transparent}
 }
 
-/* — set completata: riga più viva — */
+/* — set completata: riga più viva ed animazione spunta — */
 .set-row.on .set-check.on{box-shadow:var(--glow-volt),var(--hair-strong)}
+.set-check.on svg{animation:checkPop .24s cubic-bezier(.175,.885,.32,1.275) both}
+@keyframes checkPop{0%{transform:scale(.7);opacity:.5}50%{transform:scale(1.22)}100%{transform:scale(1);opacity:1}}
+
+/* — ambient glow & glassmorphism refinement — */
+header{backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);background:rgba(10,10,15,.78)}
+.modal{backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);background:rgba(21,21,31,.94)}
+.ex-card{transition:border-color var(--t),opacity var(--t),box-shadow var(--t-slow) var(--e-out),transform var(--t) var(--e-out)}
+.ex-card:hover{border-color:rgba(198,255,61,.32);box-shadow:0 16px 40px rgba(0,0,0,.6),var(--hair)}
+.day-tab{transition:all .2s var(--e-out)}
+.day-tab.active{transform:translateY(-1px)}
+body.kb #fabSave,body.kb #fabAddMeas{display:none!important}
+
+/* ── libreria esercizi modale ── */
+.ex-modal-tabs{display:flex;background:var(--bg);border-radius:12px;padding:3px;margin-bottom:16px;border:1px solid var(--border)}
+.ex-modal-tab{flex:1;padding:9px 12px;border-radius:9px;font-size:13px;font-weight:700;color:var(--muted);text-align:center;transition:.18s;display:flex;align-items:center;justify-content:center;gap:6px}
+.ex-modal-tab.active{background:var(--surface2);color:var(--text);box-shadow:var(--hair)}
+.ex-modal-tab:hover:not(.active){color:var(--text)}
+
+.lib-filter-sec{margin-bottom:14px;display:flex;flex-direction:column;gap:8px}
+.lib-search-wrap{position:relative}
+.lib-search-wrap input{padding-left:36px}
+.lib-search-wrap svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:17px;height:17px;stroke:var(--muted);pointer-events:none}
+
+.lib-chips-row{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.lib-chips-row::-webkit-scrollbar{display:none}
+.lib-chip{white-space:nowrap;font-size:12px;font-weight:700;padding:5px 12px;border-radius:999px;background:var(--bg);border:1px solid var(--border);color:var(--muted);transition:.15s;flex-shrink:0}
+.lib-chip:hover{border-color:var(--volt-dim);color:var(--text)}
+.lib-chip.active{background:var(--volt);color:#0A0A0F;border-color:var(--volt);box-shadow:0 4px 14px rgba(198,255,61,.22)}
+
+.lib-list{display:flex;flex-direction:column;gap:8px;max-height:280px;overflow-y:auto;padding-right:2px;margin-bottom:14px}
+.lib-card{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-radius:12px;background:var(--bg);border:1px solid var(--border);transition:.18s;cursor:pointer}
+.lib-card:hover{border-color:var(--volt);background:var(--surface2)}
+.lib-card.selected{border-color:var(--volt);background:rgba(198,255,61,.08);box-shadow:var(--glow-volt)}
+.lib-card-info{min-width:0;flex:1}
+.lib-card-title{font-size:14px;font-weight:800;color:var(--text);margin-bottom:3px}
+.lib-card-tags{display:flex;align-items:center;gap:6px}
+.lib-tag{font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:6px;background:var(--surface2);color:var(--muted)}
+.lib-card.selected .lib-tag{background:rgba(198,255,61,.2);color:var(--text)}
+.lib-tag.equip{color:var(--volt-dim)}
+.lib-card-select-ic{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--border);display:grid;place-items:center;flex-shrink:0;transition:.18s}
+.lib-card.selected .lib-card-select-ic{background:var(--volt);border-color:var(--volt)}
+.lib-card.selected .lib-card-select-ic svg{stroke:#0A0A0F;stroke-width:3}
+
+/* ── coach view ── */
+#coachMain{max-width:920px;margin:0 auto;padding:24px 18px calc(100px + env(safe-area-inset-bottom))}
+.coach-hero{background:linear-gradient(145deg,rgba(198,255,61,.12),var(--surface));border:1px solid rgba(198,255,61,.3);border-radius:var(--radius);padding:26px 20px;margin-bottom:24px;text-align:center;position:relative;box-shadow:var(--sh-2)}
+.coach-hero h2{font-family:Anton,sans-serif;font-size:30px;letter-spacing:.5px;margin-bottom:8px;color:var(--text)}
+.coach-hero p{font-size:14px;color:var(--muted);max-width:540px;margin:0 auto 18px;line-height:1.5;font-weight:600}
+.coach-badges{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+.coach-badge{font-size:11.5px;font-weight:800;padding:5px 12px;border-radius:999px;background:var(--surface2);color:var(--volt);border:1px solid rgba(198,255,61,.25);display:inline-flex;align-items:center;gap:6px}
+
+.coach-path-tabs{display:flex;background:var(--surface);border-radius:16px;padding:4px;border:1px solid var(--border);margin-bottom:24px}
+.coach-path-tab{flex:1;padding:14px;border-radius:12px;font-size:14px;font-weight:800;color:var(--muted);text-align:center;transition:.2s;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+.coach-path-tab.active{background:var(--volt);color:#0A0A0F;box-shadow:var(--glow-volt)}
+
+.plans-grid{display:grid;grid-template-columns:1fr;gap:18px}
+@media(min-width:700px){.plans-grid{grid-template-columns:1fr 1fr 1fr}}
+.plan-card{background:linear-gradient(180deg,var(--surface),var(--bg2));border:1px solid var(--border);border-radius:22px;padding:24px 20px;display:flex;flex-direction:column;justify-content:space-between;position:relative;transition:all .22s var(--e-out);box-shadow:var(--sh-2)}
+.plan-card:hover{border-color:var(--volt-dim);transform:translateY(-3px);box-shadow:var(--sh-3)}
+.plan-card.featured{border-color:var(--volt);background:linear-gradient(180deg,rgba(198,255,61,.06),var(--surface));box-shadow:var(--glow-volt)}
+.plan-tag{position:absolute;top:-12px;right:18px;font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;padding:4px 11px;border-radius:999px;background:var(--volt);color:#0A0A0F;box-shadow:0 4px 14px rgba(198,255,61,.3)}
+.plan-header{margin-bottom:14px}
+.plan-title{font-size:19px;font-weight:800;letter-spacing:-.3px;margin-bottom:6px}
+.plan-price{font-family:Anton,sans-serif;font-size:38px;color:var(--volt);line-height:1;margin-bottom:4px}
+.plan-price small{font-family:Manrope,sans-serif;font-size:13px;color:var(--muted);font-weight:700;letter-spacing:0}
+.plan-sub{font-size:12.5px;color:var(--muted);font-weight:600;line-height:1.45}
+.plan-feats{list-style:none;margin:16px 0 22px;display:flex;flex-direction:column;gap:10px;padding:0}
+.plan-feats li{font-size:13px;font-weight:600;display:flex;align-items:center;gap:9px;color:var(--text)}
+.plan-feats li svg{width:16px;height:16px;stroke:var(--volt);stroke-width:2.5;flex-shrink:0}
 
 /* — rispetto globale di chi preferisce meno movimento — */
 @media(prefers-reduced-motion:reduce){
@@ -453,6 +508,11 @@ button:focus-visible,a:focus-visible,.set-check:focus-visible,.icon-btn:focus-vi
       <span class="hb-tx"><strong>Progressi</strong><span>Peso, misure e confronto nel tempo</span></span>
       <span class="hb-arrow"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"></path></svg></span>
     </button>
+    <button class="home-btn coach" id="goCoach" data-testid="home-coach">
+      <span class="hb-ic" style="background:var(--surface2)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--volt)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></span>
+      <span class="hb-tx"><strong>Fatti seguire da un Coach</strong><span>Schede su misura o coaching fisico 1-to-1</span></span>
+      <span class="hb-arrow"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"></path></svg></span>
+    </button>
   </div>
 </div>
 
@@ -489,9 +549,8 @@ button:focus-visible,a:focus-visible,.set-check:focus-visible,.icon-btn:focus-vi
 
 <main>
   <div class="day-head" id="dayHead"></div>
-  <div class="ex-tabs" id="exTabs" data-testid="ex-tabs"></div>
+  <div class="session-banner" id="sessionBanner" style="display:none"></div>
   <div class="ex-list" id="exList"></div>
-  <div class="ex-nav" id="exNav"></div>
 </main>
 </div><!-- /trainingView -->
 
@@ -529,6 +588,138 @@ button:focus-visible,a:focus-visible,.set-check:focus-visible,.icon-btn:focus-vi
   Misurazione
 </button>
 </div><!-- /progressView -->
+
+<!-- COACH VIEW -->
+<div id="coachView">
+<header>
+  <div class="header-inner">
+    <button class="icon-btn" id="btnHomeC" title="Home" aria-label="Home">
+      <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"></path><path d="M5 10v10h5v-6h4v6h5V10"></path></svg>
+    </button>
+    <div class="logo">
+      <div class="logo-mark" style="background:var(--surface2);box-shadow:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--volt)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+      </div>
+      <div>
+        <h1 style="font-size:22px">COACHING</h1>
+        <div class="prog-name">Fatti seguire 1-to-1</div>
+      </div>
+    </div>
+  </div>
+</header>
+<main id="coachMain">
+  <div class="coach-hero">
+    <h2>RAGGIUNGI IL TUO MASSIMO POTENZIALE</h2>
+    <p>Scegli se farti guidare nella creazione di schede di allenamento periodizzate o intraprendere un percorso completo di trasformazione fisica con un Coach esperto.</p>
+    <div class="coach-badges">
+      <span class="coach-badge">✓ Coach Certificato FIPE/CONI</span>
+      <span class="coach-badge">⚡ 100% Su Misura per Te</span>
+      <span class="coach-badge">📱 Supporto WhatsApp 1-to-1</span>
+    </div>
+  </div>
+
+  <div class="coach-path-tabs">
+    <button class="coach-path-tab active" id="cTabWorkout">✍️ Schede &amp; Programmazione</button>
+    <button class="coach-path-tab" id="cTabPhysical">🔥 Coaching Fisico Integrale</button>
+  </div>
+
+  <div id="plansWorkout" class="plans-grid">
+    <div class="plan-card">
+      <div class="plan-header">
+        <div class="plan-title">Scheda Singola</div>
+        <div class="plan-price">€29 <small>una tantum</small></div>
+        <div class="plan-sub">Per chi vuole una scheda professionale pronta all'uso.</div>
+      </div>
+      <ul class="plan-feats">
+        <li><svg viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5"></path></svg>Scheda 100% personalizzata</li>
+        <li><svg viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5"></path></svg>Importabile in 1-click in FORGE</li>
+        <li><svg viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5"></path></svg>Note tecniche ed esecuzione</li>
+        <li><svg viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5"></path></svg>1 revisione inclusa (14gg)</li>
+      </ul>
+      <button class="btn btn-ghost btn-block" data-plan="Scheda Singola Personalizzata (€29)">Richiedi Scheda (€29)</button>
+    </div>
+
+    <div class="plan-card featured">
+      <span class="plan-tag">Il più scelto</span>
+      <div class="plan-header">
+        <div class="plan-title">Programmazione Mensile</div>
+        <div class="plan-price">€49 <small>/ mese</small></div>
+        <div class="plan-sub">Scheda continua con verifica esecuzione video.</div>
+      </div>
+      <ul class="plan-feats">
+        <li><svg viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5"></path></svg>Scheda aggiornata ogni 4 settimane</li>
+        <li><svg viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5"></path></svg>Correzione video dell'esecuzione</li>
+        <li><svg viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5"></path></svg>Regolazione dei carichi target</li>
+        <li><svg viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5"></path></svg>Supporto chat diretto col Coach</li>
+      </ul>
+      <button class="btn btn-primary btn-block" data-plan="Programmazione Mensile (€49/m)">Inizia Programmazione (€49/m)</button>
+    </div>
+
+    <div class="plan-card">
+      <div class="plan-header">
+        <div class="plan-title">Programmazione 3 Mesi</div>
+        <div class="plan-price">€119 <small>/ 3 mesi</small></div>
+        <div class="plan-sub">Periodizzazione completa per il massimo stimolo.</div>
+      </div>
+      <ul class="plan-feats">
+        <li><svg viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5"></path></svg>Periodizzazione 3 cicli distinti</li>
+        <li><svg viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5"></path></svg>Risparmi il 20% sul mese singolo</li>
+        <li><svg viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5"></path></svg>Analisi dei volumi di lavoro</li>
+        <li><svg viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5"></path></svg>Supporto prioritario WhatsApp</li>
+      </ul>
+      <button class="btn btn-ghost btn-block" data-plan="Programmazione Trimestrale (€119)">Inizia Trimestrale (€119)</button>
+    </div>
+  </div>
+
+  <div id="plansPhysical" class="plans-grid" style="display:none">
+    <div class="plan-card">
+      <div class="plan-header">
+        <div class="plan-title">Trasformazione Mensile</div>
+        <div class="plan-price">€89 <small>/ mese</small></div>
+        <div class="plan-sub">Coaching 1-to-1 fisico completo mese per mese.</div>
+      </div>
+      <ul class="plan-feats">
+        <li><svg viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5"></path></svg>Scheda + Guida Nutrizionale/Macro</li>
+        <li><svg viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5"></path></svg>Check-in settimanale peso/misure</li>
+        <li><svg viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5"></path></svg>Regolazioni continue del piano</li>
+        <li><svg viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5"></path></svg>Assistenza continua dal Coach</li>
+      </ul>
+      <button class="btn btn-ghost btn-block" data-plan="Coaching Trasformazione Mensile (€89/m)">Inizia Coaching (€89/m)</button>
+    </div>
+
+    <div class="plan-card featured">
+      <span class="plan-tag">Consigliato dal Coach</span>
+      <div class="plan-header">
+        <div class="plan-title">Trasformazione 3 Mesi</div>
+        <div class="plan-price">€219 <small>/ 3 mesi</small></div>
+        <div class="plan-sub">Ricomposizione corporea o massa/definizione mirata.</div>
+      </div>
+      <ul class="plan-feats">
+        <li><svg viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5"></path></svg>Risparmi €48 rispetto al mensile</li>
+        <li><svg viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5"></path></svg>Check-in settimanale 1-to-1 con foto</li>
+        <li><svg viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5"></path></svg>Strategia metabolica e allenamento</li>
+        <li><svg viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5"></path></svg>Supporto costante via chat</li>
+      </ul>
+      <button class="btn btn-primary btn-block" data-plan="Coaching Trasformazione 3 Mesi (€219)">Inizia Percorso (€219)</button>
+    </div>
+
+    <div class="plan-card">
+      <div class="plan-header">
+        <div class="plan-title">VIP Transformation 6 Mesi</div>
+        <div class="plan-price">€399 <small>/ 6 mesi</small></div>
+        <div class="plan-sub">Cambio di forma radicale e duratura nel tempo.</div>
+      </div>
+      <ul class="plan-feats">
+        <li><svg viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5"></path></svg>Videochiamata mensile 1-to-1</li>
+        <li><svg viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5"></path></svg>Monitoraggio totale a 360°</li>
+        <li><svg viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5"></path></svg>Priorità assoluta risposte 7/7</li>
+        <li><svg viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5"></path></svg>Garanzia di risultato reale</li>
+      </ul>
+      <button class="btn btn-ghost btn-block" data-plan="VIP Transformation 6 Mesi (€399)">Diventa VIP (€399)</button>
+    </div>
+  </div>
+</main>
+</div><!-- /coachView -->
 
 <input type="file" id="fileInput" accept="application/json,.json" style="display:none">
 
@@ -587,6 +778,67 @@ const DEFAULT_STATE = () => ({
   }]
 });
 
+/* ── libreria di esercizi predefiniti ── */
+const EXERCISE_LIBRARY = [
+  // PETTO
+  { name: 'Panca piana con bilanciere', group: 'Petto', type: 'free', sets: 4, reps: '8-10', restSec: 90, note: 'Tieni le scapole adotte' },
+  { name: 'Panca inclinata con manubri', group: 'Petto', type: 'free', sets: 3, reps: '10-12', restSec: 75, note: 'Inclinazione panca 30°' },
+  { name: 'Chest Press', group: 'Petto', type: 'machine', sets: 3, reps: '10-12', restSec: 75, note: 'Spinta controllata' },
+  { name: 'Pectoral Machine / Pec Deck', group: 'Petto', type: 'machine', sets: 3, reps: '12-15', restSec: 60, note: 'Stretching pettorali in apertura' },
+  { name: 'Croci ai cavi (Cable Crossover)', group: 'Petto', type: 'machine', sets: 3, reps: '12-15', restSec: 60, note: 'Contrazione di picco al centro' },
+  { name: 'Dips (Parallele)', group: 'Petto', type: 'free', sets: 3, reps: '8-10', restSec: 90, note: 'Busto leggermente inclinato in avanti' },
+  { name: 'Push-up (Piegamenti)', group: 'Petto', type: 'free', sets: 3, reps: '12-15', restSec: 60, note: 'Core saldo' },
+
+  // DORSO
+  { name: 'Lat Machine avanti', group: 'Dorso', type: 'machine', sets: 4, reps: '10-12', restSec: 75, note: 'Tira verso il petto superiore' },
+  { name: 'Pulley basso con presa stretta', group: 'Dorso', type: 'machine', sets: 3, reps: '10-12', restSec: 75, note: 'Gomiti vicini ai fianchi' },
+  { name: 'Trazioni alla sbarra (Pull-up)', group: 'Dorso', type: 'free', sets: 4, reps: '6-8', restSec: 90, note: 'Presa prona poco più ampia delle spalle' },
+  { name: 'Rematore con bilanciere', group: 'Dorso', type: 'free', sets: 4, reps: '8-10', restSec: 90, note: 'Schiena a 45°, tira all\'ombelico' },
+  { name: 'Rematore con manubrio', group: 'Dorso', type: 'free', sets: 3, reps: '10-12', restSec: 75, note: 'Appoggio su panca' },
+  { name: 'Stacco da terra (Deadlift)', group: 'Dorso', type: 'free', sets: 4, reps: '5', restSec: 150, note: 'Schiena neutra, spinta di gambe' },
+  { name: 'Row Machine / Macchina Rematore', group: 'Dorso', type: 'machine', sets: 3, reps: '10-12', restSec: 75, note: '' },
+
+  // GAMBE
+  { name: 'Squat con bilanciere', group: 'Gambe', type: 'free', sets: 4, reps: '8-10', restSec: 120, note: 'Scendi sotto il parallelo' },
+  { name: 'Leg Press 45°', group: 'Gambe', type: 'machine', sets: 4, reps: '10-12', restSec: 90, note: 'Non bloccare le ginocchia in chiusura' },
+  { name: 'Leg Extension', group: 'Gambe', type: 'machine', sets: 3, reps: '12-15', restSec: 60, note: 'Squeeze quadricipiti in alto' },
+  { name: 'Leg Curl seduto / sdraiato', group: 'Gambe', type: 'machine', sets: 3, reps: '10-12', restSec: 60, note: 'Ischiocrurali' },
+  { name: 'Stacco Rumeno (RDL)', group: 'Gambe', type: 'free', sets: 3, reps: '10-12', restSec: 90, note: 'Focus su femorali e glutei' },
+  { name: 'Affondi con manubri', group: 'Gambe', type: 'free', sets: 3, reps: '10 per gamba', restSec: 75, note: 'Passo lungo' },
+  { name: 'Calf Machine (Polpacci)', group: 'Gambe', type: 'machine', sets: 4, reps: '15-20', restSec: 45, note: 'Escursione completa' },
+  { name: 'Hip Thrust con bilanciere', group: 'Gambe', type: 'free', sets: 4, reps: '10-12', restSec: 90, note: 'Squeeze glutei in chiusura' },
+
+  // SPALLE
+  { name: 'Military Press con bilanciere', group: 'Spalle', type: 'free', sets: 4, reps: '8-10', restSec: 90, note: 'Spinta verticale da in piedi' },
+  { name: 'Lento avanti con manubri', group: 'Spalle', type: 'free', sets: 3, reps: '10-12', restSec: 75, note: 'Seduto su panca a 80°' },
+  { name: 'Shoulder Press Machine', group: 'Spalle', type: 'machine', sets: 3, reps: '10-12', restSec: 75, note: '' },
+  { name: 'Alzate laterali con manubri', group: 'Spalle', type: 'free', sets: 4, reps: '12-15', restSec: 60, note: 'Gomiti leggermente flessi' },
+  { name: 'Alzate laterali ai cavi', group: 'Spalle', type: 'machine', sets: 3, reps: '12-15', restSec: 60, note: 'Tensione continua' },
+  { name: 'Face Pull ai cavi', group: 'Spalle', type: 'machine', sets: 3, reps: '15', restSec: 60, note: 'Focus deltoidi posteriori e rotatori' },
+  { name: 'Rear Delt Machine / Alzate post.', group: 'Spalle', type: 'machine', sets: 3, reps: '12-15', restSec: 60, note: '' },
+
+  // BICIPITI
+  { name: 'Curl con bilanciere sagomato (EZ)', group: 'Bicipiti', type: 'free', sets: 3, reps: '10-12', restSec: 60, note: 'Gomiti fermi lungo i fianchi' },
+  { name: 'Curl manubri alternato', group: 'Bicipiti', type: 'free', sets: 3, reps: '10-12', restSec: 60, note: 'Supinazione del polso in risalita' },
+  { name: 'Curl Martello (Hammer Curl)', group: 'Bicipiti', type: 'free', sets: 3, reps: '10-12', restSec: 60, note: 'Presa neutra' },
+  { name: 'Curl ai cavi con barra', group: 'Bicipiti', type: 'machine', sets: 3, reps: '12-15', restSec: 60, note: 'Tensione costante' },
+  { name: 'Curl Panca Scott', group: 'Bicipiti', type: 'free', sets: 3, reps: '10-12', restSec: 60, note: 'Isolamento bicipiti' },
+
+  // TRICIPITI
+  { name: 'Pushdown cavi con corda', group: 'Tricipiti', type: 'machine', sets: 3, reps: '12-15', restSec: 60, note: 'Apri la corda in basso' },
+  { name: 'Pushdown cavi con barra a V', group: 'Tricipiti', type: 'machine', sets: 3, reps: '10-12', restSec: 60, note: '' },
+  { name: 'French Press (Skullcrusher)', group: 'Tricipiti', type: 'free', sets: 3, reps: '10-12', restSec: 75, note: 'Bilanciere EZ su panca piana' },
+  { name: 'Dip su panca', group: 'Tricipiti', type: 'free', sets: 3, reps: '12-15', restSec: 60, note: 'Mani vicine al bacino' },
+  { name: 'Estensioni dietro nuca manubrio', group: 'Tricipiti', type: 'free', sets: 3, reps: '10-12', restSec: 60, note: 'Focus capo lungo del tricipite' },
+
+  // ADDOME
+  { name: 'Plank', group: 'Addome', type: 'free', sets: 3, reps: '45s', weight: null, restSec: 60, note: 'Addome e glutei contratti' },
+  { name: 'Crunch su tappetino', group: 'Addome', type: 'free', sets: 3, reps: '15-20', restSec: 45, note: 'Solleva le spalle mantenendo il collo neutro' },
+  { name: 'Leg Raise alla sbarra / parallele', group: 'Addome', type: 'free', sets: 3, reps: '12-15', restSec: 60, note: 'Sollevamento gambe' },
+  { name: 'Crunch ai cavi (Cable Crunch)', group: 'Addome', type: 'machine', sets: 3, reps: '12-15', restSec: 60, note: 'In ginocchio con corda' },
+  { name: 'Abdominal Machine', group: 'Addome', type: 'machine', sets: 3, reps: '12-15', restSec: 60, note: '' }
+];
+
 /* ── stato ── */
 let state = load();
 
@@ -617,7 +869,17 @@ function normalizeState(s) {
         note: String(m.note || '')
       };
     });
+  if (!Array.isArray(s.customLibrary) || !s.customLibrary.length) {
+    s.customLibrary = typeof EXERCISE_LIBRARY !== 'undefined' ? JSON.parse(JSON.stringify(EXERCISE_LIBRARY)) : [];
+  }
   return s;
+}
+function getLibrary() {
+  if (!state || !Array.isArray(state.customLibrary) || !state.customLibrary.length) {
+    if (state && typeof EXERCISE_LIBRARY !== 'undefined') state.customLibrary = JSON.parse(JSON.stringify(EXERCISE_LIBRARY));
+    else return typeof EXERCISE_LIBRARY !== 'undefined' ? EXERCISE_LIBRARY : [];
+  }
+  return state.customLibrary;
 }
 function load() {
   try {
@@ -678,7 +940,13 @@ function downloadText(name, text, mime) {
 }
 
 /* ── render ── */
-function render() { renderDayBar(); renderDayHead(); renderList(); $('progName').textContent = state.programName; }
+function render() {
+  renderDayBar();
+  renderDayHead();
+  renderList();
+  $('progName').textContent = state.programName;
+  if (document.body.getAttribute('data-view') === 'training') renderSessionBanner();
+}
 
 function renderDayBar() {
   $('dayBar').innerHTML = state.days.map((d, i) =>
@@ -710,7 +978,7 @@ function renderDayHead() {
     </div></div>`;
 }
 
-function cardHTML(ex, i, session, isActive) {
+function cardHTML(ex, i, session) {
   const chips = [
     `<span class="chip">${ICONS.reps}${ex.sets}×${esc(ex.reps)}</span>`,
     ex.weight != null && ex.weight !== '' ? `<span class="chip">${ICONS.weight}${esc(ex.weight)} kg</span>` : '',
@@ -732,7 +1000,7 @@ function cardHTML(ex, i, session, isActive) {
     <button class="set-check${l.done ? ' on' : ''}" data-testid="set-check-${i}-${j}" data-ex="${i}" data-set="${j}">${ICONS.check}</button>${prevLine}</div>`;
   }).join('');
   const allDone = ex.sets > 0 && ex.log.every(l => l.done);
-  return `<div class="ex-card${allDone ? ' done' : ''}${isActive ? ' active' : ''}" data-testid="exercise-card-${i}" data-exidx="${i}" title="Tieni premuto per spostare">
+  return `<div class="ex-card${allDone ? ' done' : ''}" data-testid="exercise-card-${i}" data-exidx="${i}" title="Tieni premuto per spostare">
     <div class="ex-top">
       <div class="ex-num">${i + 1}</div>
       <div class="ex-info">
@@ -748,108 +1016,30 @@ function cardHTML(ex, i, session, isActive) {
     </div></div>`;
 }
 
-let activeEx = 0;
 function exDone(ex) { return ex.sets > 0 && ex.log.every(l => l.done); }
 
 function renderList() {
   const exs = day().exercises;
   if (!exs.length) {
-    $('exList').classList.remove('tabs', 'compact');
+    $('exList').classList.remove('compact');
     $('exList').innerHTML = `<div class="empty">
       <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5 17.5 17.5"></path><rect x="2.5" y="9" width="4" height="6" rx="1"></rect><rect x="17.5" y="9" width="4" height="6" rx="1"></rect><path d="M6.5 12h11"></path></svg>
       <h3>Nessun esercizio</h3>
       <p>Aggiungi il primo esercizio di questo giorno oppure importa una scheda JSON.</p>
       <button class="btn btn-primary" id="emptyAdd">+ Aggiungi esercizio</button></div>`;
-    $('exTabs').innerHTML = '';
-    $('exNav').innerHTML = '';
     const b = $('emptyAdd'); if (b) b.onclick = () => openExerciseForm(null);
     return;
   }
-  if (activeEx >= exs.length) activeEx = exs.length - 1;
-  if (activeEx < 0) activeEx = 0;
   const session = lastSessionFor(day().name);
-  $('exList').classList.add('tabs');
-  $('exList').innerHTML = exs.map((ex, i) => cardHTML(ex, i, session, i === activeEx)).join('');
-  renderExTabs();
-  renderExNav();
-}
-
-/* ── schede degli esercizi: strip in alto + navigazione ── */
-function renderExTabs() {
-  const exs = day().exercises;
-  $('exTabs').innerHTML = exs.map((ex, i) =>
-    `<button class="ex-tab${i === activeEx ? ' active' : ''}${exDone(ex) ? ' done' : ''}" data-ex="${i}" data-testid="ex-tab-${i}">
-      <span class="ex-tab-num">${exDone(ex) ? ICONS.check : (i + 1)}</span>
-      <span class="ex-tab-name">${esc(ex.name)}</span></button>`
-  ).join('');
-}
-
-function renderExNav() {
-  const n = day().exercises.length;
-  const last = activeEx >= n - 1;
-  // sull'ultimo esercizio, se c'è progresso, il tasto destro chiude l'allenamento
-  const right = (last && dayCounts().done > 0)
-    ? `<button class="ex-nav-btn next fin" id="exFinish">Fine ✓</button>`
-    : `<button class="ex-nav-btn next" id="exNext" ${last ? 'disabled' : ''}>Successivo ›</button>`;
-  $('exNav').innerHTML = `<div class="ex-nav-inner">
-    <button class="ex-nav-btn" id="exPrev" ${activeEx <= 0 ? 'disabled' : ''}>‹ Precedente</button>
-    <span class="ex-nav-count">${activeEx + 1} / ${n}</span>
-    ${right}
-  </div>`;
+  $('exList').innerHTML = exs.map((ex, i) => cardHTML(ex, i, session)).join('');
   updateFabSave();
 }
 
-/* Il FAB "Fine" si mostra quando c'è progresso, ma non sull'ultimo esercizio:
-   lì la stessa azione è già offerta come "Fine ✓" nella barra (niente doppioni). */
+/* Il FAB "Fine" si mostra quando c'è progresso. */
 function updateFabSave() {
   const done = dayCounts().done;
-  const n = day().exercises.length;
-  const last = activeEx >= n - 1;
-  $('fabSave').style.display = (done > 0 && !last) ? 'flex' : 'none';
+  $('fabSave').style.display = done > 0 ? 'flex' : 'none';
 }
-
-/* Passa alla scheda dell'esercizio i senza ricostruire tutta la lista. */
-function selectEx(i) {
-  const exs = day().exercises;
-  if (!exs.length) return;
-  const prev = activeEx;
-  activeEx = Math.max(0, Math.min(exs.length - 1, i));
-  const dir = activeEx > prev ? 1 : activeEx < prev ? -1 : 0;
-  [...$('exList').children].forEach((c, idx) => c.classList.toggle('active', idx === activeEx));
-  [...$('exTabs').children].forEach((c, idx) => c.classList.toggle('active', idx === activeEx));
-  // micro-animazione di ingresso nella direzione dello spostamento
-  const card = $('exList').children[activeEx];
-  if (card && dir !== 0) {
-    card.classList.remove('anim-next', 'anim-prev');
-    void card.offsetWidth; // forza il reflow per rilanciare l'animazione
-    card.classList.add(dir > 0 ? 'anim-next' : 'anim-prev');
-  }
-  renderExNav();
-  const at = $('exTabs').children[activeEx];
-  if (at) at.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-/* Prossimo esercizio non ancora completato dopo "from" (-1 se non esiste). */
-function nextIncompleteEx(from) {
-  const exs = day().exercises;
-  for (let n = 1; n <= exs.length; n++) {
-    const k = (from + n) % exs.length;
-    if (!exDone(exs[k])) return k;
-  }
-  return -1;
-}
-
-/* Navigazione tra le schede degli esercizi. */
-$('exTabs').addEventListener('click', e => {
-  const t = e.target.closest('.ex-tab');
-  if (t) selectEx(+t.dataset.ex);
-});
-$('exNav').addEventListener('click', e => {
-  if (e.target.closest('#exPrev')) selectEx(activeEx - 1);
-  else if (e.target.closest('#exNext')) selectEx(activeEx + 1);
-  else if (e.target.closest('#exFinish')) openFinishModal();
-});
 
 /* Mentre si digita in un campo serie la tastiera copre il fondo: nascondi la
    barra fissa. Piccolo debounce per non farla lampeggiare quando si passa da
@@ -858,6 +1048,9 @@ let kbTimer = null;
 document.addEventListener('focusin', e => {
   if (e.target.classList && e.target.classList.contains('set-input')) {
     clearTimeout(kbTimer); document.body.classList.add('kb');
+    setTimeout(() => {
+      try { e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (_) {}
+    }, 180);
   }
 });
 document.addEventListener('focusout', e => {
@@ -892,8 +1085,7 @@ function toggleSet(i, j, btn) {
   const card = btn.closest('.ex-card');
   card.classList.toggle('done', ex.log.every(x => x.done));
   renderDayHead();
-  renderExTabs();
-  renderExNav();
+  updateFabSave();
   if (l.done) {
     buzz(20);
     const c = dayCounts();
@@ -902,11 +1094,6 @@ function toggleSet(i, j, btn) {
       celebrateDay();
     } else {
       if (ex.restSec > 0) startRestTimer(ex.restSec, nextLabel(i, j));
-      // esercizio completato: passa alla scheda del successivo ancora da fare
-      if (exDone(ex)) {
-        const nx = nextIncompleteEx(i);
-        if (nx >= 0 && nx !== i) selectEx(nx);
-      }
     }
   }
 }
@@ -959,6 +1146,9 @@ function ensureAudio() {
     if (audioCtx.state === 'suspended') audioCtx.resume();
   } catch (_) {}
 }
+['pointerdown', 'touchstart', 'click', 'keydown'].forEach(evt => {
+  window.addEventListener(evt, ensureAudio, { once: true, passive: true });
+});
 function beep() {
   if (!audioCtx) return;
   try {
@@ -1043,24 +1233,6 @@ $('exList').addEventListener('pointerdown', e => {
   document.addEventListener('pointercancel', dragEnd);
 });
 
-/* ── swipe orizzontale sulla card: cambia esercizio. Non intralcia il riordino,
-      che richiede pressione prolungata (350 ms) + trascinamento verticale. ── */
-let swipe = null;
-$('exList').addEventListener('pointerdown', e => {
-  if (e.pointerType === 'mouse' || e.button > 0) return;     // solo tocco/penna
-  if (e.target.closest('button, input, select, textarea, a')) return;
-  swipe = { x: e.clientX, y: e.clientY, t: Date.now(), id: e.pointerId };
-});
-$('exList').addEventListener('pointerup', e => {
-  const s = swipe; swipe = null;
-  if (!s || e.pointerId !== s.id) return;
-  if (drag && drag.armed) return;                            // stavo riordinando
-  const dx = e.clientX - s.x, dy = e.clientY - s.y;
-  if (Date.now() - s.t < 500 && Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.8) {
-    selectEx(activeEx + (dx < 0 ? 1 : -1));                   // ← successivo · → precedente
-  }
-});
-
 function armDrag() {
   if (!drag) return;
   const { card } = drag;
@@ -1129,9 +1301,6 @@ function dragEnd() {
     const order = [...$('exList').querySelectorAll('.ex-card')].map(c => +c.dataset.exidx);
     const exs = day().exercises;
     day().exercises = order.map(i => exs[i]);
-    // mantieni attiva la scheda che stavi spostando
-    const newActive = order.indexOf(activeEx);
-    if (newActive >= 0) activeEx = newActive;
     save();
     buzz(15);
     renderList();
@@ -1163,12 +1332,11 @@ $('dayBar').addEventListener('click', e => {
   if (add) {
     state.days.push({ name: 'Giorno ' + String.fromCharCode(65 + state.days.length), exercises: [] });
     state.activeDay = state.days.length - 1;
-    activeEx = 0;
     save(); render();
     return;
   }
   const tab = e.target.closest('.day-tab[data-day]');
-  if (tab) { state.activeDay = +tab.dataset.day; activeEx = 0; save(); render(); }
+  if (tab) { state.activeDay = +tab.dataset.day; save(); render(); }
 });
 
 /* ── modali ── */
@@ -1200,11 +1368,46 @@ function confirmModal(title, text, label, cb) {
   b.querySelector('#cfYes').onclick = () => { closeModal(); cb(); };
 }
 
+
+
 /* ── form esercizio (aggiungi / modifica) ── */
 function openExerciseForm(idx) {
   const ex = idx == null ? { name: '', sets: 3, reps: '8-12', weight: '', restSec: 90, note: '' } : day().exercises[idx];
-  const b = openModal(idx == null ? 'Nuovo esercizio' : 'Modifica esercizio', `
-    ${idx == null ? `<div class="field"><label>Giorno</label><select id="fDay">${state.days.map((d, di) => `<option value="${di}"${di === state.activeDay ? ' selected' : ''}>${esc(d.name)}</option>`).join('')}</select></div>` : ''}
+  const isNew = idx == null;
+
+  const libTabsHTML = isNew ? `
+    <div class="ex-modal-tabs">
+      <button type="button" class="ex-modal-tab active" id="tabLib">📚 Sfoglia Libreria</button>
+      <button type="button" class="ex-modal-tab" id="tabManual">✍️ Manuale</button>
+    </div>
+    <div id="libContainer">
+      <div class="lib-filter-sec">
+        <div class="lib-search-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+          <input type="text" id="libSearch" placeholder="Cerca esercizio (es. Panca, Lat, Leg...)" spellcheck="false" autocapitalize="off">
+        </div>
+        <div class="lib-chips-row" id="groupChips">
+          <button type="button" class="lib-chip active" data-grp="all">Tutti i muscoli</button>
+          <button type="button" class="lib-chip" data-grp="Petto">Petto</button>
+          <button type="button" class="lib-chip" data-grp="Dorso">Dorso</button>
+          <button type="button" class="lib-chip" data-grp="Gambe">Gambe</button>
+          <button type="button" class="lib-chip" data-grp="Spalle">Spalle</button>
+          <button type="button" class="lib-chip" data-grp="Bicipiti">Bicipiti</button>
+          <button type="button" class="lib-chip" data-grp="Tricipiti">Tricipiti</button>
+          <button type="button" class="lib-chip" data-grp="Addome">Addome</button>
+        </div>
+        <div class="lib-chips-row" id="equipChips">
+          <button type="button" class="lib-chip active" data-eq="all">Tutti gli attrezzi</button>
+          <button type="button" class="lib-chip" data-eq="free">🏋️ Pesi liberi / Corpo libero</button>
+          <button type="button" class="lib-chip" data-eq="machine">⚙️ Macchine / Cavi</button>
+        </div>
+      </div>
+      <div class="lib-list" id="libList"></div>
+    </div>` : '';
+
+  const b = openModal(isNew ? 'Nuovo esercizio' : 'Modifica esercizio', `
+    ${libTabsHTML}
+    ${isNew ? `<div class="field"><label>Giorno</label><select id="fDay">${state.days.map((d, di) => `<option value="${di}"${di === state.activeDay ? ' selected' : ''}>${esc(d.name)}</option>`).join('')}</select></div>` : ''}
     <div class="field"><label>Nome esercizio</label><input id="fName" type="text" placeholder="Es. Panca piana" value="${esc(ex.name)}"></div>
     <div class="grid3">
       <div class="field"><label>Serie</label><input id="fSets" type="number" min="1" max="20" inputmode="numeric" value="${ex.sets}"></div>
@@ -1214,7 +1417,111 @@ function openExerciseForm(idx) {
     <div class="field"><label>Recupero (secondi)</label><input id="fRest" type="number" min="0" max="900" inputmode="numeric" placeholder="90" value="${ex.restSec}"></div>
     <div class="field"><label>Note (facoltative)</label><textarea id="fNote" placeholder="Es. controlla la discesa">${esc(ex.note)}</textarea></div>
     <div class="modal-foot"><button class="btn btn-primary btn-block" id="fSave">Salva</button></div>`);
+
   const nameInput = b.querySelector('#fName');
+
+  // Gestione dinamica della libreria se in modalità Nuovo Esercizio
+  if (isNew) {
+    let curGrp = 'all', curEq = 'all', curQuery = '', selectedLibIndex = -1;
+
+    const renderLibItems = () => {
+      const listEl = b.querySelector('#libList');
+      if (!listEl) return;
+      const q = curQuery.trim().toLowerCase();
+      const filtered = getLibrary().filter(e => {
+        const matchGrp = curGrp === 'all' || e.group === curGrp;
+        const matchEq = curEq === 'all' || e.type === curEq;
+        const matchQ = !q || e.name.toLowerCase().includes(q) || e.group.toLowerCase().includes(q);
+        return matchGrp && matchEq && matchQ;
+      });
+
+      if (!filtered.length) {
+        listEl.innerHTML = `<div style="text-align:center;padding:24px 10px;color:var(--muted);font-size:13px">Nessun esercizio trovato nella libreria per i filtri selezionati.<br>Puoi inserirlo manualmente nel campo sottostante.</div>`;
+        return;
+      }
+
+      listEl.innerHTML = filtered.map(item => {
+        const origIdx = getLibrary().indexOf(item);
+        const isSel = origIdx === selectedLibIndex;
+        const typeLabel = item.type === 'machine' ? '⚙️ Macchina / Cavi' : '🏋️ Pesi / C.Libero';
+        return `<div class="lib-card${isSel ? ' selected' : ''}" data-libidx="${origIdx}">
+          <div class="lib-card-info">
+            <div class="lib-card-title">${esc(item.name)}</div>
+            <div class="lib-card-tags">
+              <span class="lib-tag">${esc(item.group)}</span>
+              <span class="lib-tag equip">${esc(typeLabel)}</span>
+            </div>
+          </div>
+          <div class="lib-card-select-ic">${ICONS.check}</div>
+        </div>`;
+      }).join('');
+
+      listEl.querySelectorAll('.lib-card').forEach(card => {
+        card.onclick = () => {
+          const lIdx = +card.dataset.libidx;
+          selectedLibIndex = lIdx;
+          const item = getLibrary()[lIdx];
+          if (item) {
+            nameInput.value = item.name;
+            b.querySelector('#fSets').value = item.sets || 3;
+            b.querySelector('#fReps').value = item.reps || '8-12';
+            b.querySelector('#fRest').value = item.restSec != null ? item.restSec : 90;
+            b.querySelector('#fNote').value = item.note || '';
+            if (item.weight != null) b.querySelector('#fWeight').value = item.weight;
+            buzz(15);
+          }
+          renderLibItems();
+        };
+      });
+    };
+
+    // Tab switcher
+    const tabLib = b.querySelector('#tabLib');
+    const tabManual = b.querySelector('#tabManual');
+    const libContainer = b.querySelector('#libContainer');
+
+    tabLib.onclick = () => {
+      tabLib.classList.add('active'); tabManual.classList.remove('active');
+      libContainer.style.display = 'block';
+    };
+    tabManual.onclick = () => {
+      tabManual.classList.add('active'); tabLib.classList.remove('active');
+      libContainer.style.display = 'none';
+      nameInput.focus();
+    };
+
+    // Filtro Gruppo Muscolare
+    b.querySelectorAll('#groupChips .lib-chip').forEach(chip => {
+      chip.onclick = () => {
+        b.querySelectorAll('#groupChips .lib-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        curGrp = chip.dataset.grp;
+        renderLibItems();
+      };
+    });
+
+    // Filtro Equipaggiamento
+    b.querySelectorAll('#equipChips .lib-chip').forEach(chip => {
+      chip.onclick = () => {
+        b.querySelectorAll('#equipChips .lib-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        curEq = chip.dataset.eq;
+        renderLibItems();
+      };
+    });
+
+    // Input di ricerca
+    const searchInput = b.querySelector('#libSearch');
+    if (searchInput) {
+      searchInput.oninput = () => {
+        curQuery = searchInput.value;
+        renderLibItems();
+      };
+    }
+
+    renderLibItems();
+  }
+
   b.querySelector('#fSave').onclick = () => {
     const name = nameInput.value.trim();
     if (!name) { nameInput.focus(); nameInput.style.borderColor = 'var(--coral)'; return; }
@@ -1233,13 +1540,11 @@ function openExerciseForm(idx) {
       const di = sel ? Math.max(0, Math.min(state.days.length - 1, +sel.value)) : state.activeDay;
       addedToOther = di !== state.activeDay;
       state.days[di].exercises.push(ensureLog(data));
-      state.activeDay = di;                        // mostra il giorno scelto
-      activeEx = state.days[di].exercises.length - 1;
-    } else { Object.assign(day().exercises[idx], data); ensureLog(day().exercises[idx]); activeEx = idx; }
+      state.activeDay = di;
+    } else { Object.assign(day().exercises[idx], data); ensureLog(day().exercises[idx]); }
     save(); closeModal(); render();
     toast(idx == null ? (addedToOther ? `Esercizio aggiunto a "${day().name}"` : 'Esercizio aggiunto') : 'Esercizio aggiornato');
   };
-  if (idx == null) setTimeout(() => nameInput.focus(), 250);
 }
 
 /* ── menu opzioni esercizio ── */
@@ -1248,7 +1553,6 @@ function moveExercise(i, dir) {
   const j = i + dir;
   if (j < 0 || j >= exs.length) return;
   [exs[i], exs[j]] = [exs[j], exs[i]];
-  activeEx = j;
   save(); closeModal(); render(); buzz(15);
   toast(dir < 0 ? 'Spostato su' : 'Spostato giù');
 }
@@ -1270,7 +1574,6 @@ function openExMenu(i) {
     const copy = JSON.parse(JSON.stringify(ex));
     copy.log.forEach(l => { l.done = false; l.reps = ''; l.weight = ''; });
     day().exercises.splice(i + 1, 0, copy);
-    activeEx = i + 1;
     save(); closeModal(); render(); toast('Esercizio duplicato');
   };
   b.querySelector('#mClear').onclick = () => {
@@ -1314,6 +1617,78 @@ function saveSession(clearAfter) {
   toast(clearAfter ? 'Sessione salvata, scheda pronta 💪' : 'Sessione salvata');
 }
 
+/* ── check incomplete workout on startup ── */
+function hasIncompleteWorkout() {
+  const d = day();
+  return d.exercises.some(ex =>
+    ex.log.some(l => l.done || l.reps || l.weight)
+  );
+}
+
+function checkIncompleteWorkout() {
+  if (!hasIncompleteWorkout()) return;
+  // Already in training view? Show session banner instead.
+  if (document.body.getAttribute('data-view') === 'training') {
+    renderSessionBanner();
+    return;
+  }
+
+  // Not in training view: show modal to choose
+  const b = openModal('Allenamento in corso', `
+    <p style="color:var(--muted);font-size:14px;margin-bottom:18px">Hai un allenamento iniziato in precedenza (serie completate o dati inseriti) che non è stato concluso con "Fine".</p>
+    <div class="modal-foot stack">
+      <button class="btn btn-primary btn-block" id="resumeWorkout">Continua allenamento</button>
+      <button class="btn btn-ghost btn-block" id="resetWorkout">Inizia da capo (azzera progressi)</button>
+    </div>`);
+  b.querySelector('#resumeWorkout').onclick = () => {
+    closeModal();
+    setView('training');
+  };
+  b.querySelector('#resetWorkout').onclick = () => {
+    day().exercises.forEach(ex => ex.log.forEach(l => { l.done = false; l.reps = ''; l.weight = ''; }));
+    save(); render(); closeModal();
+    toast('Progressi azzerati, nuova giornata 💪');
+    setView('training');
+  };
+}
+
+function renderSessionBanner() {
+  const banner = $('sessionBanner');
+  const d = day();
+  const { tot, done } = dayCounts();
+  const last = lastSessionFor(d.name);
+  const lastDate = last ? fmtDateTs(last.ts) : '—';
+  const pct = tot ? Math.round((done / tot) * 100) : 0;
+
+  // Start in choice mode
+  banner.style.display = 'block';
+  banner.innerHTML = `
+    <div class="sb-title">Allenamento in corso — ${esc(d.name)}</div>
+    <div class="sb-actions">
+      <button class="sb-btn primary" id="sbResume">Continua allenamento</button>
+      <button class="sb-btn ghost" id="sbReset">Inizia da capo</button>
+    </div>`;
+
+  banner.querySelector('#sbResume').onclick = () => {
+    // Switch to session info mode
+    banner.innerHTML = `
+      <div class="sb-session">
+        <div>
+          <div class="sb-session-name">${esc(d.name)}</div>
+          <div class="sb-session-meta">${done}/${tot} serie (${pct}%) · Ultima: ${esc(lastDate)}</div>
+        </div>
+        <button class="sb-change" id="sbChange">Cambia</button>
+      </div>`;
+    banner.querySelector('#sbChange').onclick = () => renderSessionBanner();
+  };
+  banner.querySelector('#sbReset').onclick = () => {
+    d.exercises.forEach(ex => ex.log.forEach(l => { l.done = false; l.reps = ''; l.weight = ''; }));
+    save(); render();
+    toast('Progressi azzerati, nuova giornata 💪');
+    banner.style.display = 'none';
+  };
+}
+
 function openCompare() {
   const last = lastSessionFor(day().name);
   if (!last) { toast('Nessuna sessione salvata per questo giorno'); return; }
@@ -1342,23 +1717,44 @@ function openCompare() {
     '<p style="color:var(--muted);font-size:14px">Nessun esercizio di oggi compare nella sessione salvata.</p>');
 }
 
-/* ── menu principale ── */
+/* ── menu principale riorganizzato per sezioni ── */
 $('btnMenu').onclick = openAppMenu;
 function openAppMenu() {
   const canDelDay = state.days.length > 1;
-  const b = openModal('Menu', `<div style="display:flex;flex-direction:column;gap:4px">
-    <button class="sheet-btn" data-testid="menu-add-exercise" id="aAddEx"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg>Aggiungi esercizio</button>
-    <button class="sheet-btn" data-testid="menu-compare" id="aCompare"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10M12 20V4M6 20v-6"></path></svg>Confronta con l'ultima volta</button>
-    <button class="sheet-btn" id="aRename"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"></path></svg>Rinomina giorno / programma</button>
-    <button class="sheet-btn" data-testid="menu-import" id="aImport"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="M12 3v13m0 0-4-4m4 4 4-4"></path></svg>Importa scheda JSON</button>
-    <button class="sheet-btn" data-testid="menu-export" id="aExport"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="M12 16V3m0 13 4-4m-4 4-4-4"></path></svg>Esporta scheda JSON</button>
-    <button class="sheet-btn" data-testid="menu-backup" id="aBackup"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6"></path><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2M9 13h6"></path></svg>Esporta backup completo</button>
-    <button class="sheet-btn" data-testid="menu-docs" id="aDocs"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg>Scarica istruzioni per l'AI</button>
-    <button class="sheet-btn" id="aResetDay"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 4v4h4"></path></svg>Azzera progressi del giorno</button>
-    ${canDelDay ? `<button class="sheet-btn danger" id="aDelDay"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path></svg>Elimina questo giorno</button>` : ''}
-    <button class="sheet-btn danger" id="aReset"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path></svg>Reset completo</button>
-  </div>`);
+  const b = openModal('Menu', `
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div>
+        <div class="prog-sec-title" style="margin:0 0 8px 2px">🏋️ Allenamento &amp; Libreria</div>
+        <div class="menu-list">
+          <button class="sheet-btn" data-testid="menu-add-exercise" id="aAddEx"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg>Aggiungi esercizio a questa giornata</button>
+          <button class="sheet-btn" id="aManageLib"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>Gestisci Libreria Esercizi</button>
+          <button class="sheet-btn" data-testid="menu-compare" id="aCompare"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10M12 20V4M6 20v-6"></path></svg>Confronta con l'ultima volta</button>
+          <button class="sheet-btn" id="aRename"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"></path></svg>Rinomina giorno / programma</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="prog-sec-title" style="margin:0 0 8px 2px">💾 Dati, Import &amp; Backup</div>
+        <div class="menu-list">
+          <button class="sheet-btn" data-testid="menu-import" id="aImport"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="M12 3v13m0 0-4-4m4 4 4-4"></path></svg>Importa scheda JSON</button>
+          <button class="sheet-btn" data-testid="menu-export" id="aExport"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="M12 16V3m0 13 4-4m-4 4-4-4"></path></svg>Esporta scheda JSON</button>
+          <button class="sheet-btn" data-testid="menu-backup" id="aBackup"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6"></path><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2M9 13h6"></path></svg>Esporta backup completo</button>
+          <button class="sheet-btn" data-testid="menu-docs" id="aDocs"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg>Scarica istruzioni per l'AI</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="prog-sec-title" style="margin:0 0 8px 2px">⚠️ Zona Pericolo &amp; Reset</div>
+        <div class="menu-list">
+          <button class="sheet-btn" id="aResetDay"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 4v4h4"></path></svg>Azzera progressi del giorno</button>
+          ${canDelDay ? `<button class="sheet-btn danger" id="aDelDay"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path></svg>Elimina questo giorno</button>` : ''}
+          <button class="sheet-btn danger" id="aReset"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path></svg>Reset completo dell'app</button>
+        </div>
+      </div>
+    </div>`);
+
   b.querySelector('#aAddEx').onclick = () => { closeModal(); openExerciseForm(null); };
+  b.querySelector('#aManageLib').onclick = () => { closeModal(); openLibraryManager(); };
   b.querySelector('#aCompare').onclick = () => { closeModal(); openCompare(); };
   b.querySelector('#aRename').onclick = () => { closeModal(); openRename(); };
   b.querySelector('#aImport').onclick = () => { closeModal(); openImport(); };
@@ -1381,6 +1777,165 @@ function openAppMenu() {
     state = normalizeState(DEFAULT_STATE());
     save(); render(); toast('Scheda azzerata');
   });
+}
+
+/* ── gestore libreria esercizi ── */
+function openLibraryManager() {
+  let curGrp = 'all', curEq = 'all', curQuery = '';
+
+  const b = openModal('Libreria Esercizi', `
+    <button class="btn btn-primary btn-block" id="mgrAdd" style="margin-bottom:14px">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+      Nuovo Esercizio in Libreria
+    </button>
+    <div class="lib-filter-sec">
+      <div class="lib-search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+        <input type="text" id="mgrSearch" placeholder="Cerca in libreria..." spellcheck="false" autocapitalize="off">
+      </div>
+      <div class="lib-chips-row" id="mgrGroupChips">
+        <button type="button" class="lib-chip active" data-grp="all">Tutti i muscoli</button>
+        <button type="button" class="lib-chip" data-grp="Petto">Petto</button>
+        <button type="button" class="lib-chip" data-grp="Dorso">Dorso</button>
+        <button type="button" class="lib-chip" data-grp="Gambe">Gambe</button>
+        <button type="button" class="lib-chip" data-grp="Spalle">Spalle</button>
+        <button type="button" class="lib-chip" data-grp="Bicipiti">Bicipiti</button>
+        <button type="button" class="lib-chip" data-grp="Tricipiti">Tricipiti</button>
+        <button type="button" class="lib-chip" data-grp="Addome">Addome</button>
+      </div>
+      <div class="lib-chips-row" id="mgrEquipChips">
+        <button type="button" class="lib-chip active" data-eq="all">Tutti gli attrezzi</button>
+        <button type="button" class="lib-chip" data-eq="free">🏋️ Pesi / C.Libero</button>
+        <button type="button" class="lib-chip" data-eq="machine">⚙️ Macchine / Cavi</button>
+      </div>
+    </div>
+    <div class="lib-list" id="mgrList" style="max-height:340px"></div>
+  `);
+
+  b.querySelector('#mgrAdd').onclick = () => { closeModal(); openLibraryItemForm(null); };
+
+  const renderManagerItems = () => {
+    const listEl = b.querySelector('#mgrList');
+    if (!listEl) return;
+    const q = curQuery.trim().toLowerCase();
+    const lib = getLibrary();
+    const items = lib.filter(e => {
+      const matchGrp = curGrp === 'all' || e.group === curGrp;
+      const matchEq = curEq === 'all' || e.type === curEq;
+      const matchQ = !q || e.name.toLowerCase().includes(q) || e.group.toLowerCase().includes(q);
+      return matchGrp && matchEq && matchQ;
+    });
+
+    if (!items.length) {
+      listEl.innerHTML = `<div style="text-align:center;padding:24px 10px;color:var(--muted);font-size:13px">Nessun esercizio trovato in libreria.<br>Tocca "+ Nuovo Esercizio" in alto per aggiungerne uno!</div>`;
+      return;
+    }
+
+    listEl.innerHTML = items.map(item => {
+      const realIdx = lib.indexOf(item);
+      const typeLabel = item.type === 'machine' ? '⚙️ Macchina' : '🏋️ Pesi';
+      const setsReps = `${item.sets || 3}×${item.reps || '8-12'}`;
+      return `<div class="lib-card" style="cursor:default">
+        <div class="lib-card-info">
+          <div class="lib-card-title">${esc(item.name)}</div>
+          <div class="lib-card-tags">
+            <span class="lib-tag">${esc(item.group)}</span>
+            <span class="lib-tag equip">${esc(typeLabel)}</span>
+            <span class="lib-tag">${esc(setsReps)}</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0">
+          <button class="ex-opts-btn" data-editidx="${realIdx}" title="Modifica esercizio"><svg viewBox="0 0 24 24" fill="none" stroke="var(--volt)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"></path></svg></button>
+          <button class="ex-opts-btn" data-delidx="${realIdx}" title="Elimina dalla libreria"><svg viewBox="0 0 24 24" fill="none" stroke="var(--coral)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path></svg></button>
+        </div>
+      </div>`;
+    }).join('');
+
+    listEl.querySelectorAll('[data-editidx]').forEach(btn => {
+      btn.onclick = () => { closeModal(); openLibraryItemForm(+btn.dataset.editidx); };
+    });
+    listEl.querySelectorAll('[data-delidx]').forEach(btn => {
+      btn.onclick = () => {
+        const idx = +btn.dataset.delidx;
+        const item = getLibrary()[idx];
+        if (!item) return;
+        confirmModal('Elimina da libreria', `Eliminare "${item.name}" dalla libreria degli esercizi?`, 'Elimina', () => {
+          getLibrary().splice(idx, 1);
+          save();
+          toast('Esercizio rimosso dalla libreria');
+          openLibraryManager();
+        });
+      };
+    });
+  };
+
+  b.querySelectorAll('#mgrGroupChips .lib-chip').forEach(chip => {
+    chip.onclick = () => {
+      b.querySelectorAll('#mgrGroupChips .lib-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active'); curGrp = chip.dataset.grp; renderManagerItems();
+    };
+  });
+  b.querySelectorAll('#mgrEquipChips .lib-chip').forEach(chip => {
+    chip.onclick = () => {
+      b.querySelectorAll('#mgrEquipChips .lib-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active'); curEq = chip.dataset.eq; renderManagerItems();
+    };
+  });
+  const searchInput = b.querySelector('#mgrSearch');
+  if (searchInput) searchInput.oninput = () => { curQuery = searchInput.value; renderManagerItems(); };
+
+  renderManagerItems();
+}
+
+function openLibraryItemForm(idx) {
+  const isNew = idx == null;
+  const item = !isNew ? getLibrary()[idx] : { name: '', group: 'Petto', type: 'free', sets: 3, reps: '8-12', weight: null, restSec: 90, note: '' };
+  const groups = ['Petto', 'Dorso', 'Gambe', 'Spalle', 'Bicipiti', 'Tricipiti', 'Addome'];
+
+  const b = openModal(isNew ? 'Nuovo esercizio libreria' : 'Modifica esercizio libreria', `
+    <div class="field"><label>Nome esercizio</label><input id="liName" type="text" placeholder="Es. Panca Piana Inclinata" value="${esc(item.name)}"></div>
+    <div class="grid2">
+      <div class="field"><label>Gruppo Muscolare</label>
+        <select id="liGroup">${groups.map(g => `<option value="${g}"${g === item.group ? ' selected' : ''}>${g}</option>`).join('')}</select>
+      </div>
+      <div class="field"><label>Attrezzatura</label>
+        <select id="liType">
+          <option value="free"${item.type === 'free' ? ' selected' : ''}>🏋️ Pesi / C.Libero</option>
+          <option value="machine"${item.type === 'machine' ? ' selected' : ''}>⚙️ Macchina / Cavi</option>
+        </select>
+      </div>
+    </div>
+    <div class="grid3">
+      <div class="field"><label>Serie consigliate</label><input id="liSets" type="number" min="1" max="20" inputmode="numeric" value="${item.sets || 3}"></div>
+      <div class="field"><label>Ripetizioni</label><input id="liReps" type="text" placeholder="8-12" value="${esc(item.reps || '8-12')}"></div>
+      <div class="field"><label>Recupero (s)</label><input id="liRest" type="number" min="0" max="900" inputmode="numeric" placeholder="90" value="${item.restSec != null ? item.restSec : 90}"></div>
+    </div>
+    <div class="field"><label>Note tecniche (facoltative)</label><textarea id="liNote" placeholder="Es. scapole adotte...">${esc(item.note || '')}</textarea></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost btn-block" id="liCancel">Annulla</button>
+      <button class="btn btn-primary btn-block" id="liSave">Salva in Libreria</button>
+    </div>
+  `);
+
+  b.querySelector('#liCancel').onclick = () => { closeModal(); openLibraryManager(); };
+  b.querySelector('#liSave').onclick = () => {
+    const name = b.querySelector('#liName').value.trim();
+    if (!name) { b.querySelector('#liName').focus(); b.querySelector('#liName').style.borderColor = 'var(--coral)'; return; }
+    const entry = {
+      name,
+      group: b.querySelector('#liGroup').value,
+      type: b.querySelector('#liType').value,
+      sets: Math.min(20, Math.max(1, parseInt(b.querySelector('#liSets').value, 10) || 3)),
+      reps: b.querySelector('#liReps').value.trim() || '8-12',
+      restSec: Math.max(0, Math.min(900, parseInt(b.querySelector('#liRest').value, 10) || 0)),
+      note: b.querySelector('#liNote').value.trim()
+    };
+    if (isNew) getLibrary().push(entry);
+    else getLibrary()[idx] = entry;
+    save(); closeModal();
+    toast(isNew ? 'Esercizio aggiunto alla libreria' : 'Esercizio aggiornato nella libreria');
+    openLibraryManager();
+  };
 }
 
 function openRename() {
@@ -2004,14 +2559,76 @@ function exportMeasCSV() {
 /* ── wiring viste ── */
 $('goTraining').onclick = () => setView('training');
 $('goProgress').onclick = () => setView('progress');
+$('goCoach').onclick = () => setView('coach');
 $('btnHome').onclick = () => setView('home');
 $('btnHomeP').onclick = () => setView('home');
+$('btnHomeC').onclick = () => setView('home');
 $('fabAddMeas').onclick = () => openMeasurementForm();
 $('btnProgMenu').onclick = openProgressMenu;
+
+/* ── coach view handlers ── */
+$('cTabWorkout').onclick = () => {
+  $('cTabWorkout').classList.add('active');
+  $('cTabPhysical').classList.remove('active');
+  $('plansWorkout').style.display = 'grid';
+  $('plansPhysical').style.display = 'none';
+};
+$('cTabPhysical').onclick = () => {
+  $('cTabPhysical').classList.add('active');
+  $('cTabWorkout').classList.remove('active');
+  $('plansPhysical').style.display = 'grid';
+  $('plansWorkout').style.display = 'none';
+};
+
+document.addEventListener('click', e => {
+  const btn = e.target.closest('[data-plan]');
+  if (btn) openCoachBookingModal(btn.dataset.plan);
+});
+
+function openCoachBookingModal(planName) {
+  const b = openModal('Richiesta Coaching 1-to-1', `
+    <div class="import-summary" style="margin-bottom:16px">
+      <div class="is-name">${esc(planName)}</div>
+      <div class="is-days">Riserva il tuo posto direttamente con il Coach personalizzato</div>
+    </div>
+    <div class="field"><label>Nome e Cognome</label><input type="text" id="cbName" placeholder="Es. Marco Rossi"></div>
+    <div class="field"><label>Email o Numero WhatsApp</label><input type="text" id="cbContact" placeholder="Es. +39 340 1234567 / marco@email.com"></div>
+    <div class="field"><label>Il tuo obiettivo principale</label>
+      <select id="cbGoal">
+        <option value="Aumento Massa Muscolare">💪 Aumento Massa Muscolare</option>
+        <option value="Dimagrimento & Definizione">🔥 Dimagrimento &amp; Definizione</option>
+        <option value="Ricomposizione Corporea">⚡ Ricomposizione Corporea</option>
+        <option value="Aumento Forza & Performance">🏋️ Aumento Forza &amp; Performance</option>
+      </select>
+    </div>
+    <div class="field"><label>Note / Esigenze particolari (facoltative)</label><textarea id="cbNotes" placeholder="Es. mi alleno 3-4 volte a settimana in palestra, cerco una programmazione periodizzata..."></textarea></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost btn-block" id="cbCancel">Annulla</button>
+      <button class="btn btn-primary btn-block" id="cbSend">Invia Richiesta al Coach</button>
+    </div>
+  `);
+
+  b.querySelector('#cbCancel').onclick = closeModal;
+  b.querySelector('#cbSend').onclick = () => {
+    const name = b.querySelector('#cbName').value.trim();
+    const contact = b.querySelector('#cbContact').value.trim();
+    if (!name || !contact) {
+      toast('Compila il tuo nome e contatto');
+      return;
+    }
+    closeModal();
+    buzz([80, 40, 80]);
+    toast('Richiesta inviata col Coach! Ti ricontatteremo a breve 💪');
+  };
+}
 
 /* ── avvio ── */
 render();
 setView('home');
+
+// Check for incomplete workout from previous session
+checkIncompleteWorkout();
+
 // Splash solo al primo avvio della sessione: reload e navigazioni interne
 // non la rimostrano (niente attrito a ogni apertura della scheda).
 (function () {
