@@ -245,6 +245,12 @@ body:not([data-view="progress"]) #fabAddMeas{display:none!important}
 .home-btn.train .hb-ic svg{stroke:#0A0A0F}
 .home-btn.prog .hb-ic{background:var(--surface2)}
 .home-btn.prog .hb-ic svg{stroke:var(--volt)}
+.home-btn.coach .hb-ic{background:var(--surface2)}
+.home-btn.coach .hb-ic svg{stroke:var(--volt)}
+.home-btn.cloud .hb-ic{background:var(--surface2)}
+.home-btn.cloud .hb-ic svg{fill:var(--volt)}
+.home-btn.install .hb-ic{background:var(--surface2)}
+.home-btn.install .hb-ic svg{stroke:var(--volt)}
 .home-btn .hb-tx{min-width:0;flex:1}
 .home-btn .hb-tx strong{display:block;font-size:20px;font-weight:800;letter-spacing:-.2px}
 .home-btn .hb-tx span{font-size:12.5px;color:var(--muted);font-weight:600}
@@ -518,14 +524,14 @@ body.kb #fabSave,body.kb #fabAddMeas{display:none!important}
       <span class="hb-arrow"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"></path></svg></span>
     </button>
     <button class="home-btn coach" id="goCoach" data-testid="home-coach">
-      <span class="hb-ic" style="background:var(--surface2)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--volt)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></span>
+      <span class="hb-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></span>
       <span class="hb-tx"><strong>Fatti seguire da un Coach</strong><span>Schede su misura o coaching fisico 1-to-1</span></span>
       <span class="hb-arrow"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"></path></svg></span>
     </button>
     <!-- GOOGLE LOGIN / CLOUD PROFILE CARD -->
     <button class="home-btn cloud" id="btnGoogleAuthHome">
-      <span class="hb-ic" id="homeAuthIcon" style="background:var(--surface2)">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="var(--volt)"><path d="M12.545 10.239v3.821h5.445c-0.712 2.315-2.647 3.972-5.445 3.972-3.332 0-6.033-2.701-6.033-6.032s2.701-6.032 6.033-6.032c1.498 0 2.866 0.549 3.921 1.453l2.814-2.814C17.503 2.988 15.139 2 12.545 2 6.721 2 2 6.721 2 12.545S6.721 23.09 12.545 23.09c6.08 0 10.106-4.275 10.106-10.287c0-0.732-0.076-1.442-0.211-2.114H12.545z"/></svg>
+      <span class="hb-ic" id="homeAuthIcon">
+        <svg viewBox="0 0 24 24" width="26" height="26"><path d="M12.545 10.239v3.821h5.445c-0.712 2.315-2.647 3.972-5.445 3.972-3.332 0-6.033-2.701-6.033-6.032s2.701-6.032 6.033-6.032c1.498 0 2.866 0.549 3.921 1.453l2.814-2.814C17.503 2.988 15.139 2 12.545 2 6.721 2 2 6.721 2 12.545S6.721 23.09 12.545 23.09c6.08 0 10.106-4.275 10.106-10.287c0-0.732-0.076-1.442-0.211-2.114H12.545z"/></svg>
       </span>
       <span class="hb-tx" id="homeAuthText">
         <strong id="homeAuthTitle">Accedi con Google</strong>
@@ -536,7 +542,7 @@ body.kb #fabSave,body.kb #fabAddMeas{display:none!important}
     <!-- PWA INSTALL BUTTON (VISIBILE SOLO SE NON ANCORA INSTALLATA) -->
     <button class="home-btn install" id="btnInstallPwa" style="display:none">
       <span class="hb-ic">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
       </span>
       <span class="hb-tx">
         <strong>Installa FORGE (App)</strong>
@@ -3207,10 +3213,32 @@ try {
   updateCloudDot('offline');
 }
 
-/* ── PWA: registrazione service worker ── */
+/* ── PWA: registrazione e aggiornamento automatico service worker ── */
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
+    navigator.serviceWorker.register('sw.js').then((reg) => {
+      // Forzi la verifica immediata degli aggiornamenti ad ogni avvio
+      reg.update().catch(() => {});
+      reg.addEventListener('updatefound', () => {
+        const newWorker = reg.installing;
+        if (!newWorker) return;
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            // Nuova versione scaricata: attiva ed aggiorna istantaneamente
+            newWorker.postMessage('SKIP_WAITING');
+          }
+        });
+      });
+    }).catch(() => {});
+
+    // Ricarica la pagina in modo trasparente appena la nuova versione prende il controllo
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!refreshing) {
+        refreshing = true;
+        window.location.reload();
+      }
+    });
   });
 }
 </script>
