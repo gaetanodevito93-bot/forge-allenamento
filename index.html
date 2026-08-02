@@ -1869,10 +1869,6 @@ function openAppMenu() {
   b.querySelector('#aAddEx').onclick = () => { closeModal(); openExerciseForm(null); };
   b.querySelector('#aManageLib').onclick = () => { closeModal(); openLibraryManager(); };
   b.querySelector('#aRename').onclick = () => { closeModal(); openRename(); };
-  b.querySelector('#aImport').onclick = () => { closeModal(); openImport(); };
-  b.querySelector('#aExport').onclick = () => { closeModal(); exportJSON(); };
-  b.querySelector('#aBackup').onclick = () => { closeModal(); exportBackup(); };
-  b.querySelector('#aDocs').onclick = () => { closeModal(); downloadDocs(); };
   b.querySelector('#aResetDay').onclick = () => {
     closeModal();
     confirmModal('Azzera progressi del giorno', `Azzerare tutte le serie completate per "${esc(day().name)}"?`, 'Azzera', () => {
