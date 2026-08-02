@@ -472,6 +472,10 @@ body.kb #fabSave,body.kb #fabAddMeas{display:none!important}
   *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;
     transition-duration:.001ms!important;scroll-behavior:auto!important}
 }
+
+/* ── chart metric chips ── */
+.chart-metric-chips{display:flex;gap:6px;overflow-x:auto;padding:8px 0 12px;scrollbar-width:none}
+.chart-metric-chips::-webkit-scrollbar{display:none}
 </style>
 </head>
 <body>
@@ -2401,6 +2405,8 @@ function setView(v) {
   window.scrollTo(0, 0);
 }
 
+let activeChartKey = 'weight'; // metrica attiva nel grafico
+
 function renderProgress() {
   const main = $('progressMain');
   const list = sortedMeas();
@@ -2425,49 +2431,134 @@ function renderProgress() {
     ${chips ? `<div class="prog-chips">${chips}</div>` : ''}
     ${latest.note ? `<div class="hint" style="margin-top:14px">${esc(latest.note)}</div>` : ''}
   </div>`;
-  main.innerHTML = hero + weightChart(list) + `<div class="prog-sec-title">Tabella comparativa</div>` + buildMeasTable(list) +
+
+  // Trova le metriche che hanno almeno 2 punti dati (necessari per il grafico)
+  const availableKeys = MEAS_FIELDS.filter(f =>
+    list.filter(e => e.values[f.key] != null && !isNaN(e.values[f.key])).length >= 2
+  ).map(f => f.key);
+
+  // Se la metrica attiva non ha dati sufficienti, usa la prima disponibile
+  if (!availableKeys.includes(activeChartKey)) activeChartKey = availableKeys[0] || 'weight';
+
+  const chartChips = availableKeys.length > 0 ? `<div class="prog-sec-title">Andamento nel tempo</div>
+    <div class="chart-metric-chips" id="chartMetricChips">
+      ${availableKeys.map(k => `<button class="lib-chip${k === activeChartKey ? ' active' : ''}" data-ck="${k}">${esc(MEAS_LABEL(k))}</button>`).join('')}
+    </div>` : '';
+
+  main.innerHTML = hero + chartChips + `<div id="chartContainer">${metricChart(list, activeChartKey)}</div>` +
+    `<div class="prog-sec-title">Tabella comparativa</div>` + buildMeasTable(list) +
     `<div class="hint" style="margin-top:14px">Tocca una data nella tabella per modificare o eliminare quella rilevazione. Le variazioni (▲▼) sono rispetto alla misura precedente.</div>`;
+
+  // Wiring chip click → aggiorna solo il grafico
+  const chipsEl = main.querySelector('#chartMetricChips');
+  if (chipsEl) {
+    chipsEl.querySelectorAll('.lib-chip').forEach(chip => {
+      chip.onclick = () => {
+        activeChartKey = chip.dataset.ck;
+        chipsEl.querySelectorAll('.lib-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        const container = main.querySelector('#chartContainer');
+        if (container) {
+          container.innerHTML = metricChart(list, activeChartKey);
+          bindChartNodes(container);
+        }
+      };
+    });
+  }
+
+  bindChartNodes(main.querySelector('#chartContainer'));
   main.querySelectorAll('th[data-mid]').forEach(el => el.onclick = () => openMeasurementForm(el.dataset.mid));
 }
 
-/* Andamento del peso nel tempo: line chart (una sola serie, colore volt). */
-function weightChart(list) {
-  const pts = list.filter(e => e.values.weight != null && !isNaN(e.values.weight))
-                  .map(e => ({ date: e.date, w: e.values.weight }));
-  if (pts.length < 2) return '';
-  const W = 320, H = 150, L = 30, R = 12, TOP = 14, BOT = 24;
+function bindChartNodes(container) {
+  if (!container) return;
+  const nodes = container.querySelectorAll('.chart-node');
+  const detailEl = container.querySelector('#chartNodeDetail');
+  nodes.forEach(node => {
+    node.onclick = () => {
+      nodes.forEach(n => {
+        const circle = n.querySelector('circle:nth-child(2)');
+        if (circle) circle.setAttribute('r', '3.8');
+      });
+      const circle = node.querySelector('circle:nth-child(2)');
+      if (circle) circle.setAttribute('r', '6');
+      if (detailEl && node.getAttribute('title')) {
+        detailEl.textContent = '📍 ' + node.getAttribute('title');
+      }
+    };
+  });
+}
+
+/* Grafico generico per qualsiasi metrica: line chart SVG con area, etichette valore ben visibili e nodi interattivi. */
+function metricChart(list, key) {
+  const label = MEAS_LABEL(key);
+  const unit = MEAS_UNIT(key);
+  const pts = list.filter(e => e.values[key] != null && !isNaN(e.values[key]))
+                  .map(e => ({ date: e.date, v: e.values[key] }));
+  if (pts.length < 2) return `<div class="wchart" style="text-align:center;padding:24px;color:var(--muted);font-size:13px">Servono almeno 2 rilevazioni con "${label}" per mostrare il grafico.</div>`;
+
+  const W = 340, H = 200, L = 32, R = 14, TOP = 30, BOT = 28;
   const plotW = W - L - R, plotH = H - TOP - BOT, baseY = TOP + plotH;
-  let min = Math.min(...pts.map(p => p.w)), max = Math.max(...pts.map(p => p.w));
+  let min = Math.min(...pts.map(p => p.v)), max = Math.max(...pts.map(p => p.v));
   if (min === max) { min -= 1; max += 1; }
-  const pad = (max - min) * 0.12; min -= pad; max += pad;
+  const pad = (max - min) * 0.18; min -= pad; max += pad;
+
   const X = i => L + (i / (pts.length - 1)) * plotW;
-  const Y = w => TOP + (1 - (w - min) / (max - min)) * plotH;
-  const line = pts.map((p, i) => `${i ? 'L' : 'M'}${X(i).toFixed(1)} ${Y(p.w).toFixed(1)}`).join(' ');
+  const Y = v => TOP + (1 - (v - min) / (max - min)) * plotH;
+  const line = pts.map((p, i) => `${i ? 'L' : 'M'}${X(i).toFixed(1)} ${Y(p.v).toFixed(1)}`).join(' ');
   const area = `${line} L${X(pts.length - 1).toFixed(1)} ${baseY} L${X(0).toFixed(1)} ${baseY} Z`;
   const first = pts[0], last = pts[pts.length - 1];
-  const dots = pts.map((p, i) =>
-    `<circle cx="${X(i).toFixed(1)}" cy="${Y(p.w).toFixed(1)}" r="2.3" fill="#0A0A0F" stroke="#C6FF3D" stroke-width="1.5"><title>${esc(fmtDateISO(p.date))}: ${fmtNum(p.w)} kg</title></circle>`).join('');
-  const delta = Math.round((last.w - first.w) * 10) / 10;
-  const dTxt = delta === 0 ? '±0 kg' : `${delta > 0 ? '▲' : '▼'} ${fmtNum(Math.abs(delta))} kg`;
+
+  // Nodi e valori per ogni punto
+  const nodes = pts.map((p, i) => {
+    const cx = X(i).toFixed(1);
+    const cy = Y(p.v);
+    const isLast = i === pts.length - 1;
+    const above = cy > TOP + 20;
+    const ly = above ? (cy - 10).toFixed(1) : (cy + 16).toFixed(1);
+
+    // Allineamento orizzontale per evitare tagli ai bordi
+    const anchor = i === 0 ? 'start' : (i === pts.length - 1 ? 'end' : 'middle');
+
+    const prevP = i > 0 ? pts[i - 1] : null;
+    const diff = prevP ? Math.round((p.v - prevP.v) * 10) / 10 : null;
+    const diffStr = diff == null ? '' : (diff === 0 ? ' (±0)' : (diff > 0 ? ` (+${fmtNum(diff)})` : ` (${fmtNum(diff)})`));
+
+    return `<g class="chart-node" data-idx="${i}" style="cursor:pointer" title="${esc(fmtDateISO(p.date))}: ${fmtNum(p.v)} ${unit}${diffStr}">
+      <!-- touch target ampio -->
+      <circle cx="${cx}" cy="${cy.toFixed(1)}" r="14" fill="transparent"></circle>
+      <!-- cerchio visibile -->
+      <circle cx="${cx}" cy="${cy.toFixed(1)}" r="${isLast ? 5 : 3.8}" fill="${isLast ? 'var(--volt)' : '#0E0E15'}" stroke="var(--volt)" stroke-width="2.2"></circle>
+      <!-- etichetta valore con contorno scuro ad alto contrasto -->
+      <text x="${cx}" y="${ly}" fill="#FFFFFF" font-size="9.5" font-weight="800" text-anchor="${anchor}"
+            stroke="#0A0A0F" stroke-width="3" paint-order="stroke fill" stroke-linejoin="round">${fmtNum(p.v)}</text>
+    </g>`;
+  }).join('');
+
+  const delta = Math.round((last.v - first.v) * 10) / 10;
+  const dTxt = delta === 0 ? `±0 ${unit}` : `${delta > 0 ? '▲' : '▼'} ${fmtNum(Math.abs(delta))} ${unit}`;
   const dCol = delta === 0 ? 'var(--muted)' : (delta > 0 ? 'var(--amber)' : 'var(--volt)');
-  return `<div class="prog-sec-title">Andamento peso</div>
-  <div class="wchart">
-    <div class="wc-cap"><span class="t">${pts.length} rilevazioni con peso</span><span class="d" style="color:${dCol}">${dTxt} <span style="color:var(--muted);font-weight:600;font-size:11px">dal primo</span></span></div>
-    <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Andamento del peso corporeo nel tempo">
-      <defs><linearGradient id="wcg" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stop-color="#C6FF3D" stop-opacity="0.20"></stop>
-        <stop offset="1" stop-color="#C6FF3D" stop-opacity="0"></stop>
-      </linearGradient></defs>
-      <line x1="${L}" y1="${TOP}" x2="${W - R}" y2="${TOP}" stroke="#2A2A3A" stroke-width="1"></line>
-      <line x1="${L}" y1="${baseY}" x2="${W - R}" y2="${baseY}" stroke="#2A2A3A" stroke-width="1"></line>
+
+  return `<div class="wchart">
+    <div class="wc-cap" id="chartHeaderCap">
+      <span class="t">${pts.length} rilevazioni · ${esc(label)}</span>
+      <span class="d" style="color:${dCol}">${dTxt} <span style="color:var(--muted);font-weight:600;font-size:11px">dal primo</span></span>
+    </div>
+    <div id="chartNodeDetail" style="font-size:12px;font-weight:700;color:var(--volt);margin:2px 4px 6px;min-height:18px">Tocca un punto per i dettagli</div>
+    <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Andamento ${label} nel tempo" style="overflow:visible">
+      <defs>
+        <linearGradient id="wcg" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#C6FF3D" stop-opacity="0.25"></stop>
+          <stop offset="1" stop-color="#C6FF3D" stop-opacity="0.0"></stop>
+        </linearGradient>
+      </defs>
+      <line x1="${L}" y1="${TOP}" x2="${W - R}" y2="${TOP}" stroke="#2A2A3A" stroke-width="1" stroke-dasharray="3 3"></line>
+      <line x1="${L}" y1="${baseY}" x2="${W - R}" y2="${baseY}" stroke="#2A2A3A" stroke-width="1" stroke-dasharray="3 3"></line>
       <path d="${area}" fill="url(#wcg)"></path>
-      <path d="${line}" fill="none" stroke="#C6FF3D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path>
-      ${dots}
-      <circle cx="${X(pts.length - 1).toFixed(1)}" cy="${Y(last.w).toFixed(1)}" r="3.8" fill="#C6FF3D" stroke="#15151F" stroke-width="2"></circle>
-      <text x="${L - 4}" y="${TOP + 3}" fill="#8A8A9A" font-size="9" font-weight="700" text-anchor="end">${fmtNum(max)}</text>
-      <text x="${L - 4}" y="${baseY + 3}" fill="#8A8A9A" font-size="9" font-weight="700" text-anchor="end">${fmtNum(min)}</text>
-      <text x="${L}" y="${H - 5}" fill="#8A8A9A" font-size="9.5" font-weight="700">${esc(fmtDateISO(first.date))}</text>
-      <text x="${W - R}" y="${H - 5}" fill="#8A8A9A" font-size="9.5" font-weight="700" text-anchor="end">${esc(fmtDateISO(last.date))}</text>
+      <path d="${line}" fill="none" stroke="#C6FF3D" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path>
+      ${nodes}
+      <text x="${L}" y="${H - 4}" fill="#8A8A9A" font-size="9.5" font-weight="700">${esc(fmtDateISO(first.date))}</text>
+      <text x="${W - R}" y="${H - 4}" fill="#8A8A9A" font-size="9.5" font-weight="700" text-anchor="end">${esc(fmtDateISO(last.date))}</text>
     </svg>
   </div>`;
 }
@@ -2557,7 +2648,13 @@ function exportMeasCSV() {
 }
 
 /* ── wiring viste ── */
-$('goTraining').onclick = () => setView('training');
+$('goTraining').onclick = () => {
+  if (hasIncompleteWorkout()) {
+    checkIncompleteWorkout();
+  } else {
+    setView('training');
+  }
+};
 $('goProgress').onclick = () => setView('progress');
 $('goCoach').onclick = () => setView('coach');
 $('btnHome').onclick = () => setView('home');
@@ -2622,12 +2719,30 @@ function openCoachBookingModal(planName) {
   };
 }
 
+/* ── seed misurazioni di test (RIMUOVERE dopo il test) ── */
+if (!state.measurements || !state.measurements.length) {
+  state.measurements = [
+    { id:'s01', date:'2026-02-01', values:{ weight:88.2, bodyFat:22.5, neck:39, chest:104, waist:92, hips:102, arm:33.5, thigh:58, calf:38 }, note:'Inizio programma, a digiuno' },
+    { id:'s02', date:'2026-02-15', values:{ weight:87.5, bodyFat:22, chest:104, waist:91, arm:33.5, thigh:58.2 }, note:'' },
+    { id:'s03', date:'2026-03-01', values:{ weight:86.8, bodyFat:21.2, neck:39, chest:104.5, waist:90, hips:101.5, arm:34, thigh:58.5, calf:38 }, note:'Primo mese completato' },
+    { id:'s04', date:'2026-03-15', values:{ weight:86, bodyFat:20.5, chest:104.5, waist:89.5, arm:34, thigh:58.5 }, note:'' },
+    { id:'s05', date:'2026-04-01', values:{ weight:85.1, bodyFat:19.8, neck:39.5, chest:105, waist:88, hips:100.5, arm:34.5, thigh:59, calf:38.2 }, note:'Secondo mese, buoni progressi' },
+    { id:'s06', date:'2026-04-15', values:{ weight:84.6, bodyFat:19.2, chest:105, waist:87.5, arm:34.5, thigh:59 }, note:'Aumentato volume gambe' },
+    { id:'s07', date:'2026-05-01', values:{ weight:83.9, bodyFat:18.5, neck:39.5, chest:105.5, waist:86.5, hips:99.5, arm:35, thigh:59.5, calf:38.5 }, note:'Terzo mese, definizione visibile' },
+    { id:'s08', date:'2026-05-15', values:{ weight:83.4, bodyFat:18, chest:106, waist:86, arm:35.2, thigh:59.5 }, note:'' },
+    { id:'s09', date:'2026-06-01', values:{ weight:82.7, bodyFat:17.2, neck:40, chest:106, waist:85, hips:99, arm:35.5, thigh:60, calf:38.8 }, note:'Quarto mese, panca +10kg dal primo giorno' },
+    { id:'s10', date:'2026-06-15', values:{ weight:82.3, bodyFat:16.8, chest:106.5, waist:84.5, arm:35.5, thigh:60 }, note:'' },
+    { id:'s11', date:'2026-07-01', values:{ weight:81.5, bodyFat:16, neck:40, chest:107, waist:83.5, hips:98, arm:36, thigh:60.5, calf:39 }, note:'Quinto mese, fase di mantenimento' },
+    { id:'s12', date:'2026-08-01', values:{ weight:81, bodyFat:15.5, neck:40.5, chest:107.5, waist:83, hips:97.5, arm:36.5, thigh:61, calf:39.2 }, note:'Sesto mese — risultato finale 🔥' }
+  ];
+  save();
+}
+
 /* ── avvio ── */
 render();
 setView('home');
 
-// Check for incomplete workout from previous session
-checkIncompleteWorkout();
+// Incomplete workout check is now triggered when pressing "Allenamento" in the home menu
 
 // Splash solo al primo avvio della sessione: reload e navigazioni interne
 // non la rimostrano (niente attrito a ogni apertura della scheda).
