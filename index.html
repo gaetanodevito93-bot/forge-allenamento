@@ -1703,39 +1703,37 @@ function checkIncompleteWorkout() {
 
 function renderSessionBanner() {
   const banner = $('sessionBanner');
+  if (!banner) return;
   const d = day();
+  if (!hasIncompleteWorkout()) {
+    banner.style.display = 'none';
+    return;
+  }
   const { tot, done } = dayCounts();
   const last = lastSessionFor(d.name);
   const lastDate = last ? fmtDateTs(last.ts) : '—';
   const pct = tot ? Math.round((done / tot) * 100) : 0;
 
-  // Start in choice mode
   banner.style.display = 'block';
   banner.innerHTML = `
-    <div class="sb-title">Allenamento in corso — ${esc(d.name)}</div>
-    <div class="sb-actions">
-      <button class="sb-btn primary" id="sbResume">Continua allenamento</button>
-      <button class="sb-btn ghost" id="sbReset">Inizia da capo</button>
+    <div class="sb-session">
+      <div>
+        <div class="sb-session-name">⚡ Allenamento in corso — ${esc(d.name)}</div>
+        <div class="sb-session-meta">${done}/${tot} serie (${pct}%) · Ultima volta: ${esc(lastDate)}</div>
+      </div>
+      <button class="sb-change" id="sbResetInline" style="color:var(--coral)">Inizia da capo</button>
     </div>`;
 
-  banner.querySelector('#sbResume').onclick = () => {
-    // Switch to session info mode
-    banner.innerHTML = `
-      <div class="sb-session">
-        <div>
-          <div class="sb-session-name">${esc(d.name)}</div>
-          <div class="sb-session-meta">${done}/${tot} serie (${pct}%) · Ultima: ${esc(lastDate)}</div>
-        </div>
-        <button class="sb-change" id="sbChange">Cambia</button>
-      </div>`;
-    banner.querySelector('#sbChange').onclick = () => renderSessionBanner();
-  };
-  banner.querySelector('#sbReset').onclick = () => {
-    d.exercises.forEach(ex => ex.log.forEach(l => { l.done = false; l.reps = ''; l.weight = ''; }));
-    save(); render();
-    toast('Progressi azzerati, nuova giornata 💪');
-    banner.style.display = 'none';
-  };
+  const resetBtn = banner.querySelector('#sbResetInline');
+  if (resetBtn) {
+    resetBtn.onclick = () => {
+      confirmModal('Inizia da capo', 'Azzerare tutte le serie completate di questa giornata?', 'Inizia da capo', () => {
+        d.exercises.forEach(ex => ex.log.forEach(l => { l.done = false; l.reps = ''; l.weight = ''; }));
+        save(); render();
+        toast('Progressi azzerati, nuova giornata 💪');
+      });
+    };
+  }
 }
 
 function openCompare() {
