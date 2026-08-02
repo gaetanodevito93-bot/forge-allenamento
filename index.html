@@ -1915,7 +1915,7 @@ const btnCmp = $('btnCompare');
 if (btnCmp) btnCmp.onclick = openCompare;
 
 function openLegalModal() {
-  openModal('Privacy & Note Legali', `
+  const b = openModal('Privacy & Note Legali', `
     <div style="display:flex;flex-direction:column;gap:16px;font-size:13.5px;color:var(--text);line-height:1.55">
       <div style="background:var(--bg);border:1px solid var(--border);border-radius:14px;padding:14px 16px">
         <h4 style="font-size:14px;margin-bottom:6px;color:var(--volt)">🩺 Disclaimer Medico &amp; Responsabilità</h4>
@@ -1935,9 +1935,18 @@ function openLegalModal() {
         <p style="color:var(--muted);font-size:13px">I percorsi di programmazione e coaching 1-to-1 costituiscono servizi forniti da professionisti del settore. Tutti i prezzi indicati sono espressi in Euro (€) ed inclusivi di imposte. L'assistenza viene erogata secondo le modalità concordate con il Coach.</p>
       </div>
 
-      <button class="btn btn-primary btn-block" onclick="closeModal()">Ho compreso e accetto</button>
+      <button class="btn btn-primary btn-block" id="btnAckLegalModal">Ho compreso ed accetto</button>
     </div>
   `);
+
+  b.querySelector('#btnAckLegalModal').onclick = () => {
+    try { localStorage.setItem('forge_legal_ack', '1'); } catch (_) {}
+    const closeBtn = $('modalClose');
+    const overlay = $('overlay');
+    if (closeBtn) closeBtn.style.display = 'grid';
+    if (overlay) overlay.onclick = closeModal;
+    closeModal();
+  };
 }
 
 /* ── menu principale riorganizzato per sezioni ── */
@@ -3651,7 +3660,7 @@ if (btnCSync) btnCSync.onclick = openCloudAccountModal;
 setupPwaInstall();
 render();
 setView('home');
-checkLegalBanner();
+openMandatoryLegalGate();
 
 // Nascondi splash screen con temporizzazione morbida e stabile
 (function hideSplash() {
@@ -3673,21 +3682,55 @@ try {
   updateCloudDot('offline');
 }
 
-// Check banner disclaimer medico al primo avvio
-function checkLegalBanner() {
-  const b = $('legalBanner');
-  if (!b) return;
+// Gate di Accettazione Vincolante & Condizionale al 1° avvio
+function openMandatoryLegalGate() {
   let ack = false;
   try { ack = localStorage.getItem('forge_legal_ack') === '1'; } catch (_) {}
-  if (!ack) {
-    b.classList.remove('hide');
-    $('lbAck').onclick = () => {
+  if (ack) return;
+
+  const b = openModal('🛡️ Accettazione Termini & Condizioni', `
+    <div style="text-align:center;padding:10px 4px 6px">
+      <div style="font-size:46px;line-height:1;margin-bottom:12px">⚖️</div>
+      <h3 style="font-family:Anton,sans-serif;font-size:24px;color:var(--volt);margin-bottom:8px;letter-spacing:1px">CONDIZIONI D'USO &amp; PRIVACY</h3>
+      <p style="color:var(--muted);font-size:13.5px;margin-bottom:20px;line-height:1.4">
+        Per utilizzare FORGE è necessario accettare espressamente i <b>Termini di Servizio</b>, il <b>Disclaimer Medico</b> ed la <b>Privacy Policy (GDPR)</b>.
+      </p>
+
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:14px;text-align:left;font-size:12.5px;color:var(--text);margin-bottom:20px;display:flex;flex-direction:column;gap:10px">
+        <div>🩺 <b>Disclaimer Medico:</b> FORGE è uno strumento di tracciamento personale. Consulta il tuo medico prima di intraprendere qualsiasi attività sportiva.</div>
+        <div>🛡️ <b>Privacy GDPR:</b> I tuoi dati ed i tuoi progressi sono protetti nel rispetto del GDPR UE 2016/679.</div>
+        <div>💶 <b>Servizi Coaching:</b> I servizi 1-to-1 ed i programmi PRO sono forniti secondo le condizioni indicate.</div>
+      </div>
+
+      <div class="stack">
+        <button class="btn btn-primary btn-block" id="btnAcceptLegalGate" style="font-size:14px;padding:14px">🛡️ Accetto i Termini ed Entra in FORGE</button>
+        <button class="btn btn-ghost btn-block" id="btnReadFullTerms">Leggi Termini e Note Legali Completi</button>
+      </div>
+    </div>
+  `);
+
+  // Blocca la chiusura per rendere l'accettazione CONDIZIONALE ed OBBLIGATORIA
+  const overlay = $('overlay');
+  const closeBtn = $('modalClose');
+  if (closeBtn) closeBtn.style.display = 'none';
+  if (overlay) overlay.onclick = (e) => e.stopPropagation();
+
+  const btnAccept = b.querySelector('#btnAcceptLegalGate');
+  if (btnAccept) {
+    btnAccept.onclick = () => {
       try { localStorage.setItem('forge_legal_ack', '1'); } catch (_) {}
-      b.classList.add('hide');
+      if (closeBtn) closeBtn.style.display = 'grid';
+      if (overlay) overlay.onclick = closeModal;
+      closeModal();
+      toast('Termini e Condizioni accettati! Benvenuto in FORGE 💪');
     };
-    $('lbLink').onclick = () => openLegalModal();
-  } else {
-    b.classList.add('hide');
+  }
+
+  const btnRead = b.querySelector('#btnReadFullTerms');
+  if (btnRead) {
+    btnRead.onclick = () => {
+      openLegalModal();
+    };
   }
 }
 
