@@ -533,6 +533,17 @@ body.kb #fabSave,body.kb #fabAddMeas{display:none!important}
       </span>
       <span class="hb-arrow"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"></path></svg></span>
     </button>
+    <!-- PWA INSTALL BUTTON (VISIBILE SOLO SE NON ANCORA INSTALLATA) -->
+    <button class="home-btn install" id="btnInstallPwa" style="display:none;border-color:var(--volt);background:linear-gradient(145deg,rgba(198,255,61,.18),var(--surface))">
+      <span class="hb-ic" style="background:var(--volt);color:#0A0A0F">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#0A0A0F" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+      </span>
+      <span class="hb-tx">
+        <strong>Installa FORGE (App)</strong>
+        <span>Aggiungi alla schermata Home per uso offline ed a schermo intero</span>
+      </span>
+      <span class="hb-arrow"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"></path></svg></span>
+    </button>
   </div>
 </div>
 
@@ -1792,6 +1803,10 @@ function openAppMenu() {
             <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
             ${user ? `Account: <b>${esc(userLabel)}</b>` : 'Accedi con Google / Cloud Sync'}
           </button>
+          <button class="sheet-btn" id="aSyncCloudSheet">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"></path></svg>
+            Aggiorna questa Scheda nel Cloud ☁️
+          </button>
         </div>
       </div>
 
@@ -1826,6 +1841,8 @@ function openAppMenu() {
     </div>`);
 
   b.querySelector('#aCloudAccount').onclick = () => { closeModal(); openCloudAccountModal(); };
+  const btnSync = b.querySelector('#aSyncCloudSheet');
+  if (btnSync) btnSync.onclick = () => { closeModal(); promptCloudSync(); };
   b.querySelector('#aAddEx').onclick = () => { closeModal(); openExerciseForm(null); };
   b.querySelector('#aManageLib').onclick = () => { closeModal(); openLibraryManager(); };
   b.querySelector('#aCompare').onclick = () => { closeModal(); openCompare(); };
@@ -1850,6 +1867,31 @@ function openAppMenu() {
     state = normalizeState(DEFAULT_STATE());
     save(); render(); toast('Scheda azzerata');
   });
+}
+
+function promptCloudSync() {
+  const user = window.FORGE_CLOUD ? FORGE_CLOUD.getUser() : null;
+  if (!user) {
+    openCloudAccountModal();
+    return;
+  }
+  const b = openModal('Aggiorna Scheda nel Cloud ☁️', `
+    <p style="color:var(--muted);font-size:14px;margin-bottom:18px">Vuoi sincronizzare la tua scheda corrente (<b>"${esc(state.programName)}"</b> con ${state.days.length} giorni di allenamento) sul tuo profilo Google Cloud in modo da averla disponibile su tutti i tuoi dispositivi?</p>
+    <div class="modal-foot stack">
+      <button class="btn btn-primary btn-block" id="btnConfirmCloudSync">☁️ Sì, aggiorna nel Cloud</button>
+      <button class="btn btn-ghost btn-block" id="btnCancelCloudSync">Mantieni solo in locale</button>
+    </div>`);
+
+  b.querySelector('#btnConfirmCloudSync').onclick = () => {
+    closeModal();
+    updateCloudDot('syncing');
+    FORGE_CLOUD.saveStateToCloud(state).then(ok => {
+      updateCloudDot(ok ? 'synced' : 'offline');
+      if (ok) toast('Scheda aggiornata nel Cloud! ☁️');
+      else toast('Errore salva cloud: Attiva le Regole su Firestore');
+    });
+  };
+  b.querySelector('#btnCancelCloudSync').onclick = () => closeModal();
 }
 
 function openCloudAccountModal() {
@@ -2963,12 +3005,63 @@ function setupCloudAuthListeners() {
   });
 }
 
+let deferredInstallPrompt = null;
+
+function setupPwaInstall() {
+  const btnInstall = $('btnInstallPwa');
+  if (!btnInstall) return;
+
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  if (isStandalone) {
+    btnInstall.style.display = 'none';
+    return;
+  }
+
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  if (isIOS) {
+    btnInstall.style.display = 'flex';
+    btnInstall.onclick = () => {
+      openModal('Installa FORGE su iPhone / iPad 📲', `
+        <p style="color:var(--muted);font-size:14px;margin-bottom:14px">Per installare FORGE come App sul tuo dispositivo Apple:</p>
+        <ol style="font-size:13.5px;margin-left:20px;color:var(--text);display:flex;flex-direction:column;gap:8px;margin-bottom:18px">
+          <li>Tocca l'icona <b>Condividi 📤</b> nella barra in basso di Safari.</li>
+          <li>Scorri le opzioni e seleziona <b>"Aggiungi alla schermata Home ➕"</b>.</li>
+          <li>Tocca <b>Aggiungi</b> in alto a destra.</li>
+        </ol>
+        <button class="btn btn-primary btn-block" onclick="closeModal()">Capito!</button>`);
+    };
+  }
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    btnInstall.style.display = 'flex';
+    btnInstall.onclick = async () => {
+      if (!deferredInstallPrompt) return;
+      deferredInstallPrompt.prompt();
+      const { outcome } = await deferredInstallPrompt.userChoice;
+      if (outcome === 'accepted') {
+        btnInstall.style.display = 'none';
+        toast('FORGE installata con successo! 🎉');
+      }
+      deferredInstallPrompt = null;
+    };
+  });
+
+  window.addEventListener('appinstalled', () => {
+    btnInstall.style.display = 'none';
+    deferredInstallPrompt = null;
+    toast('FORGE installata con successo! 🎉');
+  });
+}
+
 const btnGHome = $('btnGoogleAuthHome');
 if (btnGHome) btnGHome.onclick = openCloudAccountModal;
 const btnCSync = $('btnCloudSync');
 if (btnCSync) btnCSync.onclick = openCloudAccountModal;
 
 /* ── avvio ── */
+setupPwaInstall();
 render();
 setView('home');
 
