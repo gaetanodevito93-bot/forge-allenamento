@@ -3718,7 +3718,14 @@ function openMandatoryLegalGate() {
   const btnAccept = b.querySelector('#btnAcceptLegalGate');
   if (btnAccept) {
     btnAccept.onclick = () => {
-      try { localStorage.setItem('forge_legal_ack', '1'); } catch (_) {}
+      const ts = new Date().toISOString();
+      try {
+        localStorage.setItem('forge_legal_ack', '1');
+        localStorage.setItem('forge_legal_ack_ts', ts);
+      } catch (_) {}
+      if (window.FORGE_CLOUD && FORGE_CLOUD.syncLegalConsentToCloud) {
+        FORGE_CLOUD.syncLegalConsentToCloud();
+      }
       if (closeBtn) closeBtn.style.display = 'grid';
       if (overlay) overlay.onclick = closeModal;
       closeModal();

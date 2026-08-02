@@ -250,6 +250,38 @@
     }
   }
 
+  // Sincronizza ed archivia la prova di consenso legale su Cloud Firestore
+  async function syncLegalConsentToCloud(user) {
+    const targetUser = user || currentUser;
+    if (!db || !targetUser) return false;
+    try {
+      let ack = false;
+      let ts = new Date().toISOString();
+      try {
+        ack = localStorage.getItem('forge_legal_ack') === '1';
+        ts = localStorage.getItem('forge_legal_ack_ts') || ts;
+      } catch (_) {}
+
+      if (ack) {
+        const userRef = db.collection('users').doc(targetUser.uid);
+        await userRef.set({
+          legalConsent: {
+            accepted: true,
+            timestamp: ts,
+            version: 'v1.0 (Disclaimer Medico + GDPR 2016/679 + Termini Coaching)',
+            userEmail: targetUser.email || '',
+            userName: targetUser.displayName || ''
+          }
+        }, { merge: true });
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error('Errore archiviazione consenso legale Cloud:', err);
+      return false;
+    }
+  }
+
   // Oggetto globale FORGE_CLOUD
   window.FORGE_CLOUD = {
     getStoredConfig,
@@ -262,6 +294,7 @@
     saveSchedaToCloudList,
     fetchCloudSchedeList,
     deleteCloudScheda,
+    syncLegalConsentToCloud,
     fetchCloudState,
     listenToCloudState,
     getUser: () => currentUser,
