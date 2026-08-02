@@ -1667,22 +1667,34 @@ function saveSession(clearAfter) {
 }
 
 /* ── check incomplete workout on startup ── */
+/* ── check incomplete workout on startup ── */
 function hasIncompleteWorkout() {
-  const d = day();
-  return d.exercises.some(ex =>
-    ex.log.some(l => l.done || l.reps || l.weight)
+  return state.days.some(d =>
+    (d.exercises || []).some(ex =>
+      (ex.log || []).some(l => l.done || l.reps || l.weight)
+    )
   );
+}
+
+function clearWorkoutProgress() {
+  state.days.forEach(d => {
+    (d.exercises || []).forEach(ex => {
+      (ex.log || []).forEach(l => {
+        l.done = false;
+        l.reps = '';
+        l.weight = '';
+      });
+    });
+  });
+  save();
+  const banner = $('sessionBanner');
+  if (banner) banner.style.display = 'none';
+  render();
 }
 
 function checkIncompleteWorkout() {
   if (!hasIncompleteWorkout()) return;
-  // Already in training view? Show session banner instead.
-  if (document.body.getAttribute('data-view') === 'training') {
-    renderSessionBanner();
-    return;
-  }
 
-  // Not in training view: show modal to choose
   const b = openModal('Allenamento in corso', `
     <p style="color:var(--muted);font-size:14px;margin-bottom:18px">Hai un allenamento iniziato in precedenza (serie completate o dati inseriti) che non è stato concluso con "Fine".</p>
     <div class="modal-foot stack">
@@ -1694,8 +1706,8 @@ function checkIncompleteWorkout() {
     setView('training');
   };
   b.querySelector('#resetWorkout').onclick = () => {
-    day().exercises.forEach(ex => ex.log.forEach(l => { l.done = false; l.reps = ''; l.weight = ''; }));
-    save(); render(); closeModal();
+    closeModal();
+    clearWorkoutProgress();
     toast('Progressi azzerati, nuova giornata 💪');
     setView('training');
   };
@@ -1705,7 +1717,8 @@ function renderSessionBanner() {
   const banner = $('sessionBanner');
   if (!banner) return;
   const d = day();
-  if (!hasIncompleteWorkout()) {
+  const dayHasData = d.exercises.some(ex => (ex.log || []).some(l => l.done || l.reps || l.weight));
+  if (!dayHasData) {
     banner.style.display = 'none';
     return;
   }
@@ -1728,10 +1741,7 @@ function renderSessionBanner() {
   if (resetBtn) {
     resetBtn.onclick = () => {
       confirmModal('Inizia da capo', 'Azzerare tutte le serie completate di questa giornata?', 'Inizia da capo', () => {
-        d.exercises.forEach(ex => ex.log.forEach(l => { l.done = false; l.reps = ''; l.weight = ''; }));
-        save();
-        banner.style.display = 'none';
-        render();
+        clearWorkoutProgress();
         toast('Progressi azzerati, nuova giornata 💪');
       });
     };
