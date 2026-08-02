@@ -1801,11 +1801,15 @@ function openAppMenu() {
         <div class="menu-list">
           <button class="sheet-btn" id="aCloudAccount">
             <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-            ${user ? `Account: <b>${esc(userLabel)}</b>` : 'Accedi con Google / Cloud Sync'}
+            ${user ? `Account: <b>${esc(userLabel)}</b>` : 'Accedi con Google'}
           </button>
-          <button class="sheet-btn" id="aSyncCloudSheet">
+          <button class="sheet-btn" id="aSaveToCloudBtn">
             <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"></path></svg>
-            Aggiorna questa Scheda nel Cloud ☁️
+            Salva scheda nel Cloud ☁️
+          </button>
+          <button class="sheet-btn" id="aLoadFromCloudBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="M7 10l5 5 5-5"></path><path d="M12 15V3"></path></svg>
+            Carica scheda dal Cloud 📥
           </button>
         </div>
       </div>
@@ -1840,9 +1844,12 @@ function openAppMenu() {
       </div>
     </div>`);
 
-  b.querySelector('#aCloudAccount').onclick = () => { closeModal(); openCloudAccountModal(); };
-  const btnSync = b.querySelector('#aSyncCloudSheet');
-  if (btnSync) btnSync.onclick = () => { closeModal(); promptCloudSync(); };
+  const btnAcc = b.querySelector('#aCloudAccount');
+  if (btnAcc) btnAcc.onclick = () => { closeModal(); openCloudAccountModal(); };
+  const btnSaveC = b.querySelector('#aSaveToCloudBtn');
+  if (btnSaveC) btnSaveC.onclick = () => { closeModal(); saveSchedaToCloud(); };
+  const btnLoadC = b.querySelector('#aLoadFromCloudBtn');
+  if (btnLoadC) btnLoadC.onclick = () => { closeModal(); loadSchedaFromCloud(); };
   b.querySelector('#aAddEx').onclick = () => { closeModal(); openExerciseForm(null); };
   b.querySelector('#aManageLib').onclick = () => { closeModal(); openLibraryManager(); };
   b.querySelector('#aCompare').onclick = () => { closeModal(); openCompare(); };
@@ -1869,34 +1876,38 @@ function openAppMenu() {
   });
 }
 
-function promptCloudSync() {
+async function saveSchedaToCloud() {
   const user = window.FORGE_CLOUD ? FORGE_CLOUD.getUser() : null;
-  if (!user) {
-    openCloudAccountModal();
-    return;
-  }
-  const b = openModal('Aggiorna Scheda nel Cloud ☁️', `
-    <p style="color:var(--muted);font-size:14px;margin-bottom:18px">Vuoi sincronizzare la tua scheda corrente (<b>"${esc(state.programName)}"</b> con ${state.days.length} giorni di allenamento) sul tuo profilo Google Cloud in modo da averla disponibile su tutti i tuoi dispositivi?</p>
-    <div class="modal-foot stack">
-      <button class="btn btn-primary btn-block" id="btnConfirmCloudSync">☁️ Sì, aggiorna nel Cloud</button>
-      <button class="btn btn-ghost btn-block" id="btnCancelCloudSync">Mantieni solo in locale</button>
-    </div>`);
+  if (!user) { openCloudAccountModal(); return; }
+  updateCloudDot('syncing');
+  const ok = await FORGE_CLOUD.saveStateToCloud(state);
+  updateCloudDot(ok ? 'synced' : 'offline');
+  if (ok) toast('Scheda salvata nel Cloud! ☁️');
+  else toast('Errore salva Cloud: verifica regole Firestore');
+}
 
-  b.querySelector('#btnConfirmCloudSync').onclick = () => {
-    closeModal();
+async function loadSchedaFromCloud() {
+  const user = window.FORGE_CLOUD ? FORGE_CLOUD.getUser() : null;
+  if (!user) { openCloudAccountModal(); return; }
+  confirmModal('Carica scheda dal Cloud 📥', 'Vuoi caricare l\'ultima scheda salvata nel Cloud? La scheda attuale sul browser verrà sostituita con quella salvata online.', 'Carica dal Cloud', async () => {
     updateCloudDot('syncing');
-    FORGE_CLOUD.saveStateToCloud(state).then(ok => {
-      updateCloudDot(ok ? 'synced' : 'offline');
-      if (ok) toast('Scheda aggiornata nel Cloud! ☁️');
-      else toast('Errore salva cloud: Attiva le Regole su Firestore');
-    });
-  };
-  b.querySelector('#btnCancelCloudSync').onclick = () => closeModal();
+    const cloudState = await FORGE_CLOUD.fetchCloudState();
+    if (cloudState && cloudState.days && cloudState.days.length) {
+      state = normalizeState(cloudState);
+      save(true);
+      render();
+      if (document.body.getAttribute('data-view') === 'progress') renderProgress();
+      updateCloudDot('synced');
+      toast('Scheda caricata dal Cloud! 📥');
+    } else {
+      updateCloudDot('synced');
+      toast('Nessuna scheda trovata nel Cloud per questo account.');
+    }
+  });
 }
 
 function openCloudAccountModal() {
   const user = window.FORGE_CLOUD ? FORGE_CLOUD.getUser() : null;
-  const isConfigured = window.FORGE_CLOUD ? FORGE_CLOUD.isConfigured() : false;
 
   if (user) {
     const avatar = user.photoURL ? `<img src="${esc(user.photoURL)}" style="width:48px;height:48px;border-radius:50%;border:2px solid var(--volt)">`
@@ -1909,15 +1920,19 @@ function openCloudAccountModal() {
           <div style="font-size:16px;font-weight:800;overflow:hidden;text-overflow:ellipsis">${esc(user.displayName || 'Utente FORGE')}</div>
           <div style="font-size:12.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis">${esc(user.email || '')}</div>
           <div style="font-size:11px;font-weight:700;color:var(--volt);margin-top:4px;display:flex;align-items:center;gap:4px">
-            <span style="width:7px;height:7px;border-radius:50%;background:var(--volt)"></span> Sincronizzato in Cloud
+            <span style="width:7px;height:7px;border-radius:50%;background:var(--volt)"></span> Connesso con Google
           </div>
         </div>
       </div>
-      <p style="font-size:13px;color:var(--muted);margin-bottom:18px">I tuoi dati vengono automaticamente sincronizzati nel cloud. Accedendo con questo account Google da qualsiasi altro dispositivo ritroverai la tua scheda e i tuoi progressi aggiornati.</p>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:18px">Sincronizza la tua scheda ed i tuoi progressi nel Cloud per ritrovarli aggiornati su tutti i tuoi dispositivi.</p>
       <div class="modal-foot stack">
+        <button class="btn btn-primary btn-block" id="caSaveCloud">☁️ Salva scheda sul Cloud</button>
+        <button class="btn btn-ghost btn-block" id="caLoadCloud">📥 Carica scheda dal Cloud</button>
         <button class="btn btn-danger btn-block" id="caLogout">Disconnetti account</button>
       </div>`);
 
+    b.querySelector('#caSaveCloud').onclick = () => { closeModal(); saveSchedaToCloud(); };
+    b.querySelector('#caLoadCloud').onclick = () => { closeModal(); loadSchedaFromCloud(); };
     b.querySelector('#caLogout').onclick = () => {
       confirmModal('Disconnetti', 'Vuoi disconnetterti dal tuo account Google? I dati locali rimarranno sul browser.', 'Disconnetti', async () => {
         if (window.FORGE_CLOUD) await FORGE_CLOUD.logOut();
@@ -2984,20 +2999,32 @@ function setupCloudAuthListeners() {
     if (user) {
       updateCloudDot('synced');
       renderCloudAuthUI(user);
-      toast(`Benvenuto ${user.displayName || 'su FORGE'} ☁️`);
+
+      // Caricamento automatico all'avvio dell'ultima scheda dal Cloud
+      try {
+        const cloudState = await FORGE_CLOUD.fetchCloudState();
+        if (cloudState && cloudState.days && cloudState.days.length) {
+          state = normalizeState(cloudState);
+          save(true);
+          render();
+          if (document.body.getAttribute('data-view') === 'progress') renderProgress();
+          toast(`Scheda caricata dal Cloud ☁️ (${user.displayName || 'Utente'})`);
+        } else {
+          await FORGE_CLOUD.saveStateToCloud(state);
+        }
+      } catch (err) {
+        console.error('Errore caricamento scheda all\'avvio:', err);
+      }
 
       // Ascolta il cloud in tempo reale
       FORGE_CLOUD.listenToCloudState((cloudState) => {
         if (cloudState && cloudState.days && cloudState.days.length) {
           state = normalizeState(cloudState);
-          save(true); // salva in locale senza eco al cloud
+          save(true);
           render();
           if (document.body.getAttribute('data-view') === 'progress') renderProgress();
         }
       });
-
-      // Salva lo stato attuale se il cloud non ha ancora dati
-      FORGE_CLOUD.saveStateToCloud(state);
     } else {
       updateCloudDot('offline');
       renderCloudAuthUI(null);

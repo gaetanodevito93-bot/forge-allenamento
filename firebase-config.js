@@ -152,6 +152,22 @@
     return unsubscribeSnapshot;
   }
 
+  // Recupera l'ultimo stato salvato nel cloud
+  async function fetchCloudState() {
+    if (!db || !currentUser) return null;
+    try {
+      const doc = await db.collection('users').doc(currentUser.uid).get();
+      if (doc.exists) {
+        const data = doc.data();
+        if (data && data.state) return data.state;
+      }
+      return null;
+    } catch (err) {
+      console.error('Errore recupero scheda dal Cloud:', err);
+      return null;
+    }
+  }
+
   // Oggetto globale FORGE_CLOUD
   window.FORGE_CLOUD = {
     getStoredConfig,
@@ -161,6 +177,7 @@
     signInWithGoogle,
     logOut,
     saveStateToCloud,
+    fetchCloudState,
     listenToCloudState,
     getUser: () => currentUser,
     setUser: (u) => { currentUser = u; },

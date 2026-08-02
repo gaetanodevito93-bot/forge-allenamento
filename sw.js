@@ -1,7 +1,7 @@
 /* FORGE — service worker (offline-first PWA) */
 'use strict';
 
-const VERSION = 'forge-v20';
+const VERSION = 'forge-v21';
 const APP_SHELL = `${VERSION}-shell`;
 const RUNTIME = `${VERSION}-runtime`;
 
