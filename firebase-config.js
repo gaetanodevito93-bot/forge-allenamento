@@ -123,6 +123,9 @@
       return true;
     } catch (err) {
       console.error('Errore salvataggio Cloud:', err);
+      if (err.code === 'permission-denied' && typeof toast === 'function') {
+        toast('Errore salva cloud: Attiva le Regole su Firestore Console');
+      }
       return false;
     }
   }
