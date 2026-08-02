@@ -203,6 +203,15 @@ body.dragging-active{cursor:grabbing;user-select:none}
 .paste-json{width:100%;min-height:130px;resize:vertical;background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:12px 14px;color:var(--text);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;line-height:1.5}
 .paste-json:focus{outline:none;border-color:var(--volt)}
 .paste-json::placeholder{color:var(--muted)}
+.legal-banner{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:95;width:calc(100% - 32px);max-width:540px;background:var(--surface2);border:1px solid var(--border);border-radius:16px;padding:12px 16px;box-shadow:var(--shadow);transition:transform .3s ease,opacity .3s ease}
+.legal-banner.hide{transform:translate(-50%,120%);opacity:0;pointer-events:none}
+.lb-inner{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:12.5px;color:var(--text)}
+.lb-inner span{line-height:1.4}
+.lb-inner button#lbLink{background:none;border:none;color:var(--volt);font-weight:700;cursor:pointer;text-decoration:underline;padding:0}
+.btn-sm{padding:8px 14px;font-size:12.5px;border-radius:10px;flex-shrink:0}
+.set-copy-btn{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:var(--surface2);border:1px solid var(--border);color:var(--volt);border-radius:6px;width:22px;height:22px;font-size:10px;display:grid;place-items:center;cursor:pointer;transition:.15s;opacity:.7}
+.set-copy-btn:hover{opacity:1;background:var(--volt);color:#0A0A0F}
+.set-row{position:relative}
 /* ── viste: home / allenamento / progressi / coach ── */
 #homeView,#progressView,#coachView{display:none}
 body[data-view="home"] #homeView{display:flex}
@@ -1058,11 +1067,12 @@ function cardHTML(ex, i, session) {
     } else if (ps && ps.done) {
       prevLine = `<div class="set-prev">ultima volta: <b>✓ completata</b></div>`;
     }
+    const copyBtn = j > 0 ? `<button class="set-copy-btn" data-ex="${i}" data-set="${j}" title="Copia ripetizioni e peso dalla serie sopra">⚡</button>` : '';
     return `<div class="set-row${l.done ? ' on' : ''}">
     <div class="set-idx">${j + 1}</div>
     <input class="set-input" data-testid="reps-${i}-${j}" data-ex="${i}" data-set="${j}" data-k="reps" inputmode="text" placeholder="${esc(ex.reps)}" value="${esc(l.reps)}">
     <input class="set-input" data-testid="weight-${i}-${j}" data-ex="${i}" data-set="${j}" data-k="weight" inputmode="decimal" placeholder="${ex.weight != null && ex.weight !== '' ? esc(ex.weight) : '—'}" value="${esc(l.weight)}">
-    <button class="set-check${l.done ? ' on' : ''}" data-testid="set-check-${i}-${j}" data-ex="${i}" data-set="${j}">${ICONS.check}</button>${prevLine}</div>`;
+    <button class="set-check${l.done ? ' on' : ''}" data-testid="set-check-${i}-${j}" data-ex="${i}" data-set="${j}">${ICONS.check}</button>${copyBtn}${prevLine}</div>`;
   }).join('');
   const allDone = ex.sets > 0 && ex.log.every(l => l.done);
   return `<div class="ex-card${allDone ? ' done' : ''}" data-testid="exercise-card-${i}" data-exidx="${i}" title="Tieni premuto per spostare">
@@ -1136,6 +1146,25 @@ $('exList').addEventListener('input', e => {
 $('exList').addEventListener('click', e => {
   const opts = e.target.closest('.ex-opts-btn');
   if (opts) { openExMenu(+opts.dataset.exidx); return; }
+  const cpy = e.target.closest('.set-copy-btn');
+  if (cpy) {
+    const exIdx = +cpy.dataset.ex;
+    const setIdx = +cpy.dataset.set;
+    if (setIdx > 0) {
+      const ex = day().exercises[exIdx];
+      const prevSet = ex.log[setIdx - 1];
+      const currSet = ex.log[setIdx];
+      if (prevSet) {
+        currSet.reps = prevSet.reps;
+        currSet.weight = prevSet.weight;
+        save();
+        renderList();
+        buzz(20);
+        toast(`Copiati ${prevSet.reps || '—'}${prevSet.weight ? ` × ${prevSet.weight}kg` : ''} ⚡`);
+      }
+    }
+    return;
+  }
   const chk = e.target.closest('.set-check');
   if (chk) toggleSet(+chk.dataset.ex, +chk.dataset.set, chk);
 });
@@ -1697,8 +1726,54 @@ function openFinishModal() {
   b.querySelector('#finBack').onclick = () => closeModal();
 }
 
+function openWorkoutSummaryModal(volumeKg, doneSets, totSets, dayName) {
+  buzz([100, 50, 100, 50, 150]);
+  openModal('🎉 Ottimo lavoro!', `
+    <div style="text-align:center;padding:10px 4px 6px">
+      <div style="font-size:52px;line-height:1;margin-bottom:12px">🏆</div>
+      <h3 style="font-family:Anton,sans-serif;font-size:26px;color:var(--volt);margin-bottom:6px;letter-spacing:1px">WORKOUT COMPLETATO!</h3>
+      <p style="color:var(--muted);font-size:13.5px;margin-bottom:22px">Sessione salvata con successo per <b>"${esc(dayName)}"</b>.</p>
+      
+      <div class="grid2" style="margin-bottom:20px">
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:16px;padding:16px 12px;text-align:center">
+          <div style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px">Volume Totale</div>
+          <div style="font-family:Anton,sans-serif;font-size:26px;color:var(--volt);line-height:1.1">${volumeKg > 0 ? Math.round(volumeKg).toLocaleString('it-IT') : '0'}<span style="font-size:14px;font-family:sans-serif;margin-left:2px;color:var(--text)">kg</span></div>
+        </div>
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:16px;padding:16px 12px;text-align:center">
+          <div style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px">Serie Completate</div>
+          <div style="font-family:Anton,sans-serif;font-size:26px;color:var(--text);line-height:1.1">${doneSets} <span style="font-size:14px;font-family:sans-serif;color:var(--muted)">/ ${totSets}</span></div>
+        </div>
+      </div>
+
+      <div style="background:rgba(198,255,61,.06);border:1px solid rgba(198,255,61,.2);border-radius:14px;padding:12px 14px;margin-bottom:20px;font-size:13px;color:var(--text)">
+        ⚡ I tuoi progressi ed i carichi di oggi sono pronti come riferimento per la prossima sessione!
+      </div>
+
+      <div class="modal-foot stack">
+        <button class="btn btn-primary btn-block" onclick="closeModal()">Fantastico! Continua</button>
+        <button class="btn btn-ghost btn-block" onclick="closeModal(); setView('home');">Torna alla Home</button>
+      </div>
+    </div>
+  `);
+}
+
 function saveSession(clearAfter) {
   const d = day();
+  let totalVolumeKg = 0;
+  let totalDoneSets = 0;
+  let totSets = 0;
+  d.exercises.forEach(ex => {
+    totSets += ex.sets;
+    (ex.log || []).forEach(l => {
+      if (l.done) {
+        totalDoneSets++;
+        const r = parseFloat(String(l.reps).replace(',', '.')) || 0;
+        const w = parseFloat(String(l.weight).replace(',', '.')) || 0;
+        totalVolumeKg += (r * w);
+      }
+    });
+  });
+
   const rec = {
     ts: Date.now(),
     exercises: d.exercises.map(e => ({
@@ -1711,7 +1786,11 @@ function saveSession(clearAfter) {
   if (arr.length > 20) arr.splice(0, arr.length - 20);
   if (clearAfter) d.exercises.forEach(ex => ex.log.forEach(l => { l.done = false; l.reps = ''; l.weight = ''; }));
   save(); render();
-  toast(clearAfter ? 'Sessione salvata, scheda pronta 💪' : 'Sessione salvata');
+  if (clearAfter) {
+    openWorkoutSummaryModal(totalVolumeKg, totalDoneSets, totSets, d.name);
+  } else {
+    toast('Sessione salvata');
+  }
 }
 
 /* ── check incomplete workout on startup ── */
@@ -1827,6 +1906,32 @@ function openCompare() {
 const btnCmp = $('btnCompare');
 if (btnCmp) btnCmp.onclick = openCompare;
 
+function openLegalModal() {
+  openModal('Privacy & Note Legali', `
+    <div style="display:flex;flex-direction:column;gap:16px;font-size:13.5px;color:var(--text);line-height:1.55">
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:14px;padding:14px 16px">
+        <h4 style="font-size:14px;margin-bottom:6px;color:var(--volt)">🩺 Disclaimer Medico &amp; Responsabilità</h4>
+        <p style="color:var(--muted);font-size:13px">FORGE è un'applicazione PWA per il tracciamento personale degli allenamenti. Prima di intraprendere qualsiasi programma di attività fisica, si raccomanda di consultare il proprio medico curante per verificare l'idoneità alla pratica sportiva. L'utente si assume la piena ed esclusiva responsabilità per l'esecuzione degli esercizi e l'utilizzo dei carichi indicati.</p>
+      </div>
+
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:14px;padding:14px 16px">
+        <h4 style="font-size:14px;margin-bottom:6px;color:var(--volt)">🛡️ Privacy Policy (GDPR UE 2016/679)</h4>
+        <p style="color:var(--muted);font-size:13px;margin-bottom:8px"><b>Dati Trattati:</b> Autenticazione Google OAuth (nome, email, avatar) e dati sulle misurazioni corporee e storico allenamenti inseriti dall'utente.</p>
+        <p style="color:var(--muted);font-size:13px;margin-bottom:8px"><b>Finalità:</b> I dati vengono salvati ed elaborati esclusivamente per consentire la fruizione dell'app e la sincronizzazione multi-dispositivo tramite i server sicuri Google Firebase / Cloud Firestore.</p>
+        <p style="color:var(--muted);font-size:13px;margin-bottom:8px"><b>Cookie Tecnici &amp; LocalStorage:</b> L'app utilizza esclusivamente risorse tecniche locali per il funzionamento offline. Non vengono utilizzati cookie di profilazione o tracciamento pubblicitario di terze parti.</p>
+        <p style="color:var(--muted);font-size:13px"><b>Diritti dell'Utente:</b> L'utente ha il diritto di accedere, modificare o richiedere la cancellazione totale dei propri dati in qualsiasi momento tramite la funzione "Reset completo dell'app" o disconnettendosi dal Cloud.</p>
+      </div>
+
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:14px;padding:14px 16px">
+        <h4 style="font-size:14px;margin-bottom:6px;color:var(--volt)">💶 Servizi di Coaching &amp; Condizioni</h4>
+        <p style="color:var(--muted);font-size:13px">I percorsi di programmazione e coaching 1-to-1 costituiscono servizi forniti da professionisti del settore. Tutti i prezzi indicati sono espressi in Euro (€) ed inclusivi di imposte. L'assistenza viene erogata secondo le modalità concordate con il Coach.</p>
+      </div>
+
+      <button class="btn btn-primary btn-block" onclick="closeModal()">Ho compreso e accetto</button>
+    </div>
+  `);
+}
+
 /* ── menu principale riorganizzato per sezioni ── */
 $('btnMenu').onclick = openAppMenu;
 function openAppMenu() {
@@ -1878,6 +1983,16 @@ function openAppMenu() {
       </div>
 
       <div>
+        <div class="prog-sec-title" style="margin:0 0 8px 2px">🛡️ Informazioni Legali</div>
+        <div class="menu-list">
+          <button class="sheet-btn" id="aLegalInfo">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            Privacy &amp; Note Legali
+          </button>
+        </div>
+      </div>
+
+      <div>
         <div class="prog-sec-title" style="margin:0 0 8px 2px">⚠️ Reset</div>
         <div class="menu-list">
           <button class="sheet-btn" id="aResetDay"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 4v4h4"></path></svg>Azzera progressi del giorno</button>
@@ -1900,6 +2015,7 @@ function openAppMenu() {
   b.querySelector('#aAddEx').onclick = () => { closeModal(); openExerciseForm(null); };
   b.querySelector('#aManageLib').onclick = () => { closeModal(); openLibraryManager(); };
   b.querySelector('#aRename').onclick = () => { closeModal(); openRename(); };
+  b.querySelector('#aLegalInfo').onclick = () => { closeModal(); openLegalModal(); };
   b.querySelector('#aResetDay').onclick = () => {
     closeModal();
     confirmModal('Azzera progressi del giorno', `Azzerare tutte le serie completate per "${esc(day().name)}"?`, 'Azzera', () => {
@@ -3243,6 +3359,32 @@ if ('serviceWorker' in navigator) {
     });
   });
 }
+
+// Check banner disclaimer medico al primo avvio
+(function checkLegalBanner() {
+  const b = $('legalBanner');
+  if (!b) return;
+  let ack = false;
+  try { ack = localStorage.getItem('forge_legal_ack') === '1'; } catch (_) {}
+  if (!ack) {
+    b.classList.remove('hide');
+    $('lbAck').onclick = () => {
+      try { localStorage.setItem('forge_legal_ack', '1'); } catch (_) {}
+      b.classList.add('hide');
+    };
+    $('lbLink').onclick = () => openLegalModal();
+  } else {
+    b.classList.add('hide');
+  }
+})();
 </script>
+
+<!-- BANNER LEGALE DI ACCETTAZIONE AL 1° AVVIO -->
+<div id="legalBanner" class="legal-banner hide">
+  <div class="lb-inner">
+    <span>🛡️ Utilizzando FORGE accetti i <button id="lbLink">Termini &amp; Disclaimer Medico</button>.</span>
+    <button class="btn btn-primary btn-sm" id="lbAck">Accetto</button>
+  </div>
+</div>
 </body>
 </html>
