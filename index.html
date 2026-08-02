@@ -791,6 +791,14 @@ body.kb #fabSave,body.kb #fabAddMeas{display:none!important}
 
 <div id="toast"></div>
 
+<!-- BANNER LEGALE DI ACCETTAZIONE AL 1° AVVIO -->
+<div id="legalBanner" class="legal-banner hide">
+  <div class="lb-inner">
+    <span>🛡️ Utilizzando FORGE accetti i <button id="lbLink">Termini &amp; Disclaimer Medico</button>.</span>
+    <button class="btn btn-primary btn-sm" id="lbAck">Accetto</button>
+  </div>
+</div>
+
 <!-- MODAL ROOT -->
 <div class="overlay" id="overlay"><div class="modal" id="modal"></div></div>
 
@@ -3310,6 +3318,7 @@ if (btnCSync) btnCSync.onclick = openCloudAccountModal;
 setupPwaInstall();
 render();
 setView('home');
+checkLegalBanner();
 
 // Nascondi splash screen con temporizzazione morbida e stabile
 (function hideSplash() {
@@ -3329,6 +3338,24 @@ try {
 } catch (err) {
   console.warn('Inizializzazione Cloud in fallback offline:', err);
   updateCloudDot('offline');
+}
+
+// Check banner disclaimer medico al primo avvio
+function checkLegalBanner() {
+  const b = $('legalBanner');
+  if (!b) return;
+  let ack = false;
+  try { ack = localStorage.getItem('forge_legal_ack') === '1'; } catch (_) {}
+  if (!ack) {
+    b.classList.remove('hide');
+    $('lbAck').onclick = () => {
+      try { localStorage.setItem('forge_legal_ack', '1'); } catch (_) {}
+      b.classList.add('hide');
+    };
+    $('lbLink').onclick = () => openLegalModal();
+  } else {
+    b.classList.add('hide');
+  }
 }
 
 /* ── PWA: registrazione e aggiornamento automatico service worker ── */
@@ -3359,32 +3386,6 @@ if ('serviceWorker' in navigator) {
     });
   });
 }
-
-// Check banner disclaimer medico al primo avvio
-(function checkLegalBanner() {
-  const b = $('legalBanner');
-  if (!b) return;
-  let ack = false;
-  try { ack = localStorage.getItem('forge_legal_ack') === '1'; } catch (_) {}
-  if (!ack) {
-    b.classList.remove('hide');
-    $('lbAck').onclick = () => {
-      try { localStorage.setItem('forge_legal_ack', '1'); } catch (_) {}
-      b.classList.add('hide');
-    };
-    $('lbLink').onclick = () => openLegalModal();
-  } else {
-    b.classList.add('hide');
-  }
-})();
 </script>
-
-<!-- BANNER LEGALE DI ACCETTAZIONE AL 1° AVVIO -->
-<div id="legalBanner" class="legal-banner hide">
-  <div class="lb-inner">
-    <span>🛡️ Utilizzando FORGE accetti i <button id="lbLink">Termini &amp; Disclaimer Medico</button>.</span>
-    <button class="btn btn-primary btn-sm" id="lbAck">Accetto</button>
-  </div>
-</div>
 </body>
 </html>
