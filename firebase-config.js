@@ -168,35 +168,44 @@
     }
   }
 
-  // Salva una scheda specifica nel Cloud con nome e id
-  async function saveSchedaToCloudList(schedaName, state) {
-    if (!db || !currentUser) return false;
+  // Salva una scheda specifica nel Cloud con nome e id (rispettando il limite di 10 schede per utenti free)
+  async function saveSchedaToCloudList(schedaName, stateObj, isProOrPurchased) {
+    if (!db || !currentUser) return { success: false, reason: 'unauthenticated' };
     try {
       const userRef = db.collection('users').doc(currentUser.uid);
-      const name = schedaName || state.programName || 'La mia Scheda';
+      const doc = await userRef.get();
+      const userData = doc.exists ? doc.data() : {};
+      const currentSchede = (userData && userData.schede && typeof userData.schede === 'object') ? Object.values(userData.schede) : [];
+      const isCoachingOrPro = isProOrPurchased || userData.isCoaching || userData.isPro;
+
+      const name = schedaName || (stateObj && stateObj.programName) || 'La mia Scheda';
       const safeId = 'scheda_' + String(name).toLowerCase().replace(/[^a-z0-9]/g, '_');
+      const alreadyExists = currentSchede.some(s => s.id === safeId);
+
+      // Limite di 10 schede nel Cloud per utenti free (se non è un aggiornamento di una esistente)
+      if (!alreadyExists && !isCoachingOrPro && currentSchede.length >= 10) {
+        return { success: false, reason: 'quota_exceeded', count: currentSchede.length };
+      }
 
       const entry = {
         id: safeId,
         name: name,
         updatedAt: Date.now(),
-        daysCount: (state.days || []).length,
-        state: state
+        daysCount: (stateObj && stateObj.days || []).length,
+        isPro: !!isProOrPurchased,
+        state: stateObj
       };
 
       await userRef.set({
         activeSchedaId: safeId,
-        state: state,
+        state: stateObj,
         [`schede.${safeId}`]: entry
       }, { merge: true });
 
-      return true;
+      return { success: true, count: currentSchede.length + (alreadyExists ? 0 : 1), isCoachingOrPro };
     } catch (err) {
       console.error('Errore salvataggio scheda Cloud:', err);
-      if (err.code === 'permission-denied' && typeof toast === 'function') {
-        toast('Errore salva cloud: Attiva le Regole su Firestore Console');
-      }
-      return false;
+      return { success: false, reason: 'error' };
     }
   }
 
