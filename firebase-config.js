@@ -138,6 +138,8 @@
     const userRef = db.collection('users').doc(currentUser.uid);
     unsubscribeSnapshot = userRef.onSnapshot((doc) => {
       if (doc.exists) {
+        // Ignora gli snapshot locali temporanei mentre un salvataggio è in corso
+        if (doc.metadata && doc.metadata.hasPendingWrites) return;
         const data = doc.data();
         if (data && data.state) {
           onUpdate(data.state);

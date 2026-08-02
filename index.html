@@ -1729,7 +1729,9 @@ function renderSessionBanner() {
     resetBtn.onclick = () => {
       confirmModal('Inizia da capo', 'Azzerare tutte le serie completate di questa giornata?', 'Inizia da capo', () => {
         d.exercises.forEach(ex => ex.log.forEach(l => { l.done = false; l.reps = ''; l.weight = ''; }));
-        save(); render();
+        save();
+        banner.style.display = 'none';
+        render();
         toast('Progressi azzerati, nuova giornata 💪');
       });
     };
