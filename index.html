@@ -1391,6 +1391,23 @@ function cancelDrag() {
   drag = null;
 }
 
+/* ── pulizia automatica giornate vuote ── */
+function cleanupEmptyDays() {
+  if (!state || !Array.isArray(state.days) || state.days.length <= 1) return false;
+  let deletedAny = false;
+  for (let i = state.days.length - 1; i >= 0; i--) {
+    const d = state.days[i];
+    if ((!d.exercises || d.exercises.length === 0) && !d.isNew) {
+      state.days.splice(i, 1);
+      deletedAny = true;
+    }
+  }
+  if (deletedAny) {
+    state.activeDay = Math.min(Math.max(0, state.activeDay), state.days.length - 1);
+  }
+  return deletedAny;
+}
+
 /* ── giorni ── */
 $('dayBar').addEventListener('click', e => {
   const add = e.target.closest('.add-day');
@@ -1609,9 +1626,14 @@ function openExerciseForm(idx) {
       const sel = b.querySelector('#fDay');
       const di = sel ? Math.max(0, Math.min(state.days.length - 1, +sel.value)) : state.activeDay;
       addedToOther = di !== state.activeDay;
+      delete state.days[di].isNew;
       state.days[di].exercises.push(ensureLog(data));
       state.activeDay = di;
-    } else { Object.assign(day().exercises[idx], data); ensureLog(day().exercises[idx]); }
+    } else {
+      delete day().isNew;
+      Object.assign(day().exercises[idx], data);
+      ensureLog(day().exercises[idx]);
+    }
     save(); closeModal(); render();
     toast(idx == null ? (addedToOther ? `Esercizio aggiunto a "${day().name}"` : 'Esercizio aggiunto') : 'Esercizio aggiornato');
   };
@@ -1654,7 +1676,9 @@ function openExMenu(i) {
     closeModal();
     confirmModal('Elimina esercizio', `Eliminare "${esc(ex.name)}" da questo giorno?`, 'Elimina', () => {
       day().exercises.splice(i, 1);
-      save(); render(); toast('Esercizio eliminato');
+      const dayRemoved = cleanupEmptyDays();
+      save(); render();
+      toast(dayRemoved ? 'Esercizio e giornata svuotata eliminati' : 'Esercizio eliminato');
     });
   };
 }
