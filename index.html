@@ -3730,6 +3730,7 @@ function openMandatoryLegalGate() {
       if (overlay) overlay.onclick = closeModal;
       closeModal();
       toast('Termini e Condizioni accettati! Benvenuto in FORGE 💪');
+      setTimeout(openWelcomeTourModal, 350);
     };
   }
 
@@ -3737,6 +3738,59 @@ function openMandatoryLegalGate() {
   if (btnRead) {
     btnRead.onclick = () => {
       openLegalModal();
+    };
+  }
+}
+
+function openWelcomeTourModal() {
+  let done = false;
+  try { done = localStorage.getItem('forge_tour_done') === '1'; } catch (_) {}
+  if (done) return;
+
+  openModal('Benvenuto in FORGE ⚡', `
+    <div style="text-align:center;padding:10px 4px 6px">
+      <div style="font-size:48px;line-height:1;margin-bottom:12px">⚡</div>
+      <h3 style="font-family:Anton,sans-serif;font-size:24px;color:var(--volt);margin-bottom:8px;letter-spacing:1px">BENVENUTO IN FORGE!</h3>
+      <p style="color:var(--muted);font-size:13.5px;margin-bottom:20px;line-height:1.4">
+        Ecco 3 semplici consigli per sfruttare al massimo la tua nuova App di allenamento:
+      </p>
+
+      <div style="display:flex;flex-direction:column;gap:12px;text-align:left;margin-bottom:22px">
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:14px;display:flex;gap:12px;align-items:flex-start">
+          <div style="font-size:24px">🏋️</div>
+          <div>
+            <div style="font-weight:800;font-size:14px;color:var(--text);margin-bottom:2px">1. Traccia e Copia al Volo</div>
+            <div style="font-size:12.5px;color:var(--muted)">Inserisci reps e kg. Usa il tasto <b>⚡ Copia</b> per duplicare la riga sopra con 1 solo tocco!</div>
+          </div>
+        </div>
+
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:14px;display:flex;gap:12px;align-items:flex-start">
+          <div style="font-size:24px">⏱️</div>
+          <div>
+            <div style="font-weight:800;font-size:14px;color:var(--text);margin-bottom:2px">2. Timer di Recupero Automatico</div>
+            <div style="font-size:12.5px;color:var(--muted)">Spuntando una serie completata si avvia il timer di riposo per scandire il tuo allenamento.</div>
+          </div>
+        </div>
+
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:14px;display:flex;gap:12px;align-items:flex-start">
+          <div style="font-size:24px">☁️</div>
+          <div>
+            <div style="font-weight:800;font-size:14px;color:var(--text);margin-bottom:2px">3. Salvataggio Cloud Google</div>
+            <div style="font-size:12.5px;color:var(--muted)">Accedi con Google dal menu per sincronizzare le tue schede ed i tuoi progressi su qualsiasi dispositivo!</div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-block" id="btnStartAppNow" style="font-size:14.5px;padding:14px">Inizia ad Allenarti! 🚀</button>
+    </div>
+  `);
+
+  const btn = document.querySelector('#btnStartAppNow');
+  if (btn) {
+    btn.onclick = () => {
+      try { localStorage.setItem('forge_tour_done', '1'); } catch (_) {}
+      closeModal();
+      toast('Scheda pronta! Buon allenamento 💪');
     };
   }
 }
