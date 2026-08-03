@@ -1230,13 +1230,22 @@ function toggleSet(i, j, btn) {
   const ex = day().exercises[i];
   const l = ex.log[j];
   l.done = !l.done;
+
+  if (l.done) {
+    // Autocompila con i valori preimpostati della scheda o della serie precedente se lasciati vuoti
+    if (!l.reps || String(l.reps).trim() === '') {
+      l.reps = (j > 0 && ex.log[j - 1].reps) ? ex.log[j - 1].reps : (ex.reps || '');
+    }
+    if (!l.weight || String(l.weight).trim() === '') {
+      l.weight = (j > 0 && ex.log[j - 1].weight) ? ex.log[j - 1].weight : (ex.weight != null ? ex.weight : '');
+    }
+  }
+
   save();
-  btn.classList.toggle('on', l.done);
-  btn.closest('.set-row').classList.toggle('on', l.done);
-  const card = btn.closest('.ex-card');
-  card.classList.toggle('done', ex.log.every(x => x.done));
+  renderList();
   renderDayHead();
   updateFabSave();
+
   if (l.done) {
     buzz(20);
     const c = dayCounts();
