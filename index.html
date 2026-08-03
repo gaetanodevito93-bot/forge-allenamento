@@ -461,6 +461,11 @@ body.kb #fabSave,body.kb #fabAddMeas{display:none!important}
 .lib-chip:hover{border-color:var(--volt-dim);color:var(--text);background:var(--surface2)}
 .lib-chip.active{background:var(--volt);color:#0A0A0F;border-color:var(--volt);box-shadow:0 4px 14px rgba(198,255,61,.22);font-weight:800}
 
+/* ── Quick Reorder Buttons ── */
+.reorder-arrow-btn{width:28px;height:28px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-size:11px;font-weight:900;display:grid;place-items:center;cursor:pointer;transition:all .15s ease;user-select:none;flex-shrink:0}
+.reorder-arrow-btn:hover:not([disabled]){background:var(--volt);color:#0A0A0F;border-color:var(--volt);box-shadow:0 2px 8px rgba(198,255,61,.25)}
+.reorder-arrow-btn:active:not([disabled]){transform:scale(.9)}
+
 /* ── Library List ── */
 .lib-list{display:flex;flex-direction:column;gap:6px;max-height:260px;overflow-y:auto;padding-right:2px;margin-bottom:16px;scroll-behavior:smooth}
 .lib-list::-webkit-scrollbar{width:4px}
@@ -1390,7 +1395,8 @@ function cardHTML(ex, i, session) {
     <button class="set-check${l.done ? ' on' : ''}" data-testid="set-check-${i}-${j}" data-ex="${i}" data-set="${j}">${ICONS.check}</button>${prevLine}</div>`;
   }).join('');
   const allDone = ex.sets > 0 && ex.log.every(l => l.done);
-  return `<div class="ex-card${allDone ? ' done' : ''}" data-testid="exercise-card-${i}" data-exidx="${i}" title="Tieni premuto per spostare">
+
+  return `<div class="ex-card${allDone ? ' done' : ''}" data-testid="exercise-card-${i}" data-exidx="${i}" title="Trascina per riordinare">
     <div class="ex-top">
       <div class="ex-num">${i + 1}</div>
       <div class="ex-info">
@@ -1426,7 +1432,36 @@ function renderList() {
     return;
   }
   const session = lastSessionFor(d.name);
-  $('exList').innerHTML = d.exercises.map((ex, i) => cardHTML(ex, i, session)).join('');
+  const isCompact = $('exList').classList.contains('compact');
+
+  const cardsHTML = d.exercises.map((ex, i) => cardHTML(ex, i, session)).join('');
+  const bottomBarHTML = `
+    <div style="margin-top:20px;display:flex;gap:10px;align-items:center">
+      <button class="btn btn-primary" id="btnDayAddEx" style="flex:1;padding:14px 16px;font-size:14.5px;font-weight:800;border-radius:16px;box-shadow:var(--glow-volt);display:flex;align-items:center;justify-content:center;gap:8px">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+        Aggiungi Esercizio
+      </button>
+      <button class="btn btn-ghost" id="btnToggleReorder" style="padding:14px 18px;font-size:13.5px;font-weight:800;border-radius:16px;border:1.5px solid ${isCompact ? 'var(--volt)' : 'var(--border)'};display:flex;align-items:center;gap:7px;background:${isCompact ? 'rgba(198,255,61,.12)' : 'var(--surface)'};color:${isCompact ? 'var(--volt)' : 'var(--text)'}">
+        ${isCompact ? '✨ Fine Riordino' : '🪟 Ordina Scheda'}
+      </button>
+    </div>
+  `;
+
+  $('exList').innerHTML = cardsHTML + bottomBarHTML;
+
+  const addBtn = $('btnDayAddEx');
+  if (addBtn) addBtn.onclick = () => openExerciseForm(null);
+
+  const reorderBtn = $('btnToggleReorder');
+  if (reorderBtn) {
+    reorderBtn.onclick = () => {
+      const active = $('exList').classList.toggle('compact');
+      if (active) $('exList').dataset.manualCompact = 'true';
+      else delete $('exList').dataset.manualCompact;
+      buzz(15);
+      renderList();
+    };
+  }
 }
 
 /* Il FAB "Fine" si mostra quando c'è progresso. */
@@ -1464,6 +1499,12 @@ $('exList').addEventListener('input', e => {
 });
 
 $('exList').addEventListener('click', e => {
+  const reorderBtn = e.target.closest('.reorder-arrow-btn');
+  if (reorderBtn && !reorderBtn.disabled) {
+    e.stopPropagation();
+    moveExercise(+reorderBtn.dataset.exidx, +reorderBtn.dataset.dir);
+    return;
+  }
   const opts = e.target.closest('.ex-opts-btn');
   if (opts) { openExMenu(+opts.dataset.exidx); return; }
   const rm = e.target.closest('.rm-btn');
@@ -1638,15 +1679,19 @@ $('exList').addEventListener('pointerdown', e => {
   if (drag || e.button > 0) return;
   const card = e.target.closest('.ex-card');
   if (!card || e.target.closest('button, input, select, textarea, a')) return;
+  const isCompactMode = $('exList').classList.contains('compact');
   drag = {
     card, ph: null,
     startX: e.clientX, startY: e.clientY, lastY: e.clientY,
     offsetY: 0, armed: false, raf: null,
-    timer: setTimeout(armDrag, HOLD_MS)
+    timer: isCompactMode ? null : setTimeout(armDrag, HOLD_MS)
   };
   document.addEventListener('pointermove', dragMove);
   document.addEventListener('pointerup', dragEnd);
   document.addEventListener('pointercancel', dragEnd);
+  if (isCompactMode) {
+    armDrag();
+  }
 });
 
 function armDrag() {
@@ -1713,7 +1758,10 @@ function dragEnd() {
     card.classList.remove('dragging');
     card.style.position = card.style.left = card.style.top = card.style.width = '';
     document.body.classList.remove('dragging-active');
-    $('exList').classList.remove('compact');
+    const isManualCompact = $('exList').dataset.manualCompact === 'true';
+    if (!isManualCompact) {
+      $('exList').classList.remove('compact');
+    }
     const order = [...$('exList').querySelectorAll('.ex-card')].map(c => +c.dataset.exidx);
     const exs = day().exercises;
     day().exercises = order.map(i => exs[i]);
@@ -1734,7 +1782,9 @@ function cancelDrag() {
     drag.card.classList.remove('dragging');
     drag.card.style.position = drag.card.style.left = drag.card.style.top = drag.card.style.width = '';
     document.body.classList.remove('dragging-active');
-    $('exList').classList.remove('compact');
+    if ($('exList').dataset.manualCompact !== 'true') {
+      $('exList').classList.remove('compact');
+    }
   }
   document.removeEventListener('pointermove', dragMove);
   document.removeEventListener('pointerup', dragEnd);
@@ -1788,7 +1838,12 @@ function openModal(title, bodyHTML) {
   return m.querySelector('.modal-body');
 }
 function closeModal() { $('overlay').classList.remove('open'); }
-$('overlay').addEventListener('click', e => { if (e.target === $('overlay')) closeModal(); });
+let overlayMouseDownTarget = null;
+$('overlay').addEventListener('mousedown', e => { overlayMouseDownTarget = e.target; });
+$('overlay').addEventListener('click', e => {
+  if (overlayMouseDownTarget === $('overlay') && e.target === $('overlay')) closeModal();
+  overlayMouseDownTarget = null;
+});
 $('modal').setAttribute('role', 'dialog');
 $('modal').setAttribute('aria-modal', 'true');
 // Esc: chiude prima il timer di recupero, poi un'eventuale finestra aperta
@@ -1857,7 +1912,7 @@ function openExerciseForm(idx) {
   const b = openModal(isNew ? 'Nuovo esercizio' : 'Modifica esercizio', `
     ${libTabsHTML}
     ${isNew ? `<div class="ex-form-divider">⚙️ Dettagli</div>` : ''}
-    ${isNew ? `<div class="field"><label>Giorno di destinazione</label><select id="fDay">${state.days.map((d, di) => `<option value="${di}"${di === state.activeDay ? ' selected' : ''}>${esc(d.name)}</option>`).join('')}</select></div>` : ''}
+    ${(isNew && state.days.length > 1) ? `<div class="field"><label>Giorno di destinazione</label><select id="fDay">${state.days.map((d, di) => `<option value="${di}"${di === state.activeDay ? ' selected' : ''}>${esc(d.name)}</option>`).join('')}</select></div>` : ''}
     <div class="field"><label>Nome esercizio</label><input id="fName" type="text" placeholder="Es. Panca piana" value="${esc(ex.name)}"></div>
     <div class="grid3">
       <div class="field"><label>Serie</label><input id="fSets" type="number" min="1" max="20" inputmode="numeric" value="${ex.sets}"></div>
@@ -1883,8 +1938,8 @@ function openExerciseForm(idx) {
       const btnNext = b.querySelector('#' + nextBtnId);
       if (!row) return;
 
-      if (btnPrev) btnPrev.onclick = () => row.scrollBy({ left: -150, behavior: 'smooth' });
-      if (btnNext) btnNext.onclick = () => row.scrollBy({ left: 150, behavior: 'smooth' });
+      if (btnPrev) btnPrev.onclick = (e) => { if (e) { e.preventDefault(); e.stopPropagation(); } row.scrollBy({ left: -150, behavior: 'smooth' }); };
+      if (btnNext) btnNext.onclick = (e) => { if (e) { e.preventDefault(); e.stopPropagation(); } row.scrollBy({ left: 150, behavior: 'smooth' }); };
 
       row.addEventListener('wheel', e => {
         if (e.deltaY) {
@@ -1893,9 +1948,10 @@ function openExerciseForm(idx) {
         }
       }, { passive: false });
 
-      let isDown = false, startX, scrollLeft;
+      let isDown = false, startX, scrollLeft, hasMoved = false;
       row.addEventListener('mousedown', e => {
         isDown = true;
+        hasMoved = false;
         startX = e.pageX - row.offsetLeft;
         scrollLeft = row.scrollLeft;
       });
@@ -1903,10 +1959,13 @@ function openExerciseForm(idx) {
       row.addEventListener('mouseup', () => isDown = false);
       row.addEventListener('mousemove', e => {
         if (!isDown) return;
-        e.preventDefault();
         const x = e.pageX - row.offsetLeft;
-        const walk = (x - startX) * 1.5;
-        row.scrollLeft = scrollLeft - walk;
+        const diff = x - startX;
+        if (Math.abs(diff) > 5) {
+          hasMoved = true;
+          e.preventDefault();
+          row.scrollLeft = scrollLeft - diff * 1.5;
+        }
       });
     };
 
@@ -1958,7 +2017,8 @@ function openExerciseForm(idx) {
       }).join('');
 
       listEl.querySelectorAll('.lib-card').forEach(card => {
-        card.onclick = () => {
+        card.onclick = (e) => {
+          if (e) { e.preventDefault(); e.stopPropagation(); }
           const lIdx = +card.dataset.libidx;
           selectedLibIndex = lIdx;
           const item = getLibrary()[lIdx];
@@ -1981,11 +2041,13 @@ function openExerciseForm(idx) {
     const tabManual = b.querySelector('#tabManual');
     const libContainer = b.querySelector('#libContainer');
 
-    tabLib.onclick = () => {
+    tabLib.onclick = (e) => {
+      if (e) { e.preventDefault(); e.stopPropagation(); }
       tabLib.classList.add('active'); tabManual.classList.remove('active');
       libContainer.style.display = 'block';
     };
-    tabManual.onclick = () => {
+    tabManual.onclick = (e) => {
+      if (e) { e.preventDefault(); e.stopPropagation(); }
       tabManual.classList.add('active'); tabLib.classList.remove('active');
       libContainer.style.display = 'none';
       nameInput.focus();
@@ -1993,7 +2055,8 @@ function openExerciseForm(idx) {
 
     // Filtro Gruppo Muscolare
     b.querySelectorAll('#groupChips .lib-chip').forEach(chip => {
-      chip.onclick = () => {
+      chip.onclick = (e) => {
+        if (e) { e.preventDefault(); e.stopPropagation(); }
         b.querySelectorAll('#groupChips .lib-chip').forEach(c => c.classList.remove('active'));
         chip.classList.add('active');
         curGrp = chip.dataset.grp;
@@ -2003,7 +2066,8 @@ function openExerciseForm(idx) {
 
     // Filtro Equipaggiamento
     b.querySelectorAll('#equipChips .lib-chip').forEach(chip => {
-      chip.onclick = () => {
+      chip.onclick = (e) => {
+        if (e) { e.preventDefault(); e.stopPropagation(); }
         b.querySelectorAll('#equipChips .lib-chip').forEach(c => c.classList.remove('active'));
         chip.classList.add('active');
         curEq = chip.dataset.eq;
@@ -2059,8 +2123,10 @@ function moveExercise(i, dir) {
   const j = i + dir;
   if (j < 0 || j >= exs.length) return;
   [exs[i], exs[j]] = [exs[j], exs[i]];
-  save(); closeModal(); render(); buzz(15);
-  toast(dir < 0 ? 'Spostato su' : 'Spostato giù');
+  save();
+  if ($('overlay').classList.contains('open')) closeModal();
+  renderList(); renderDayHead(); buzz(15);
+  toast(dir < 0 ? 'Spostato in alto' : 'Spostato in basso');
 }
 function openExMenu(i) {
   const ex = day().exercises[i];
