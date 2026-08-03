@@ -430,35 +430,53 @@ header{backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);background:
 body.kb #fabSave,body.kb #fabAddMeas{display:none!important}
 
 /* ── libreria esercizi modale ── */
-.ex-modal-tabs{display:flex;background:var(--bg);border-radius:12px;padding:3px;margin-bottom:16px;border:1px solid var(--border)}
-.ex-modal-tab{flex:1;padding:9px 12px;border-radius:9px;font-size:13px;font-weight:700;color:var(--muted);text-align:center;transition:.18s;display:flex;align-items:center;justify-content:center;gap:6px}
-.ex-modal-tab.active{background:var(--surface2);color:var(--text);box-shadow:var(--hair)}
-.ex-modal-tab:hover:not(.active){color:var(--text)}
+/* ── Tabs ── */
+.ex-modal-tabs{display:flex;background:var(--bg);border-radius:14px;padding:4px;margin-bottom:18px;border:1px solid var(--border);gap:4px}
+.ex-modal-tab{flex:1;padding:11px 14px;border-radius:10px;font-size:13.5px;font-weight:800;color:var(--muted);text-align:center;transition:all .2s ease;display:flex;align-items:center;justify-content:center;gap:7px;letter-spacing:.2px}
+.ex-modal-tab.active{background:var(--volt);color:#0A0A0F;box-shadow:0 4px 16px rgba(198,255,61,.25)}
+.ex-modal-tab:hover:not(.active){color:var(--text);background:var(--surface2)}
 
-.lib-filter-sec{margin-bottom:14px;display:flex;flex-direction:column;gap:8px}
+/* ── Search Bar ── */
+.lib-filter-sec{margin-bottom:16px;display:flex;flex-direction:column;gap:10px}
 .lib-search-wrap{position:relative}
-.lib-search-wrap input{padding-left:36px}
-.lib-search-wrap svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:17px;height:17px;stroke:var(--muted);pointer-events:none}
+.lib-search-wrap input{padding:14px 16px 14px 44px;font-size:15px;font-weight:600;border-radius:16px;background:var(--bg);border:1.5px solid var(--border);color:var(--text);width:100%;transition:border-color .2s,box-shadow .2s}
+.lib-search-wrap input::placeholder{color:var(--muted);font-weight:500}
+.lib-search-wrap input:focus{outline:none;border-color:var(--volt);box-shadow:0 0 0 3px rgba(198,255,61,.15),0 4px 20px rgba(198,255,61,.1)}
+.lib-search-wrap svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:19px;height:19px;stroke:var(--muted);pointer-events:none;transition:stroke .2s}
+.lib-search-wrap input:focus~svg,.lib-search-wrap:focus-within svg{stroke:var(--volt)}
 
-.lib-chips-row{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+/* ── Filter Labels ── */
+.lib-filter-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:-2px;padding-left:2px}
+
+/* ── Chips ── */
+.lib-chips-row{display:flex;gap:7px;overflow-x:auto;padding-bottom:5px;scrollbar-width:none}
 .lib-chips-row::-webkit-scrollbar{display:none}
-.lib-chip{white-space:nowrap;font-size:12px;font-weight:700;padding:5px 12px;border-radius:999px;background:var(--bg);border:1px solid var(--border);color:var(--muted);transition:.15s;flex-shrink:0}
-.lib-chip:hover{border-color:var(--volt-dim);color:var(--text)}
-.lib-chip.active{background:var(--volt);color:#0A0A0F;border-color:var(--volt);box-shadow:0 4px 14px rgba(198,255,61,.22)}
+.lib-chip{white-space:nowrap;font-size:12.5px;font-weight:700;padding:7px 14px;border-radius:999px;background:var(--bg);border:1.5px solid var(--border);color:var(--muted);transition:all .18s ease;flex-shrink:0;cursor:pointer}
+.lib-chip:hover{border-color:var(--volt-dim);color:var(--text);background:var(--surface2)}
+.lib-chip.active{background:var(--volt);color:#0A0A0F;border-color:var(--volt);box-shadow:0 4px 14px rgba(198,255,61,.22);font-weight:800}
 
-.lib-list{display:flex;flex-direction:column;gap:8px;max-height:280px;overflow-y:auto;padding-right:2px;margin-bottom:14px}
-.lib-card{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-radius:12px;background:var(--bg);border:1px solid var(--border);transition:.18s;cursor:pointer}
-.lib-card:hover{border-color:var(--volt);background:var(--surface2)}
+/* ── Library List ── */
+.lib-list{display:flex;flex-direction:column;gap:6px;max-height:260px;overflow-y:auto;padding-right:2px;margin-bottom:16px;scroll-behavior:smooth}
+.lib-list::-webkit-scrollbar{width:4px}
+.lib-list::-webkit-scrollbar-track{background:transparent}
+.lib-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+.lib-card{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 15px;border-radius:14px;background:var(--bg);border:1.5px solid var(--border);transition:all .18s ease;cursor:pointer}
+.lib-card:hover{border-color:var(--volt);background:var(--surface2);transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.15)}
 .lib-card.selected{border-color:var(--volt);background:rgba(198,255,61,.08);box-shadow:var(--glow-volt)}
 .lib-card-info{min-width:0;flex:1}
-.lib-card-title{font-size:14px;font-weight:800;color:var(--text);margin-bottom:3px}
-.lib-card-tags{display:flex;align-items:center;gap:6px}
-.lib-tag{font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:6px;background:var(--surface2);color:var(--muted)}
+.lib-card-title{font-size:14.5px;font-weight:800;color:var(--text);margin-bottom:4px;line-height:1.2}
+.lib-card-tags{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.lib-tag{font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:8px;background:var(--surface2);color:var(--muted)}
 .lib-card.selected .lib-tag{background:rgba(198,255,61,.2);color:var(--text)}
 .lib-tag.equip{color:var(--volt-dim)}
-.lib-card-select-ic{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--border);display:grid;place-items:center;flex-shrink:0;transition:.18s}
-.lib-card.selected .lib-card-select-ic{background:var(--volt);border-color:var(--volt)}
+.lib-card-select-ic{width:26px;height:26px;border-radius:50%;border:2px solid var(--border);display:grid;place-items:center;flex-shrink:0;transition:all .2s ease}
+.lib-card.selected .lib-card-select-ic{background:var(--volt);border-color:var(--volt);transform:scale(1.1)}
 .lib-card.selected .lib-card-select-ic svg{stroke:#0A0A0F;stroke-width:3}
+
+/* ── Section Divider ── */
+.ex-form-divider{display:flex;align-items:center;gap:10px;margin:20px 0 14px;font-size:11.5px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.8px}
+.ex-form-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.lib-result-count{font-size:11px;color:var(--muted);font-weight:600;text-align:right;padding-right:4px;margin-bottom:4px}
 
 /* ── coach view ── */
 #coachMain{max-width:920px;margin:0 auto;padding:24px 18px calc(100px + env(safe-area-inset-bottom))}
@@ -1771,46 +1789,52 @@ function openExerciseForm(idx) {
 
   const libTabsHTML = isNew ? `
     <div class="ex-modal-tabs">
-      <button type="button" class="ex-modal-tab active" id="tabLib">📚 Sfoglia Libreria</button>
-      <button type="button" class="ex-modal-tab" id="tabManual">✍️ Manuale</button>
+      <button type="button" class="ex-modal-tab active" id="tabLib">📚 Libreria</button>
+      <button type="button" class="ex-modal-tab" id="tabManual">✍️ Inserimento manuale</button>
     </div>
     <div id="libContainer">
       <div class="lib-filter-sec">
         <div class="lib-search-wrap">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
-          <input type="text" id="libSearch" placeholder="Cerca esercizio (es. Panca, Lat, Leg...)" spellcheck="false" autocapitalize="off">
+          <input type="text" id="libSearch" placeholder="🔍 Cerca esercizio..." spellcheck="false" autocapitalize="off">
         </div>
+        <div class="lib-filter-label">Muscolo</div>
         <div class="lib-chips-row" id="groupChips">
-          <button type="button" class="lib-chip active" data-grp="all">Tutti i muscoli</button>
-          <button type="button" class="lib-chip" data-grp="Petto">Petto</button>
-          <button type="button" class="lib-chip" data-grp="Dorso">Dorso</button>
-          <button type="button" class="lib-chip" data-grp="Gambe">Gambe</button>
-          <button type="button" class="lib-chip" data-grp="Spalle">Spalle</button>
-          <button type="button" class="lib-chip" data-grp="Bicipiti">Bicipiti</button>
-          <button type="button" class="lib-chip" data-grp="Tricipiti">Tricipiti</button>
-          <button type="button" class="lib-chip" data-grp="Addome">Addome</button>
+          <button type="button" class="lib-chip active" data-grp="all">Tutti</button>
+          <button type="button" class="lib-chip" data-grp="Petto">💪 Petto</button>
+          <button type="button" class="lib-chip" data-grp="Dorso">🔙 Dorso</button>
+          <button type="button" class="lib-chip" data-grp="Gambe">🦵 Gambe</button>
+          <button type="button" class="lib-chip" data-grp="Spalle">🙆 Spalle</button>
+          <button type="button" class="lib-chip" data-grp="Bicipiti">💪 Bicipiti</button>
+          <button type="button" class="lib-chip" data-grp="Tricipiti">💪 Tricipiti</button>
+          <button type="button" class="lib-chip" data-grp="Addome">🧱 Addome</button>
         </div>
+        <div class="lib-filter-label">Attrezzo</div>
         <div class="lib-chips-row" id="equipChips">
-          <button type="button" class="lib-chip active" data-eq="all">Tutti gli attrezzi</button>
-          <button type="button" class="lib-chip" data-eq="free">🏋️ Pesi liberi / Corpo libero</button>
-          <button type="button" class="lib-chip" data-eq="machine">⚙️ Macchine / Cavi</button>
+          <button type="button" class="lib-chip active" data-eq="all">Tutti</button>
+          <button type="button" class="lib-chip" data-eq="free">🏋️ Pesi liberi</button>
+          <button type="button" class="lib-chip" data-eq="machine">⚙️ Macchine</button>
         </div>
       </div>
+      <div id="libResultCount" class="lib-result-count"></div>
       <div class="lib-list" id="libList"></div>
     </div>` : '';
 
   const b = openModal(isNew ? 'Nuovo esercizio' : 'Modifica esercizio', `
     ${libTabsHTML}
-    ${isNew ? `<div class="field"><label>Giorno</label><select id="fDay">${state.days.map((d, di) => `<option value="${di}"${di === state.activeDay ? ' selected' : ''}>${esc(d.name)}</option>`).join('')}</select></div>` : ''}
+    ${isNew ? `<div class="ex-form-divider">⚙️ Dettagli</div>` : ''}
+    ${isNew ? `<div class="field"><label>Giorno di destinazione</label><select id="fDay">${state.days.map((d, di) => `<option value="${di}"${di === state.activeDay ? ' selected' : ''}>${esc(d.name)}</option>`).join('')}</select></div>` : ''}
     <div class="field"><label>Nome esercizio</label><input id="fName" type="text" placeholder="Es. Panca piana" value="${esc(ex.name)}"></div>
     <div class="grid3">
       <div class="field"><label>Serie</label><input id="fSets" type="number" min="1" max="20" inputmode="numeric" value="${ex.sets}"></div>
-      <div class="field"><label>Ripetizioni</label><input id="fReps" type="text" placeholder="8-12 / 45s" value="${esc(ex.reps)}"></div>
+      <div class="field"><label>Ripetizioni</label><input id="fReps" type="text" placeholder="10" value="${esc(ex.reps)}"></div>
       <div class="field"><label>Peso (kg)</label><input id="fWeight" type="text" inputmode="decimal" placeholder="—" value="${ex.weight != null ? esc(ex.weight) : ''}"></div>
     </div>
-    <div class="field"><label>Recupero (secondi)</label><input id="fRest" type="number" min="0" max="900" inputmode="numeric" placeholder="90" value="${ex.restSec}"></div>
-    <div class="field"><label>Note (facoltative)</label><textarea id="fNote" placeholder="Es. controlla la discesa">${esc(ex.note)}</textarea></div>
-    <div class="modal-foot"><button class="btn btn-primary btn-block" id="fSave">Salva</button></div>`);
+    <div class="grid2">
+      <div class="field"><label>Recupero (sec)</label><input id="fRest" type="number" min="0" max="900" inputmode="numeric" placeholder="90" value="${ex.restSec}"></div>
+      <div class="field"><label>Note</label><input id="fNote" type="text" placeholder="Facoltative" value="${esc(ex.note)}"></div>
+    </div>
+    <div class="modal-foot" style="margin-top:14px"><button class="btn btn-primary btn-block" id="fSave" style="padding:14px;font-size:15px;font-weight:800;border-radius:14px">${isNew ? '➕ Aggiungi Esercizio' : '💾 Salva Modifiche'}</button></div>`);
 
   const nameInput = b.querySelector('#fName');
 
@@ -1830,20 +1854,32 @@ function openExerciseForm(idx) {
       });
 
       if (!filtered.length) {
-        listEl.innerHTML = `<div style="text-align:center;padding:24px 10px;color:var(--muted);font-size:13px">Nessun esercizio trovato nella libreria per i filtri selezionati.<br>Puoi inserirlo manualmente nel campo sottostante.</div>`;
+        const countEl = b.querySelector('#libResultCount');
+        if (countEl) countEl.textContent = '0 esercizi trovati';
+        listEl.innerHTML = `<div style="text-align:center;padding:28px 14px;color:var(--muted);font-size:13.5px;line-height:1.6">
+          <div style="font-size:32px;margin-bottom:8px">🔍</div>
+          <b style="color:var(--text)">Nessun esercizio trovato</b><br>
+          Prova a cambiare i filtri oppure passa al tab<br><b>"✍️ Inserimento manuale"</b> per crearne uno nuovo.
+        </div>`;
         return;
       }
+
+      const countEl = b.querySelector('#libResultCount');
+      if (countEl) countEl.textContent = `${filtered.length} eserciz${filtered.length === 1 ? 'io trovato' : 'i trovati'}`;
 
       listEl.innerHTML = filtered.map(item => {
         const origIdx = getLibrary().indexOf(item);
         const isSel = origIdx === selectedLibIndex;
-        const typeLabel = item.type === 'machine' ? '⚙️ Macchina / Cavi' : '🏋️ Pesi / C.Libero';
+        const typeIcon = item.type === 'machine' ? '⚙️' : '🏋️';
+        const typeLabel = item.type === 'machine' ? 'Macchina' : 'Pesi liberi';
+        const setsReps = `${item.sets}×${item.reps}`;
         return `<div class="lib-card${isSel ? ' selected' : ''}" data-libidx="${origIdx}">
           <div class="lib-card-info">
             <div class="lib-card-title">${esc(item.name)}</div>
             <div class="lib-card-tags">
               <span class="lib-tag">${esc(item.group)}</span>
-              <span class="lib-tag equip">${esc(typeLabel)}</span>
+              <span class="lib-tag equip">${typeIcon} ${esc(typeLabel)}</span>
+              <span class="lib-tag">${setsReps}</span>
             </div>
           </div>
           <div class="lib-card-select-ic">${ICONS.check}</div>
