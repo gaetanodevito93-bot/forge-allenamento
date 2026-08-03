@@ -520,6 +520,7 @@ body.kb #fabSave,body.kb #fabAddMeas{display:none!important}
     </div>
     <h1>FORGE</h1>
     <p>Cosa vuoi fare oggi?</p>
+    <div id="homeStreakBadge" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,183,3,.12);border:1px solid rgba(255,183,3,.3);color:#FFB703;padding:6px 14px;border-radius:20px;font-size:12.5px;font-weight:700;margin-top:6px"></div>
   </div>
   <div class="home-btns">
     <button class="home-btn train" id="goTraining" data-testid="home-training">
@@ -1026,6 +1027,7 @@ function render() {
   renderDayBar();
   renderDayHead();
   renderList();
+  renderStreakBadge();
   $('progName').textContent = state.programName;
   if (document.body.getAttribute('data-view') === 'training') renderSessionBanner();
 }
@@ -1060,12 +1062,51 @@ function renderDayHead() {
     </div></div>`;
 }
 
+function getPreviousMaxWeight(exName) {
+  let maxW = 0;
+  const normName = exName.trim().toLowerCase();
+  Object.values(state.history || {}).forEach(arr => {
+    (arr || []).forEach(sess => {
+      (sess.exercises || []).forEach(e => {
+        if (e.name && e.name.trim().toLowerCase() === normName) {
+          (e.sets || []).forEach(s => {
+            const w = parseFloat(String(s.weight).replace(',', '.')) || 0;
+            if (w > maxW) maxW = w;
+          });
+        }
+      });
+    });
+  });
+  return maxW;
+}
+
 function cardHTML(ex, i, session) {
+  let maxW = parseFloat(String(ex.weight).replace(',', '.')) || 0;
+  ex.log.forEach(l => {
+    const w = parseFloat(String(l.weight).replace(',', '.')) || 0;
+    if (w > maxW) maxW = w;
+  });
+
+  let best1RM = 0;
+  ex.log.forEach(l => {
+    const r = parseFloat(String(l.reps).replace(',', '.')) || parseFloat(String(ex.reps).replace(',', '.')) || 1;
+    const w = parseFloat(String(l.weight).replace(',', '.')) || maxW;
+    if (w > 0) {
+      const rm = r === 1 ? w : w * (1 + r / 30);
+      if (rm > best1RM) best1RM = rm;
+    }
+  });
+
+  const prevMaxW = getPreviousMaxWeight(ex.name);
+
   const chips = [
     `<span class="chip">${ICONS.reps}${ex.sets}×${esc(ex.reps)}</span>`,
     ex.weight != null && ex.weight !== '' ? `<span class="chip">${ICONS.weight}${esc(ex.weight)} kg</span>` : '',
-    `<span class="chip rest">${ICONS.rest}${fmtRest(ex.restSec)} recupero</span>`
+    `<span class="chip rest">${ICONS.rest}${fmtRest(ex.restSec)} recupero</span>`,
+    maxW > 0 ? `<button class="chip plate-btn" data-weight="${maxW}" style="background:rgba(198,255,61,.08);color:var(--volt);cursor:pointer;border:1px solid rgba(198,255,61,.2)" title="Calcola dischi per bilanciere">🏋️ Dischi</button>` : '',
+    best1RM > 0 ? `<button class="chip rm-btn" data-exname="${esc(ex.name)}" data-rm="${Math.round(best1RM)}" style="background:rgba(255,183,3,.1);color:#FFB703;cursor:pointer;border:1px solid rgba(255,183,3,.25)" title="Massimale teorico">🔥 1RM: ~${Math.round(best1RM)}kg</button>` : ''
   ].join('');
+
   const prevEx = prevExercise(session, ex.name);
   const rows = ex.log.map((l, j) => {
     const ps = prevEx && prevEx.sets[j];
@@ -1075,9 +1116,13 @@ function cardHTML(ex, i, session) {
     } else if (ps && ps.done) {
       prevLine = `<div class="set-prev">ultima volta: <b>✓ completata</b></div>`;
     }
+    const currW = parseFloat(String(l.weight).replace(',', '.')) || 0;
+    const isPR = l.done && currW > prevMaxW && prevMaxW > 0;
+    const prBadge = isPR ? `<span class="chip-pr" style="background:linear-gradient(135deg,#FFD700,#FFA500);color:#0A0A0F;font-weight:900;font-size:10px;padding:2px 6px;border-radius:4px;margin-left:4px;box-shadow:0 0 8px rgba(255,215,0,.5)">🏅 PR</span>` : '';
+
     const copyBtn = j > 0 ? `<button class="set-copy-btn" data-ex="${i}" data-set="${j}" title="Copia ripetizioni e peso dalla serie sopra">⚡</button>` : '';
     return `<div class="set-row${l.done ? ' on' : ''}">
-    <div class="set-idx">${j + 1}</div>
+    <div class="set-idx">${j + 1}${prBadge}</div>
     <input class="set-input" data-testid="reps-${i}-${j}" data-ex="${i}" data-set="${j}" data-k="reps" inputmode="text" placeholder="${esc(ex.reps)}" value="${esc(l.reps)}">
     <input class="set-input" data-testid="weight-${i}-${j}" data-ex="${i}" data-set="${j}" data-k="weight" inputmode="decimal" placeholder="${ex.weight != null && ex.weight !== '' ? esc(ex.weight) : '—'}" value="${esc(l.weight)}">
     <button class="set-check${l.done ? ' on' : ''}" data-testid="set-check-${i}-${j}" data-ex="${i}" data-set="${j}">${ICONS.check}</button>${copyBtn}${prevLine}</div>`;
@@ -1173,6 +1218,10 @@ $('exList').addEventListener('click', e => {
     }
     return;
   }
+  const pb = e.target.closest('.plate-btn');
+  if (pb) { openPlateCalculatorModal(+pb.dataset.weight); return; }
+  const rm = e.target.closest('.rm-btn');
+  if (rm) { open1RMModal(rm.dataset.exname, +rm.dataset.rm, 8); return; }
   const chk = e.target.closest('.set-check');
   if (chk) toggleSet(+chk.dataset.ex, +chk.dataset.set, chk);
 });
@@ -1688,8 +1737,16 @@ function moveExercise(i, dir) {
 function openExMenu(i) {
   const ex = day().exercises[i];
   const n = day().exercises.length;
+  let maxW = parseFloat(String(ex.weight).replace(',', '.')) || 0;
+  ex.log.forEach(l => {
+    const w = parseFloat(String(l.weight).replace(',', '.')) || 0;
+    if (w > maxW) maxW = w;
+  });
+
   const b = openModal(ex.name, `<div style="display:flex;flex-direction:column;gap:4px">
     <button class="sheet-btn" id="mEdit"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"></path></svg>Modifica esercizio</button>
+    <button class="sheet-btn" id="mPlate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="3"></circle></svg>🏋️ Calcolatrice Dischi Bilanciere</button>
+    <button class="sheet-btn" id="m1RM"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"></path></svg>🔥 Massimale Teorico (1RM)</button>
     ${i > 0 ? `<button class="sheet-btn" id="mUp"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"></path></svg>Sposta su</button>` : ''}
     ${i < n - 1 ? `<button class="sheet-btn" id="mDown"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"></path></svg>Sposta giù</button>` : ''}
     <button class="sheet-btn" id="mDup"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>Duplica esercizio</button>
@@ -1697,6 +1754,8 @@ function openExMenu(i) {
     <button class="sheet-btn danger" id="mDel"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path></svg>Elimina esercizio</button>
   </div>`);
   b.querySelector('#mEdit').onclick = () => { closeModal(); openExerciseForm(i); };
+  b.querySelector('#mPlate').onclick = () => { closeModal(); openPlateCalculatorModal(maxW || 60); };
+  b.querySelector('#m1RM').onclick = () => { closeModal(); open1RMModal(ex.name, maxW || 60, 8); };
   const up = b.querySelector('#mUp'); if (up) up.onclick = () => moveExercise(i, -1);
   const dn = b.querySelector('#mDown'); if (dn) dn.onclick = () => moveExercise(i, 1);
   b.querySelector('#mDup').onclick = () => {
@@ -1718,6 +1777,157 @@ function openExMenu(i) {
       toast(dayRemoved ? 'Esercizio e giornata svuotata eliminati' : 'Esercizio eliminato');
     });
   };
+}
+
+function renderStreakBadge() {
+  const badge = $('homeStreakBadge');
+  if (!badge) return;
+  let count = 0;
+  const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+  Object.values(state.history || {}).forEach(arr => {
+    (arr || []).forEach(sess => {
+      if (sess.ts >= sevenDaysAgo) count++;
+    });
+  });
+  if (count > 0) {
+    badge.style.display = 'inline-flex';
+    badge.innerHTML = `🔥 <b>${count} ${count === 1 ? 'Workout svolto' : 'Workout svolti'}</b> negli ultimi 7 giorni`;
+  } else {
+    badge.style.display = 'inline-flex';
+    badge.innerHTML = `⚡ Inizia il tuo primo allenamento di questa settimana!`;
+  }
+}
+
+function openPlateCalculatorModal(initWeight) {
+  const w = parseFloat(initWeight) || 60;
+  const b = openModal('🏋️ Calcolatrice Dischi Bilanciere', `
+    <div style="padding:4px 0">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+        <div>
+          <label style="font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:4px">Peso Totale (kg)</label>
+          <input type="number" id="pcTotal" class="set-input" style="width:100%;height:44px;font-size:18px;font-weight:800;text-align:center" value="${w}">
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:4px">Bilanciere (kg)</label>
+          <select id="pcBar" style="width:100%;height:44px;background:var(--bg);border:1px solid var(--border);border-radius:10px;color:var(--text);font-weight:700;font-size:14px;padding:0 8px">
+            <option value="20">20 kg (Olimpico)</option>
+            <option value="15">15 kg (Donna)</option>
+            <option value="10">10 kg (Ez / Corto)</option>
+            <option value="0">0 kg (Solo dischi)</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="pcResult" style="background:var(--surface2);border:1px solid var(--border);border-radius:16px;padding:16px;text-align:center;margin-bottom:18px">
+      </div>
+
+      <button class="btn btn-primary btn-block" onclick="closeModal()">Perfetto!</button>
+    </div>
+  `);
+
+  const pcTotal = b.querySelector('#pcTotal');
+  const pcBar = b.querySelector('#pcBar');
+  const pcResult = b.querySelector('#pcResult');
+
+  const update = () => {
+    const tot = parseFloat(pcTotal.value) || 0;
+    const bar = parseFloat(pcBar.value) || 0;
+    const rem = (tot - bar) / 2;
+
+    if (tot <= bar) {
+      pcResult.innerHTML = `<div style="color:var(--muted);font-size:13px">Il peso totale deve essere maggiore del bilanciere (${bar} kg)</div>`;
+      return;
+    }
+
+    const available = [
+      { w: 25, color: '#E63946', name: '25 kg' },
+      { w: 20, color: '#1D3557', name: '20 kg' },
+      { w: 15, color: '#FFB703', name: '15 kg' },
+      { w: 10, color: '#2A9D8F', name: '10 kg' },
+      { w: 5,  color: '#F4A261', name: '5 kg' },
+      { w: 2.5, color: '#E76F51', name: '2.5 kg' },
+      { w: 1.25, color: '#8D99AE', name: '1.25 kg' }
+    ];
+
+    let curr = rem;
+    const plates = [];
+    available.forEach(p => {
+      const count = Math.floor(curr / p.w);
+      if (count > 0) {
+        for (let k = 0; k < count; k++) plates.push(p);
+        curr -= count * p.w;
+        curr = Math.round(curr * 100) / 100;
+      }
+    });
+
+    let visualPlates = plates.map(p => `
+      <div style="background:${p.color};color:#FFF;font-weight:800;font-size:11px;padding:8px 6px;border-radius:6px;min-width:34px;text-align:center;box-shadow:0 4px 10px rgba(0,0,0,.3)">
+        ${p.w}
+      </div>
+    `).join('');
+
+    let listText = plates.map(p => `${p.w}kg`).join(' + ');
+
+    pcResult.innerHTML = `
+      <div style="font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;margin-bottom:4px;letter-spacing:.6px">Per Ogni Lato del Bilanciere</div>
+      <div style="font-family:Anton,sans-serif;font-size:32px;color:var(--volt);line-height:1;margin-bottom:12px">${rem} <span style="font-size:16px;font-family:sans-serif;color:var(--text)">kg</span></div>
+      
+      <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:12px;overflow-x:auto;padding:8px 0">
+        <div style="width:24px;height:12px;background:#555;border-radius:2px" title="Bilanciere"></div>
+        ${visualPlates || '<span style="color:var(--muted)">Nessun disco</span>'}
+      </div>
+
+      <div style="font-size:13px;color:var(--text)"><b>Dischi:</b> ${listText || '—'}</div>
+      ${curr > 0 ? `<div style="font-size:12px;color:var(--amber);margin-top:6px">⚠️ Rimanente non caricabile: ${curr} kg</div>` : ''}
+    `;
+  };
+
+  pcTotal.oninput = update;
+  pcBar.onchange = update;
+  update();
+}
+
+function open1RMModal(exName, weight, reps) {
+  const w = parseFloat(weight) || 60;
+  const r = parseInt(reps, 10) || 8;
+  const oneRM = r === 1 ? w : Math.round(w * (1 + r / 30));
+
+  const pctTable = [
+    { pct: 100, reps: '1', load: Math.round(oneRM * 1) },
+    { pct: 95, reps: '2', load: Math.round(oneRM * 0.95) },
+    { pct: 90, reps: '3-4', load: Math.round(oneRM * 0.90) },
+    { pct: 85, reps: '5-6', load: Math.round(oneRM * 0.85) },
+    { pct: 80, reps: '7-8', load: Math.round(oneRM * 0.80) },
+    { pct: 75, reps: '9-10', load: Math.round(oneRM * 0.75) },
+    { pct: 70, reps: '11-12', load: Math.round(oneRM * 0.70) }
+  ];
+
+  const rows = pctTable.map(t => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg);border-radius:10px;font-size:13px">
+      <span style="font-weight:700;color:var(--volt)">${t.pct}% 1RM</span>
+      <span style="color:var(--muted)">${t.reps} reps</span>
+      <span style="font-weight:800;color:var(--text)">~${t.load} kg</span>
+    </div>
+  `).join('');
+
+  openModal('🔥 Massimale Teorico (1RM)', `
+    <div style="padding:4px 0">
+      <h4 style="font-size:16px;font-weight:800;color:var(--text);margin-bottom:2px">${esc(exName)}</h4>
+      <p style="font-size:12.5px;color:var(--muted);margin-bottom:16px">Basato sul tuo carico di <b>${w}kg × ${r} reps</b> (Formula di Epley)</p>
+
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:16px;padding:16px;text-align:center;margin-bottom:18px">
+        <div style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px">Massimale Stimato (1RM)</div>
+        <div style="font-family:Anton,sans-serif;font-size:36px;color:var(--volt);line-height:1">~${oneRM} <span style="font-size:18px;font-family:sans-serif;color:var(--text)">kg</span></div>
+      </div>
+
+      <div style="font-size:12.5px;font-weight:800;color:var(--muted);text-transform:uppercase;margin-bottom:8px;letter-spacing:.6px">Tabella Percentuali Carico</div>
+      <div style="display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto;margin-bottom:18px">
+        ${rows}
+      </div>
+
+      <button class="btn btn-primary btn-block" onclick="closeModal()">Capito!</button>
+    </div>
+  `);
 }
 
 /* ── sessioni: salvataggio e confronto con l'ultima volta ── */
