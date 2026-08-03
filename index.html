@@ -1367,10 +1367,18 @@ function exDone(ex) { return ex.sets > 0 && ex.log.every(l => l.done); }
 function renderList() {
   const d = day();
   if (!d.exercises.length) {
-    $('exList').innerHTML = `<div class="empty">
-      <h3>Nessun esercizio in questo giorno</h3>
-      <p>Tocca "+ Esercizio" in basso per aggiungere il primo esercizio alla scheda.</p>
+    $('exList').innerHTML = `<div class="empty" style="text-align:center;padding:36px 16px;background:var(--surface2);border:1px dashed var(--border);border-radius:20px;margin-top:12px">
+      <div style="font-size:48px;line-height:1;margin-bottom:12px">🏋️</div>
+      <h3 style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:6px">Nessun esercizio in questa giornata</h3>
+      <p style="color:var(--muted);font-size:13.5px;margin-bottom:20px;max-width:320px;margin-left:auto;margin-right:auto">Inizia a costruire la tua scheda aggiungendo il primo esercizio per <b>"${esc(d.name)}"</b>.</p>
+      <button class="btn btn-primary" id="btnQuickAddEx" style="display:inline-flex;align-items:center;gap:8px;padding:12px 24px;font-size:14.5px;font-weight:800;box-shadow:var(--glow-volt)">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg>
+        Aggiungi Esercizio ⚡
+      </button>
     </div>`;
+
+    const quickBtn = $('btnQuickAddEx');
+    if (quickBtn) quickBtn.onclick = () => openExerciseForm(null);
     return;
   }
   const session = lastSessionFor(d.name);
