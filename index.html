@@ -826,9 +826,9 @@ const DEFAULT_STATE = () => ({
   days: [{
     name: 'Giorno A — Full Body',
     exercises: [
-      { name: 'Panca piana', sets: 4, reps: '8-12', weight: 50, restSec: 90, note: 'Controlla la discesa' },
-      { name: 'Squat con bilanciere', sets: 4, reps: '8-10', weight: 60, restSec: 120, note: 'Schiena dritta, scendi sotto il parallelo' },
-      { name: 'Rematore manubrio', sets: 3, reps: '10-12', weight: 22, restSec: 75, note: '' },
+      { name: 'Panca piana', sets: 4, reps: '8', weight: 50, restSec: 90, note: 'Controlla la discesa' },
+      { name: 'Squat con bilanciere', sets: 4, reps: '8', weight: 60, restSec: 120, note: 'Schiena dritta, scendi sotto il parallelo' },
+      { name: 'Rematore manubrio', sets: 3, reps: '10', weight: 22, restSec: 75, note: '' },
       { name: 'Plank', sets: 3, reps: '45s', weight: null, restSec: 60, note: 'Addome contratto' }
     ]
   }],
@@ -839,62 +839,62 @@ const DEFAULT_STATE = () => ({
 /* ── libreria di esercizi predefiniti ── */
 const EXERCISE_LIBRARY = [
   // PETTO
-  { name: 'Panca piana con bilanciere', group: 'Petto', type: 'free', sets: 4, reps: '8-10', restSec: 90, note: 'Tieni le scapole adotte' },
-  { name: 'Panca inclinata con manubri', group: 'Petto', type: 'free', sets: 3, reps: '10-12', restSec: 75, note: 'Inclinazione panca 30°' },
-  { name: 'Chest Press', group: 'Petto', type: 'machine', sets: 3, reps: '10-12', restSec: 75, note: 'Spinta controllata' },
-  { name: 'Pectoral Machine / Pec Deck', group: 'Petto', type: 'machine', sets: 3, reps: '12-15', restSec: 60, note: 'Stretching pettorali in apertura' },
-  { name: 'Croci ai cavi (Cable Crossover)', group: 'Petto', type: 'machine', sets: 3, reps: '12-15', restSec: 60, note: 'Contrazione di picco al centro' },
-  { name: 'Dips (Parallele)', group: 'Petto', type: 'free', sets: 3, reps: '8-10', restSec: 90, note: 'Busto leggermente inclinato in avanti' },
-  { name: 'Push-up (Piegamenti)', group: 'Petto', type: 'free', sets: 3, reps: '12-15', restSec: 60, note: 'Core saldo' },
+  { name: 'Panca piana con bilanciere', group: 'Petto', type: 'free', sets: 4, reps: '8', restSec: 90, note: 'Tieni le scapole adotte' },
+  { name: 'Panca inclinata con manubri', group: 'Petto', type: 'free', sets: 3, reps: '10', restSec: 75, note: 'Inclinazione panca 30°' },
+  { name: 'Chest Press', group: 'Petto', type: 'machine', sets: 3, reps: '10', restSec: 75, note: 'Spinta controllata' },
+  { name: 'Pectoral Machine / Pec Deck', group: 'Petto', type: 'machine', sets: 3, reps: '12', restSec: 60, note: 'Stretching pettorali in apertura' },
+  { name: 'Croci ai cavi (Cable Crossover)', group: 'Petto', type: 'machine', sets: 3, reps: '12', restSec: 60, note: 'Contrazione di picco al centro' },
+  { name: 'Dips (Parallele)', group: 'Petto', type: 'free', sets: 3, reps: '8', restSec: 90, note: 'Busto leggermente inclinato in avanti' },
+  { name: 'Push-up (Piegamenti)', group: 'Petto', type: 'free', sets: 3, reps: '12', restSec: 60, note: 'Core saldo' },
 
   // DORSO
-  { name: 'Lat Machine avanti', group: 'Dorso', type: 'machine', sets: 4, reps: '10-12', restSec: 75, note: 'Tira verso il petto superiore' },
-  { name: 'Pulley basso con presa stretta', group: 'Dorso', type: 'machine', sets: 3, reps: '10-12', restSec: 75, note: 'Gomiti vicini ai fianchi' },
-  { name: 'Trazioni alla sbarra (Pull-up)', group: 'Dorso', type: 'free', sets: 4, reps: '6-8', restSec: 90, note: 'Presa prona poco più ampia delle spalle' },
-  { name: 'Rematore con bilanciere', group: 'Dorso', type: 'free', sets: 4, reps: '8-10', restSec: 90, note: 'Schiena a 45°, tira all\'ombelico' },
-  { name: 'Rematore con manubrio', group: 'Dorso', type: 'free', sets: 3, reps: '10-12', restSec: 75, note: 'Appoggio su panca' },
+  { name: 'Lat Machine avanti', group: 'Dorso', type: 'machine', sets: 4, reps: '10', restSec: 75, note: 'Tira verso il petto superiore' },
+  { name: 'Pulley basso con presa stretta', group: 'Dorso', type: 'machine', sets: 3, reps: '10', restSec: 75, note: 'Gomiti vicini ai fianchi' },
+  { name: 'Trazioni alla sbarra (Pull-up)', group: 'Dorso', type: 'free', sets: 4, reps: '6', restSec: 90, note: 'Presa prona poco più ampia delle spalle' },
+  { name: 'Rematore con bilanciere', group: 'Dorso', type: 'free', sets: 4, reps: '8', restSec: 90, note: 'Schiena a 45°, tira all\'ombelico' },
+  { name: 'Rematore con manubrio', group: 'Dorso', type: 'free', sets: 3, reps: '10', restSec: 75, note: 'Appoggio su panca' },
   { name: 'Stacco da terra (Deadlift)', group: 'Dorso', type: 'free', sets: 4, reps: '5', restSec: 150, note: 'Schiena neutra, spinta di gambe' },
-  { name: 'Row Machine / Macchina Rematore', group: 'Dorso', type: 'machine', sets: 3, reps: '10-12', restSec: 75, note: '' },
+  { name: 'Row Machine / Macchina Rematore', group: 'Dorso', type: 'machine', sets: 3, reps: '10', restSec: 75, note: '' },
 
   // GAMBE
-  { name: 'Squat con bilanciere', group: 'Gambe', type: 'free', sets: 4, reps: '8-10', restSec: 120, note: 'Scendi sotto il parallelo' },
-  { name: 'Leg Press 45°', group: 'Gambe', type: 'machine', sets: 4, reps: '10-12', restSec: 90, note: 'Non bloccare le ginocchia in chiusura' },
-  { name: 'Leg Extension', group: 'Gambe', type: 'machine', sets: 3, reps: '12-15', restSec: 60, note: 'Squeeze quadricipiti in alto' },
-  { name: 'Leg Curl seduto / sdraiato', group: 'Gambe', type: 'machine', sets: 3, reps: '10-12', restSec: 60, note: 'Ischiocrurali' },
-  { name: 'Stacco Rumeno (RDL)', group: 'Gambe', type: 'free', sets: 3, reps: '10-12', restSec: 90, note: 'Focus su femorali e glutei' },
-  { name: 'Affondi con manubri', group: 'Gambe', type: 'free', sets: 3, reps: '10 per gamba', restSec: 75, note: 'Passo lungo' },
-  { name: 'Calf Machine (Polpacci)', group: 'Gambe', type: 'machine', sets: 4, reps: '15-20', restSec: 45, note: 'Escursione completa' },
-  { name: 'Hip Thrust con bilanciere', group: 'Gambe', type: 'free', sets: 4, reps: '10-12', restSec: 90, note: 'Squeeze glutei in chiusura' },
+  { name: 'Squat con bilanciere', group: 'Gambe', type: 'free', sets: 4, reps: '8', restSec: 120, note: 'Scendi sotto il parallelo' },
+  { name: 'Leg Press 45°', group: 'Gambe', type: 'machine', sets: 4, reps: '10', restSec: 90, note: 'Non bloccare le ginocchia in chiusura' },
+  { name: 'Leg Extension', group: 'Gambe', type: 'machine', sets: 3, reps: '12', restSec: 60, note: 'Squeeze quadricipiti in alto' },
+  { name: 'Leg Curl seduto / sdraiato', group: 'Gambe', type: 'machine', sets: 3, reps: '10', restSec: 60, note: 'Ischiocrurali' },
+  { name: 'Stacco Rumeno (RDL)', group: 'Gambe', type: 'free', sets: 3, reps: '10', restSec: 90, note: 'Focus su femorali e glutei' },
+  { name: 'Affondi con manubri', group: 'Gambe', type: 'free', sets: 3, reps: '10', restSec: 75, note: 'Passo lungo' },
+  { name: 'Calf Machine (Polpacci)', group: 'Gambe', type: 'machine', sets: 4, reps: '15', restSec: 45, note: 'Escursione completa' },
+  { name: 'Hip Thrust con bilanciere', group: 'Gambe', type: 'free', sets: 4, reps: '10', restSec: 90, note: 'Squeeze glutei in chiusura' },
 
   // SPALLE
-  { name: 'Military Press con bilanciere', group: 'Spalle', type: 'free', sets: 4, reps: '8-10', restSec: 90, note: 'Spinta verticale da in piedi' },
-  { name: 'Lento avanti con manubri', group: 'Spalle', type: 'free', sets: 3, reps: '10-12', restSec: 75, note: 'Seduto su panca a 80°' },
-  { name: 'Shoulder Press Machine', group: 'Spalle', type: 'machine', sets: 3, reps: '10-12', restSec: 75, note: '' },
-  { name: 'Alzate laterali con manubri', group: 'Spalle', type: 'free', sets: 4, reps: '12-15', restSec: 60, note: 'Gomiti leggermente flessi' },
-  { name: 'Alzate laterali ai cavi', group: 'Spalle', type: 'machine', sets: 3, reps: '12-15', restSec: 60, note: 'Tensione continua' },
+  { name: 'Military Press con bilanciere', group: 'Spalle', type: 'free', sets: 4, reps: '8', restSec: 90, note: 'Spinta verticale da in piedi' },
+  { name: 'Lento avanti con manubri', group: 'Spalle', type: 'free', sets: 3, reps: '10', restSec: 75, note: 'Seduto su panca a 80°' },
+  { name: 'Shoulder Press Machine', group: 'Spalle', type: 'machine', sets: 3, reps: '10', restSec: 75, note: '' },
+  { name: 'Alzate laterali con manubri', group: 'Spalle', type: 'free', sets: 4, reps: '12', restSec: 60, note: 'Gomiti leggermente flessi' },
+  { name: 'Alzate laterali ai cavi', group: 'Spalle', type: 'machine', sets: 3, reps: '12', restSec: 60, note: 'Tensione continua' },
   { name: 'Face Pull ai cavi', group: 'Spalle', type: 'machine', sets: 3, reps: '15', restSec: 60, note: 'Focus deltoidi posteriori e rotatori' },
-  { name: 'Rear Delt Machine / Alzate post.', group: 'Spalle', type: 'machine', sets: 3, reps: '12-15', restSec: 60, note: '' },
+  { name: 'Rear Delt Machine / Alzate post.', group: 'Spalle', type: 'machine', sets: 3, reps: '12', restSec: 60, note: '' },
 
   // BICIPITI
-  { name: 'Curl con bilanciere sagomato (EZ)', group: 'Bicipiti', type: 'free', sets: 3, reps: '10-12', restSec: 60, note: 'Gomiti fermi lungo i fianchi' },
-  { name: 'Curl manubri alternato', group: 'Bicipiti', type: 'free', sets: 3, reps: '10-12', restSec: 60, note: 'Supinazione del polso in risalita' },
-  { name: 'Curl Martello (Hammer Curl)', group: 'Bicipiti', type: 'free', sets: 3, reps: '10-12', restSec: 60, note: 'Presa neutra' },
-  { name: 'Curl ai cavi con barra', group: 'Bicipiti', type: 'machine', sets: 3, reps: '12-15', restSec: 60, note: 'Tensione costante' },
-  { name: 'Curl Panca Scott', group: 'Bicipiti', type: 'free', sets: 3, reps: '10-12', restSec: 60, note: 'Isolamento bicipiti' },
+  { name: 'Curl con bilanciere sagomato (EZ)', group: 'Bicipiti', type: 'free', sets: 3, reps: '10', restSec: 60, note: 'Gomiti fermi lungo i fianchi' },
+  { name: 'Curl manubri alternato', group: 'Bicipiti', type: 'free', sets: 3, reps: '10', restSec: 60, note: 'Supinazione del polso in risalita' },
+  { name: 'Curl Martello (Hammer Curl)', group: 'Bicipiti', type: 'free', sets: 3, reps: '10', restSec: 60, note: 'Presa neutra' },
+  { name: 'Curl ai cavi con barra', group: 'Bicipiti', type: 'machine', sets: 3, reps: '12', restSec: 60, note: 'Tensione costante' },
+  { name: 'Curl Panca Scott', group: 'Bicipiti', type: 'free', sets: 3, reps: '10', restSec: 60, note: 'Isolamento bicipiti' },
 
   // TRICIPITI
-  { name: 'Pushdown cavi con corda', group: 'Tricipiti', type: 'machine', sets: 3, reps: '12-15', restSec: 60, note: 'Apri la corda in basso' },
-  { name: 'Pushdown cavi con barra a V', group: 'Tricipiti', type: 'machine', sets: 3, reps: '10-12', restSec: 60, note: '' },
-  { name: 'French Press (Skullcrusher)', group: 'Tricipiti', type: 'free', sets: 3, reps: '10-12', restSec: 75, note: 'Bilanciere EZ su panca piana' },
-  { name: 'Dip su panca', group: 'Tricipiti', type: 'free', sets: 3, reps: '12-15', restSec: 60, note: 'Mani vicine al bacino' },
-  { name: 'Estensioni dietro nuca manubrio', group: 'Tricipiti', type: 'free', sets: 3, reps: '10-12', restSec: 60, note: 'Focus capo lungo del tricipite' },
+  { name: 'Pushdown cavi con corda', group: 'Tricipiti', type: 'machine', sets: 3, reps: '12', restSec: 60, note: 'Apri la corda in basso' },
+  { name: 'Pushdown cavi con barra a V', group: 'Tricipiti', type: 'machine', sets: 3, reps: '10', restSec: 60, note: '' },
+  { name: 'French Press (Skullcrusher)', group: 'Tricipiti', type: 'free', sets: 3, reps: '10', restSec: 75, note: 'Bilanciere EZ su panca piana' },
+  { name: 'Dip su panca', group: 'Tricipiti', type: 'free', sets: 3, reps: '12', restSec: 60, note: 'Mani vicine al bacino' },
+  { name: 'Estensioni dietro nuca manubrio', group: 'Tricipiti', type: 'free', sets: 3, reps: '10', restSec: 60, note: 'Focus capo lungo del tricipite' },
 
   // ADDOME
   { name: 'Plank', group: 'Addome', type: 'free', sets: 3, reps: '45s', weight: null, restSec: 60, note: 'Addome e glutei contratti' },
-  { name: 'Crunch su tappetino', group: 'Addome', type: 'free', sets: 3, reps: '15-20', restSec: 45, note: 'Solleva le spalle mantenendo il collo neutro' },
-  { name: 'Leg Raise alla sbarra / parallele', group: 'Addome', type: 'free', sets: 3, reps: '12-15', restSec: 60, note: 'Sollevamento gambe' },
-  { name: 'Crunch ai cavi (Cable Crunch)', group: 'Addome', type: 'machine', sets: 3, reps: '12-15', restSec: 60, note: 'In ginocchio con corda' },
-  { name: 'Abdominal Machine', group: 'Addome', type: 'machine', sets: 3, reps: '12-15', restSec: 60, note: '' }
+  { name: 'Crunch su tappetino', group: 'Addome', type: 'free', sets: 3, reps: '15', restSec: 45, note: 'Solleva le spalle mantenendo il collo neutro' },
+  { name: 'Leg Raise alla sbarra / parallele', group: 'Addome', type: 'free', sets: 3, reps: '12', restSec: 60, note: 'Sollevamento gambe' },
+  { name: 'Crunch ai cavi (Cable Crunch)', group: 'Addome', type: 'machine', sets: 3, reps: '12', restSec: 60, note: 'In ginocchio con corda' },
+  { name: 'Abdominal Machine', group: 'Addome', type: 'machine', sets: 3, reps: '12', restSec: 60, note: '' }
 ];
 
 /* ── stato ── */
@@ -1103,7 +1103,6 @@ function cardHTML(ex, i, session) {
     `<span class="chip">${ICONS.reps}${ex.sets}×${esc(ex.reps)}</span>`,
     ex.weight != null && ex.weight !== '' ? `<span class="chip">${ICONS.weight}${esc(ex.weight)} kg</span>` : '',
     `<span class="chip rest">${ICONS.rest}${fmtRest(ex.restSec)} recupero</span>`,
-    maxW > 0 ? `<button class="chip plate-btn" data-weight="${maxW}" style="background:rgba(198,255,61,.08);color:var(--volt);cursor:pointer;border:1px solid rgba(198,255,61,.2)" title="Calcola dischi per bilanciere">🏋️ Dischi</button>` : '',
     best1RM > 0 ? `<button class="chip rm-btn" data-exname="${esc(ex.name)}" data-rm="${Math.round(best1RM)}" style="background:rgba(255,183,3,.1);color:#FFB703;cursor:pointer;border:1px solid rgba(255,183,3,.25)" title="Massimale teorico">🔥 1RM: ~${Math.round(best1RM)}kg</button>` : ''
   ].join('');
 
@@ -1120,12 +1119,11 @@ function cardHTML(ex, i, session) {
     const isPR = l.done && currW > prevMaxW && prevMaxW > 0;
     const prBadge = isPR ? `<span class="chip-pr" style="background:linear-gradient(135deg,#FFD700,#FFA500);color:#0A0A0F;font-weight:900;font-size:10px;padding:2px 6px;border-radius:4px;margin-left:4px;box-shadow:0 0 8px rgba(255,215,0,.5)">🏅 PR</span>` : '';
 
-    const copyBtn = j > 0 ? `<button class="set-copy-btn" data-ex="${i}" data-set="${j}" title="Copia ripetizioni e peso dalla serie sopra">⚡</button>` : '';
     return `<div class="set-row${l.done ? ' on' : ''}">
     <div class="set-idx">${j + 1}${prBadge}</div>
     <input class="set-input" data-testid="reps-${i}-${j}" data-ex="${i}" data-set="${j}" data-k="reps" inputmode="text" placeholder="${esc(ex.reps)}" value="${esc(l.reps)}">
     <input class="set-input" data-testid="weight-${i}-${j}" data-ex="${i}" data-set="${j}" data-k="weight" inputmode="decimal" placeholder="${ex.weight != null && ex.weight !== '' ? esc(ex.weight) : '—'}" value="${esc(l.weight)}">
-    <button class="set-check${l.done ? ' on' : ''}" data-testid="set-check-${i}-${j}" data-ex="${i}" data-set="${j}">${ICONS.check}</button>${copyBtn}${prevLine}</div>`;
+    <button class="set-check${l.done ? ' on' : ''}" data-testid="set-check-${i}-${j}" data-ex="${i}" data-set="${j}">${ICONS.check}</button>${prevLine}</div>`;
   }).join('');
   const allDone = ex.sets > 0 && ex.log.every(l => l.done);
   return `<div class="ex-card${allDone ? ' done' : ''}" data-testid="exercise-card-${i}" data-exidx="${i}" title="Tieni premuto per spostare">
@@ -1147,20 +1145,16 @@ function cardHTML(ex, i, session) {
 function exDone(ex) { return ex.sets > 0 && ex.log.every(l => l.done); }
 
 function renderList() {
-  const exs = day().exercises;
-  if (!exs.length) {
-    $('exList').classList.remove('compact');
+  const d = day();
+  if (!d.exercises.length) {
     $('exList').innerHTML = `<div class="empty">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5 17.5 17.5"></path><rect x="2.5" y="9" width="4" height="6" rx="1"></rect><rect x="17.5" y="9" width="4" height="6" rx="1"></rect><path d="M6.5 12h11"></path></svg>
-      <h3>Nessun esercizio</h3>
-      <p>Aggiungi il primo esercizio di questo giorno oppure importa una scheda JSON.</p>
-      <button class="btn btn-primary" id="emptyAdd">+ Aggiungi esercizio</button></div>`;
-    const b = $('emptyAdd'); if (b) b.onclick = () => openExerciseForm(null);
+      <h3>Nessun esercizio in questo giorno</h3>
+      <p>Tocca "+ Esercizio" in basso per aggiungere il primo esercizio alla scheda.</p>
+    </div>`;
     return;
   }
-  const session = lastSessionFor(day().name);
-  $('exList').innerHTML = exs.map((ex, i) => cardHTML(ex, i, session)).join('');
-  updateFabSave();
+  const session = lastSessionFor(d.name);
+  $('exList').innerHTML = d.exercises.map((ex, i) => cardHTML(ex, i, session)).join('');
 }
 
 /* Il FAB "Fine" si mostra quando c'è progresso. */
@@ -1173,11 +1167,12 @@ function updateFabSave() {
    barra fissa. Piccolo debounce per non farla lampeggiare quando si passa da
    un campo all'altro. */
 let kbTimer = null;
-document.addEventListener('focusin', e => {
+$('exList').addEventListener('focusin', e => {
   if (e.target.classList && e.target.classList.contains('set-input')) {
-    clearTimeout(kbTimer); document.body.classList.add('kb');
+    clearTimeout(kbTimer);
+    document.body.classList.add('kb');
     setTimeout(() => {
-      try { e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (_) {}
+      e.target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }, 180);
   }
 });
@@ -1199,32 +1194,18 @@ $('exList').addEventListener('input', e => {
 $('exList').addEventListener('click', e => {
   const opts = e.target.closest('.ex-opts-btn');
   if (opts) { openExMenu(+opts.dataset.exidx); return; }
-  const cpy = e.target.closest('.set-copy-btn');
-  if (cpy) {
-    const exIdx = +cpy.dataset.ex;
-    const setIdx = +cpy.dataset.set;
-    if (setIdx > 0) {
-      const ex = day().exercises[exIdx];
-      const prevSet = ex.log[setIdx - 1];
-      const currSet = ex.log[setIdx];
-      if (prevSet) {
-        currSet.reps = prevSet.reps;
-        currSet.weight = prevSet.weight;
-        save();
-        renderList();
-        buzz(20);
-        toast(`Copiati ${prevSet.reps || '—'}${prevSet.weight ? ` × ${prevSet.weight}kg` : ''} ⚡`);
-      }
-    }
-    return;
-  }
-  const pb = e.target.closest('.plate-btn');
-  if (pb) { openPlateCalculatorModal(+pb.dataset.weight); return; }
   const rm = e.target.closest('.rm-btn');
   if (rm) { open1RMModal(rm.dataset.exname, +rm.dataset.rm, 8); return; }
   const chk = e.target.closest('.set-check');
   if (chk) toggleSet(+chk.dataset.ex, +chk.dataset.set, chk);
 });
+
+function getSingleRepNumber(repsStr) {
+  if (!repsStr) return '';
+  const str = String(repsStr).trim();
+  const match = str.match(/^\d+/);
+  return match ? match[0] : str;
+}
 
 function toggleSet(i, j, btn) {
   const ex = day().exercises[i];
@@ -1232,12 +1213,15 @@ function toggleSet(i, j, btn) {
   l.done = !l.done;
 
   if (l.done) {
-    // Autocompila con i valori preimpostati della scheda o della serie precedente se lasciati vuoti
+    // Registra come numero preciso da scheda dell'esercizio o eredita dalla serie prima se non inserito prima
     if (!l.reps || String(l.reps).trim() === '') {
-      l.reps = (j > 0 && ex.log[j - 1].reps) ? ex.log[j - 1].reps : (ex.reps || '');
+      const prevReps = j > 0 ? ex.log[j - 1].reps : null;
+      const targetReps = (prevReps && String(prevReps).trim() !== '') ? prevReps : (ex.reps || '8');
+      l.reps = getSingleRepNumber(targetReps);
     }
     if (!l.weight || String(l.weight).trim() === '') {
-      l.weight = (j > 0 && ex.log[j - 1].weight) ? ex.log[j - 1].weight : (ex.weight != null ? ex.weight : '');
+      const prevWeight = j > 0 ? ex.log[j - 1].weight : null;
+      l.weight = (prevWeight && String(prevWeight).trim() !== '') ? prevWeight : (ex.weight != null ? ex.weight : '');
     }
   }
 
@@ -1754,7 +1738,6 @@ function openExMenu(i) {
 
   const b = openModal(ex.name, `<div style="display:flex;flex-direction:column;gap:4px">
     <button class="sheet-btn" id="mEdit"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"></path></svg>Modifica esercizio</button>
-    <button class="sheet-btn" id="mPlate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="3"></circle></svg>🏋️ Calcolatrice Dischi Bilanciere</button>
     <button class="sheet-btn" id="m1RM"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"></path></svg>🔥 Massimale Teorico (1RM)</button>
     ${i > 0 ? `<button class="sheet-btn" id="mUp"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"></path></svg>Sposta su</button>` : ''}
     ${i < n - 1 ? `<button class="sheet-btn" id="mDown"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"></path></svg>Sposta giù</button>` : ''}
@@ -1763,7 +1746,6 @@ function openExMenu(i) {
     <button class="sheet-btn danger" id="mDel"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path></svg>Elimina esercizio</button>
   </div>`);
   b.querySelector('#mEdit').onclick = () => { closeModal(); openExerciseForm(i); };
-  b.querySelector('#mPlate').onclick = () => { closeModal(); openPlateCalculatorModal(maxW || 60); };
   b.querySelector('#m1RM').onclick = () => { closeModal(); open1RMModal(ex.name, maxW || 60, 8); };
   const up = b.querySelector('#mUp'); if (up) up.onclick = () => moveExercise(i, -1);
   const dn = b.querySelector('#mDown'); if (dn) dn.onclick = () => moveExercise(i, 1);
@@ -1805,95 +1787,6 @@ function renderStreakBadge() {
     badge.style.display = 'inline-flex';
     badge.innerHTML = `⚡ Inizia il tuo primo allenamento di questa settimana!`;
   }
-}
-
-function openPlateCalculatorModal(initWeight) {
-  const w = parseFloat(initWeight) || 60;
-  const b = openModal('🏋️ Calcolatrice Dischi Bilanciere', `
-    <div style="padding:4px 0">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
-        <div>
-          <label style="font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:4px">Peso Totale (kg)</label>
-          <input type="number" id="pcTotal" class="set-input" style="width:100%;height:44px;font-size:18px;font-weight:800;text-align:center" value="${w}">
-        </div>
-        <div>
-          <label style="font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:4px">Bilanciere (kg)</label>
-          <select id="pcBar" style="width:100%;height:44px;background:var(--bg);border:1px solid var(--border);border-radius:10px;color:var(--text);font-weight:700;font-size:14px;padding:0 8px">
-            <option value="20">20 kg (Olimpico)</option>
-            <option value="15">15 kg (Donna)</option>
-            <option value="10">10 kg (Ez / Corto)</option>
-            <option value="0">0 kg (Solo dischi)</option>
-          </select>
-        </div>
-      </div>
-
-      <div id="pcResult" style="background:var(--surface2);border:1px solid var(--border);border-radius:16px;padding:16px;text-align:center;margin-bottom:18px">
-      </div>
-
-      <button class="btn btn-primary btn-block" onclick="closeModal()">Perfetto!</button>
-    </div>
-  `);
-
-  const pcTotal = b.querySelector('#pcTotal');
-  const pcBar = b.querySelector('#pcBar');
-  const pcResult = b.querySelector('#pcResult');
-
-  const update = () => {
-    const tot = parseFloat(pcTotal.value) || 0;
-    const bar = parseFloat(pcBar.value) || 0;
-    const rem = (tot - bar) / 2;
-
-    if (tot <= bar) {
-      pcResult.innerHTML = `<div style="color:var(--muted);font-size:13px">Il peso totale deve essere maggiore del bilanciere (${bar} kg)</div>`;
-      return;
-    }
-
-    const available = [
-      { w: 25, color: '#E63946', name: '25 kg' },
-      { w: 20, color: '#1D3557', name: '20 kg' },
-      { w: 15, color: '#FFB703', name: '15 kg' },
-      { w: 10, color: '#2A9D8F', name: '10 kg' },
-      { w: 5,  color: '#F4A261', name: '5 kg' },
-      { w: 2.5, color: '#E76F51', name: '2.5 kg' },
-      { w: 1.25, color: '#8D99AE', name: '1.25 kg' }
-    ];
-
-    let curr = rem;
-    const plates = [];
-    available.forEach(p => {
-      const count = Math.floor(curr / p.w);
-      if (count > 0) {
-        for (let k = 0; k < count; k++) plates.push(p);
-        curr -= count * p.w;
-        curr = Math.round(curr * 100) / 100;
-      }
-    });
-
-    let visualPlates = plates.map(p => `
-      <div style="background:${p.color};color:#FFF;font-weight:800;font-size:11px;padding:8px 6px;border-radius:6px;min-width:34px;text-align:center;box-shadow:0 4px 10px rgba(0,0,0,.3)">
-        ${p.w}
-      </div>
-    `).join('');
-
-    let listText = plates.map(p => `${p.w}kg`).join(' + ');
-
-    pcResult.innerHTML = `
-      <div style="font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;margin-bottom:4px;letter-spacing:.6px">Per Ogni Lato del Bilanciere</div>
-      <div style="font-family:Anton,sans-serif;font-size:32px;color:var(--volt);line-height:1;margin-bottom:12px">${rem} <span style="font-size:16px;font-family:sans-serif;color:var(--text)">kg</span></div>
-      
-      <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:12px;overflow-x:auto;padding:8px 0">
-        <div style="width:24px;height:12px;background:#555;border-radius:2px" title="Bilanciere"></div>
-        ${visualPlates || '<span style="color:var(--muted)">Nessun disco</span>'}
-      </div>
-
-      <div style="font-size:13px;color:var(--text)"><b>Dischi:</b> ${listText || '—'}</div>
-      ${curr > 0 ? `<div style="font-size:12px;color:var(--amber);margin-top:6px">⚠️ Rimanente non caricabile: ${curr} kg</div>` : ''}
-    `;
-  };
-
-  pcTotal.oninput = update;
-  pcBar.onchange = update;
-  update();
 }
 
 function open1RMModal(exName, weight, reps) {
