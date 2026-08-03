@@ -1057,62 +1057,62 @@ const DEFAULT_STATE = () => ({
 /* ── libreria di esercizi predefiniti ── */
 const EXERCISE_LIBRARY = [
   // PETTO
-  { name: 'Panca piana con bilanciere', group: 'Petto', type: 'free', sets: 4, reps: '8', restSec: 90, note: 'Tieni le scapole adotte' },
-  { name: 'Panca inclinata con manubri', group: 'Petto', type: 'free', sets: 3, reps: '10', restSec: 75, note: 'Inclinazione panca 30°' },
-  { name: 'Chest Press', group: 'Petto', type: 'machine', sets: 3, reps: '10', restSec: 75, note: 'Spinta controllata' },
-  { name: 'Pectoral Machine / Pec Deck', group: 'Petto', type: 'machine', sets: 3, reps: '12', restSec: 60, note: 'Stretching pettorali in apertura' },
-  { name: 'Croci ai cavi (Cable Crossover)', group: 'Petto', type: 'machine', sets: 3, reps: '12', restSec: 60, note: 'Contrazione di picco al centro' },
-  { name: 'Dips (Parallele)', group: 'Petto', type: 'free', sets: 3, reps: '8', restSec: 90, note: 'Busto leggermente inclinato in avanti' },
-  { name: 'Push-up (Piegamenti)', group: 'Petto', type: 'free', sets: 3, reps: '12', restSec: 60, note: 'Core saldo' },
+  { name: 'Panca piana con bilanciere', group: 'Petto', type: 'free', sets: 4, reps: '8', restSec: 90, note: 'Scapole addotte, arco lombare naturale, scendi al petto' },
+  { name: 'Panca inclinata con manubri', group: 'Petto', type: 'free', sets: 3, reps: '10', restSec: 75, note: 'Panca a 30°, gomiti a 45° dal busto' },
+  { name: 'Chest Press', group: 'Petto', type: 'machine', sets: 3, reps: '10', restSec: 75, note: 'Regola il sedile: impugnature all\'altezza del petto' },
+  { name: 'Pectoral Machine / Pec Deck', group: 'Petto', type: 'machine', sets: 3, reps: '12', restSec: 60, note: 'Stretching completo in apertura, squeeze al centro' },
+  { name: 'Croci ai cavi (Cable Crossover)', group: 'Petto', type: 'machine', sets: 3, reps: '12', restSec: 60, note: 'Gomiti leggermente flessi, incrocia le mani al centro' },
+  { name: 'Dips (Parallele)', group: 'Petto', type: 'free', sets: 3, reps: '8', restSec: 90, note: 'Busto inclinato avanti 15-20°, scendi fino a 90° gomiti' },
+  { name: 'Push-up (Piegamenti)', group: 'Petto', type: 'free', sets: 3, reps: '12', restSec: 60, note: 'Corpo rigido da testa a talloni, petto sfiora il suolo' },
 
   // DORSO
-  { name: 'Lat Machine avanti', group: 'Dorso', type: 'machine', sets: 4, reps: '10', restSec: 75, note: 'Tira verso il petto superiore' },
-  { name: 'Pulley basso con presa stretta', group: 'Dorso', type: 'machine', sets: 3, reps: '10', restSec: 75, note: 'Gomiti vicini ai fianchi' },
-  { name: 'Trazioni alla sbarra (Pull-up)', group: 'Dorso', type: 'free', sets: 4, reps: '6', restSec: 90, note: 'Presa prona poco più ampia delle spalle' },
-  { name: 'Rematore con bilanciere', group: 'Dorso', type: 'free', sets: 4, reps: '8', restSec: 90, note: 'Schiena a 45°, tira all\'ombelico' },
-  { name: 'Rematore con manubrio', group: 'Dorso', type: 'free', sets: 3, reps: '10', restSec: 75, note: 'Appoggio su panca' },
-  { name: 'Stacco da terra (Deadlift)', group: 'Dorso', type: 'free', sets: 4, reps: '5', restSec: 150, note: 'Schiena neutra, spinta di gambe' },
-  { name: 'Row Machine / Macchina Rematore', group: 'Dorso', type: 'machine', sets: 3, reps: '10', restSec: 75, note: '' },
+  { name: 'Lat Machine avanti', group: 'Dorso', type: 'machine', sets: 4, reps: '10', restSec: 75, note: 'Tira al petto alto, stringi le scapole in basso' },
+  { name: 'Pulley basso con presa stretta', group: 'Dorso', type: 'machine', sets: 3, reps: '10', restSec: 75, note: 'Petto fuori, gomiti rasenti ai fianchi, tira all\'ombelico' },
+  { name: 'Trazioni alla sbarra (Pull-up)', group: 'Dorso', type: 'free', sets: 4, reps: '6', restSec: 90, note: 'Presa prona, parti da braccia distese, mento sopra la sbarra' },
+  { name: 'Rematore con bilanciere', group: 'Dorso', type: 'free', sets: 4, reps: '8', restSec: 90, note: 'Busto a 45°, schiena neutra, tira verso l\'ombelico' },
+  { name: 'Rematore con manubrio', group: 'Dorso', type: 'free', sets: 3, reps: '10', restSec: 75, note: 'Ginocchio e mano su panca, tira il gomito verso il fianco' },
+  { name: 'Stacco da terra (Deadlift)', group: 'Dorso', type: 'free', sets: 4, reps: '5', restSec: 150, note: 'Schiena neutra, spingi con le gambe, bilanciere aderente alle tibie' },
+  { name: 'Row Machine / Macchina Rematore', group: 'Dorso', type: 'machine', sets: 3, reps: '10', restSec: 75, note: 'Petto a contatto col supporto, tira stringendo le scapole' },
 
   // GAMBE
-  { name: 'Squat con bilanciere', group: 'Gambe', type: 'free', sets: 4, reps: '8', restSec: 120, note: 'Scendi sotto il parallelo' },
-  { name: 'Leg Press 45°', group: 'Gambe', type: 'machine', sets: 4, reps: '10', restSec: 90, note: 'Non bloccare le ginocchia in chiusura' },
-  { name: 'Leg Extension', group: 'Gambe', type: 'machine', sets: 3, reps: '12', restSec: 60, note: 'Squeeze quadricipiti in alto' },
-  { name: 'Leg Curl seduto / sdraiato', group: 'Gambe', type: 'machine', sets: 3, reps: '10', restSec: 60, note: 'Ischiocrurali' },
-  { name: 'Stacco Rumeno (RDL)', group: 'Gambe', type: 'free', sets: 3, reps: '10', restSec: 90, note: 'Focus su femorali e glutei' },
-  { name: 'Affondi con manubri', group: 'Gambe', type: 'free', sets: 3, reps: '10', restSec: 75, note: 'Passo lungo' },
-  { name: 'Calf Machine (Polpacci)', group: 'Gambe', type: 'machine', sets: 4, reps: '15', restSec: 45, note: 'Escursione completa' },
-  { name: 'Hip Thrust con bilanciere', group: 'Gambe', type: 'free', sets: 4, reps: '10', restSec: 90, note: 'Squeeze glutei in chiusura' },
+  { name: 'Squat con bilanciere', group: 'Gambe', type: 'free', sets: 4, reps: '8', restSec: 120, note: 'Sotto il parallelo, ginocchia in linea con le punte dei piedi' },
+  { name: 'Leg Press 45°', group: 'Gambe', type: 'machine', sets: 4, reps: '10', restSec: 90, note: 'Piedi larghezza spalle, non bloccare le ginocchia in estensione' },
+  { name: 'Leg Extension', group: 'Gambe', type: 'machine', sets: 3, reps: '12', restSec: 60, note: 'Estendi completamente, pausa 1s in alto, negativa lenta' },
+  { name: 'Leg Curl seduto / sdraiato', group: 'Gambe', type: 'machine', sets: 3, reps: '10', restSec: 60, note: 'Contrai i femorali fino in fondo, negativa controllata' },
+  { name: 'Stacco Rumeno (RDL)', group: 'Gambe', type: 'free', sets: 3, reps: '10', restSec: 90, note: 'Bilanciere lungo le cosce, ginocchia semi-flesse, senti il femore' },
+  { name: 'Affondi con manubri', group: 'Gambe', type: 'free', sets: 3, reps: '10', restSec: 75, note: 'Passo lungo, ginocchio posteriore sfiora il suolo' },
+  { name: 'Calf Machine (Polpacci)', group: 'Gambe', type: 'machine', sets: 4, reps: '15', restSec: 45, note: 'Escursione completa: stretch in basso, pausa 1s in alto' },
+  { name: 'Hip Thrust con bilanciere', group: 'Gambe', type: 'free', sets: 4, reps: '10', restSec: 90, note: 'Schiena alta sulla panca, stringi i glutei in alto, mento al petto' },
 
   // SPALLE
-  { name: 'Military Press con bilanciere', group: 'Spalle', type: 'free', sets: 4, reps: '8', restSec: 90, note: 'Spinta verticale da in piedi' },
-  { name: 'Lento avanti con manubri', group: 'Spalle', type: 'free', sets: 3, reps: '10', restSec: 75, note: 'Seduto su panca a 80°' },
-  { name: 'Shoulder Press Machine', group: 'Spalle', type: 'machine', sets: 3, reps: '10', restSec: 75, note: '' },
-  { name: 'Alzate laterali con manubri', group: 'Spalle', type: 'free', sets: 4, reps: '12', restSec: 60, note: 'Gomiti leggermente flessi' },
-  { name: 'Alzate laterali ai cavi', group: 'Spalle', type: 'machine', sets: 3, reps: '12', restSec: 60, note: 'Tensione continua' },
-  { name: 'Face Pull ai cavi', group: 'Spalle', type: 'machine', sets: 3, reps: '15', restSec: 60, note: 'Focus deltoidi posteriori e rotatori' },
-  { name: 'Rear Delt Machine / Alzate post.', group: 'Spalle', type: 'machine', sets: 3, reps: '12', restSec: 60, note: '' },
+  { name: 'Military Press con bilanciere', group: 'Spalle', type: 'free', sets: 4, reps: '8', restSec: 90, note: 'In piedi, core attivo, spingi verticale sopra la testa' },
+  { name: 'Lento avanti con manubri', group: 'Spalle', type: 'free', sets: 3, reps: '10', restSec: 75, note: 'Panca a 80°, gomiti a 90° in partenza, spingi senza inarcare' },
+  { name: 'Shoulder Press Machine', group: 'Spalle', type: 'machine', sets: 3, reps: '10', restSec: 75, note: 'Sedile regolato, impugnature altezza orecchie, spinta controllata' },
+  { name: 'Alzate laterali con manubri', group: 'Spalle', type: 'free', sets: 4, reps: '12', restSec: 60, note: 'Gomiti a 15-20°, solleva fino a parallelo spalle, no slancio' },
+  { name: 'Alzate laterali ai cavi', group: 'Spalle', type: 'machine', sets: 3, reps: '12', restSec: 60, note: 'Cavo dal lato opposto, tensione costante su tutto il ROM' },
+  { name: 'Face Pull ai cavi', group: 'Spalle', type: 'machine', sets: 3, reps: '15', restSec: 60, note: 'Corda in alto, tira verso la fronte, ruota esternamente le mani' },
+  { name: 'Rear Delt Machine / Alzate post.', group: 'Spalle', type: 'machine', sets: 3, reps: '12', restSec: 60, note: 'Petto aderente, apri con i gomiti alti, squeeze scapolare' },
 
   // BICIPITI
-  { name: 'Curl con bilanciere sagomato (EZ)', group: 'Bicipiti', type: 'free', sets: 3, reps: '10', restSec: 60, note: 'Gomiti fermi lungo i fianchi' },
-  { name: 'Curl manubri alternato', group: 'Bicipiti', type: 'free', sets: 3, reps: '10', restSec: 60, note: 'Supinazione del polso in risalita' },
-  { name: 'Curl Martello (Hammer Curl)', group: 'Bicipiti', type: 'free', sets: 3, reps: '10', restSec: 60, note: 'Presa neutra' },
-  { name: 'Curl ai cavi con barra', group: 'Bicipiti', type: 'machine', sets: 3, reps: '12', restSec: 60, note: 'Tensione costante' },
-  { name: 'Curl Panca Scott', group: 'Bicipiti', type: 'free', sets: 3, reps: '10', restSec: 60, note: 'Isolamento bicipiti' },
+  { name: 'Curl con bilanciere sagomato (EZ)', group: 'Bicipiti', type: 'free', sets: 3, reps: '10', restSec: 60, note: 'Gomiti fissi ai fianchi, non oscillare il busto' },
+  { name: 'Curl manubri alternato', group: 'Bicipiti', type: 'free', sets: 3, reps: '10', restSec: 60, note: 'Supina il polso durante la salita, negativa 2-3s' },
+  { name: 'Curl Martello (Hammer Curl)', group: 'Bicipiti', type: 'free', sets: 3, reps: '10', restSec: 60, note: 'Presa neutra (pollici in alto), lavora brachiale e brachioradiale' },
+  { name: 'Curl ai cavi con barra', group: 'Bicipiti', type: 'machine', sets: 3, reps: '12', restSec: 60, note: 'Tensione costante, squeeze in alto 1s, negativa lenta' },
+  { name: 'Curl Panca Scott', group: 'Bicipiti', type: 'free', sets: 3, reps: '10', restSec: 60, note: 'Braccia aderenti al cuscino, non iperestendere in basso' },
 
   // TRICIPITI
-  { name: 'Pushdown cavi con corda', group: 'Tricipiti', type: 'machine', sets: 3, reps: '12', restSec: 60, note: 'Apri la corda in basso' },
-  { name: 'Pushdown cavi con barra a V', group: 'Tricipiti', type: 'machine', sets: 3, reps: '10', restSec: 60, note: '' },
-  { name: 'French Press (Skullcrusher)', group: 'Tricipiti', type: 'free', sets: 3, reps: '10', restSec: 75, note: 'Bilanciere EZ su panca piana' },
-  { name: 'Dip su panca', group: 'Tricipiti', type: 'free', sets: 3, reps: '12', restSec: 60, note: 'Mani vicine al bacino' },
-  { name: 'Estensioni dietro nuca manubrio', group: 'Tricipiti', type: 'free', sets: 3, reps: '10', restSec: 60, note: 'Focus capo lungo del tricipite' },
+  { name: 'Pushdown cavi con corda', group: 'Tricipiti', type: 'machine', sets: 3, reps: '12', restSec: 60, note: 'Gomiti fissi, apri la corda a fine estensione, squeeze' },
+  { name: 'Pushdown cavi con barra a V', group: 'Tricipiti', type: 'machine', sets: 3, reps: '10', restSec: 60, note: 'Gomiti incollati ai fianchi, estendi completamente' },
+  { name: 'French Press (Skullcrusher)', group: 'Tricipiti', type: 'free', sets: 3, reps: '10', restSec: 75, note: 'EZ su panca piana, scendi alla fronte, gomiti fissi e stretti' },
+  { name: 'Dip su panca', group: 'Tricipiti', type: 'free', sets: 3, reps: '12', restSec: 60, note: 'Mani al bordo panca, scendi a 90° gomiti, piedi avanti' },
+  { name: 'Estensioni dietro nuca manubrio', group: 'Tricipiti', type: 'free', sets: 3, reps: '10', restSec: 60, note: 'Un manubrio a due mani, gomiti vicini alle orecchie, stretch in basso' },
 
   // ADDOME
-  { name: 'Plank', group: 'Addome', type: 'free', sets: 3, reps: '45s', weight: null, restSec: 60, note: 'Addome e glutei contratti' },
-  { name: 'Crunch su tappetino', group: 'Addome', type: 'free', sets: 3, reps: '15', restSec: 45, note: 'Solleva le spalle mantenendo il collo neutro' },
-  { name: 'Leg Raise alla sbarra / parallele', group: 'Addome', type: 'free', sets: 3, reps: '12', restSec: 60, note: 'Sollevamento gambe' },
-  { name: 'Crunch ai cavi (Cable Crunch)', group: 'Addome', type: 'machine', sets: 3, reps: '12', restSec: 60, note: 'In ginocchio con corda' },
-  { name: 'Abdominal Machine', group: 'Addome', type: 'machine', sets: 3, reps: '12', restSec: 60, note: '' }
+  { name: 'Plank', group: 'Addome', type: 'free', sets: 3, reps: '45s', weight: null, restSec: 60, note: 'Corpo in linea, glutei contratti, non inarcare la schiena' },
+  { name: 'Crunch su tappetino', group: 'Addome', type: 'free', sets: 3, reps: '15', restSec: 45, note: 'Solleva solo le scapole, collo neutro, espira in salita' },
+  { name: 'Leg Raise alla sbarra / parallele', group: 'Addome', type: 'free', sets: 3, reps: '12', restSec: 60, note: 'Gambe tese, solleva fino a 90°, no slancio' },
+  { name: 'Crunch ai cavi (Cable Crunch)', group: 'Addome', type: 'machine', sets: 3, reps: '12', restSec: 60, note: 'In ginocchio, corda dietro la nuca, piega il busto verso il basso' },
+  { name: 'Abdominal Machine', group: 'Addome', type: 'machine', sets: 3, reps: '12', restSec: 60, note: 'Movimento lento e controllato, espira in contrazione' }
 ];
 
 /* ── stato ── */
