@@ -2032,6 +2032,24 @@ function openCompare() {
   if (btnHM) btnHM.onclick = () => { closeModal(); openHistoryManagerModal(); };
 }
 
+function deleteHistorySession(dayName, ts) {
+  const arr = state.history[dayName];
+  if (!arr) return false;
+  const targetTs = Number(ts);
+  const newArr = arr.filter(s => Number(s.ts) !== targetTs);
+  if (newArr.length === 0) {
+    delete state.history[dayName];
+  } else {
+    state.history[dayName] = newArr;
+  }
+  save();
+  if (window.FORGE_CLOUD && FORGE_CLOUD.saveStateToCloud && FORGE_CLOUD.getUser()) {
+    FORGE_CLOUD.saveStateToCloud(state);
+  }
+  render();
+  return true;
+}
+
 function openHistoryManagerModal() {
   const historyKeys = Object.keys(state.history || {}).filter(k => (state.history[k] || []).length > 0);
   
@@ -2046,7 +2064,7 @@ function openHistoryManagerModal() {
     return;
   }
 
-  let html = `<div style="display:flex;flex-direction:column;gap:14px;max-height:65vh;overflow-y:auto;padding-right:2px">`;
+  let html = `<div style="display:flex;flex-direction:column;gap:14px;max-height:60vh;overflow-y:auto;padding-right:2px">`;
 
   historyKeys.forEach(dayName => {
     const sessions = state.history[dayName] || [];
@@ -2057,8 +2075,7 @@ function openHistoryManagerModal() {
       </div>
       <div style="display:flex;flex-direction:column;gap:8px">`;
 
-    sessions.slice().reverse().forEach((sess, revIdx) => {
-      const origIdx = sessions.length - 1 - revIdx;
+    sessions.slice().reverse().forEach((sess) => {
       const dateStr = new Date(sess.ts).toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
       const exCount = (sess.exercises || []).length;
       
@@ -2079,7 +2096,7 @@ function openHistoryManagerModal() {
             <div style="font-weight:700;font-size:13px;color:var(--text)" class="sess-date-title">${dateStr}</div>
             <div style="font-size:12px;color:var(--muted)">${exCount} esercizi ${totalVol > 0 ? `· Vol: ${Math.round(totalVol)} kg` : ''}</div>
           </div>
-          <button class="btn btn-ghost danger btn-del-sess" data-day="${esc(dayName)}" data-idx="${origIdx}" style="padding:6px 10px;font-size:12px;color:var(--coral);border-color:rgba(255,107,107,.2)" title="Elimina questa sessione">
+          <button class="btn btn-ghost danger btn-del-sess" data-day="${esc(dayName)}" data-ts="${sess.ts}" style="padding:6px 10px;font-size:12px;color:var(--coral);border-color:rgba(255,107,107,.2)" title="Elimina questa sessione">
             🗑️ Elimina
           </button>
         </div>
@@ -2089,29 +2106,43 @@ function openHistoryManagerModal() {
     html += `</div></div>`;
   });
 
-  html += `</div>`;
+  html += `</div>
+  <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);text-align:center">
+    <button class="btn btn-ghost danger btn-block" id="btnClearAllHistory" style="font-size:13px">🗑️ Cancella Tutto lo Storico Allenamenti</button>
+  </div>`;
 
   const b = openModal('📜 Storico & Gestione Sessioni', html);
 
   b.querySelectorAll('.btn-del-sess').forEach(btn => {
     btn.onclick = () => {
       const dName = btn.dataset.day;
-      const idx = parseInt(btn.dataset.idx, 10);
+      const ts = btn.dataset.ts;
       const titleEl = btn.closest('div').querySelector('.sess-date-title');
       const dateText = titleEl ? titleEl.textContent.trim() : '';
       confirmModal('Elimina Sessione', `Cancellare definitivamente la sessione del ${dateText} dallo storico per "${esc(dName)}"?`, 'Elimina', () => {
-        if (state.history[dName]) {
-          state.history[dName].splice(idx, 1);
-          if (state.history[dName].length === 0) delete state.history[dName];
-        }
-        save();
-        render();
+        deleteHistorySession(dName, ts);
         closeModal();
         openHistoryManagerModal();
         toast('Sessione eliminata dallo storico');
       });
     };
   });
+
+  const btnClearAll = b.querySelector('#btnClearAllHistory');
+  if (btnClearAll) {
+    btnClearAll.onclick = () => {
+      confirmModal('Svuota Storico', 'Eliminare TUTTE le sessioni di allenamento salvate nello storico?', 'Svuota tutto', () => {
+        state.history = {};
+        save();
+        if (window.FORGE_CLOUD && FORGE_CLOUD.saveStateToCloud && FORGE_CLOUD.getUser()) {
+          FORGE_CLOUD.saveStateToCloud(state);
+        }
+        render();
+        closeModal();
+        toast('Tutto lo storico sessioni è stato svuotato');
+      });
+    };
+  }
 }
 
 const btnCmp = $('btnCompare');
