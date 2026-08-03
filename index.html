@@ -497,13 +497,21 @@ body.kb #fabSave,body.kb #fabAddMeas{display:none!important}
 .chart-metric-chips{display:flex;gap:6px;overflow-x:auto;padding:8px 0 12px;scrollbar-width:none}
 .chart-metric-chips::-webkit-scrollbar{display:none}
 
-/* ── A4 Print Stylesheet ── */
+/* ── Premium A4 Print Stylesheet ── */
 #printArea { display: none; }
 
 @media print {
   @page {
     size: A4 portrait;
-    margin: 12mm 10mm 12mm 10mm;
+    margin: 12mm 14mm 12mm 14mm;
+  }
+  html, body {
+    background: #FFFFFF !important;
+    color: #111827 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
   body * {
     visibility: hidden !important;
@@ -518,15 +526,18 @@ body.kb #fabSave,body.kb #fabAddMeas{display:none!important}
     top: 0 !important;
     width: 100% !important;
     background: #FFFFFF !important;
-    color: #111111 !important;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    color: #111827 !important;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
   }
   .print-page {
     page-break-after: always !important;
     break-after: page !important;
-    padding-bottom: 20px !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    padding: 0 !important;
     box-sizing: border-box !important;
-    min-height: 95vh !important;
+    min-height: 265mm !important;
+    max-height: 270mm !important;
     display: flex !important;
     flex-direction: column !important;
     justify-content: space-between !important;
@@ -535,90 +546,151 @@ body.kb #fabSave,body.kb #fabAddMeas{display:none!important}
     page-break-after: avoid !important;
     break-after: avoid !important;
   }
+
+  /* Header Premium */
   .print-header {
     display: flex !important;
     justify-content: space-between !important;
-    align-items: flex-start !important;
-    border-bottom: 2.5px solid #111 !important;
-    padding-bottom: 8px !important;
-    margin-bottom: 14px !important;
+    align-items: center !important;
+    border-bottom: 3px solid #111827 !important;
+    padding-bottom: 12px !important;
+    margin-bottom: 16px !important;
   }
-  .print-brand {
+  .print-brand-group {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+  }
+  .print-logo-badge {
+    background: #111827 !important;
+    color: #FFFFFF !important;
     font-family: 'Anton', Arial, sans-serif !important;
-    font-size: 26pt !important;
+    font-size: 24pt !important;
     line-height: 1 !important;
+    padding: 6px 14px !important;
+    border-radius: 6px !important;
+    letter-spacing: 2px !important;
+  }
+  .print-brand-text {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  .print-brand-title {
+    font-weight: 900 !important;
+    font-size: 13pt !important;
     letter-spacing: 1px !important;
-    color: #000 !important;
+    color: #111827 !important;
   }
-  .print-subbrand {
+  .print-brand-sub {
     font-size: 8pt !important;
-    font-weight: bold !important;
+    font-weight: 700 !important;
+    color: #6B7280 !important;
+    text-transform: uppercase !important;
     letter-spacing: 1.5px !important;
-    color: #444 !important;
-    margin-top: 2px !important;
   }
-  .print-meta-box {
+
+  .print-meta-group {
     text-align: right !important;
   }
-  .print-prog-title {
-    font-size: 9pt !important;
-    font-weight: 800 !important;
-    color: #555 !important;
-  }
-  .print-day-title {
+  .print-day-badge {
     font-size: 16pt !important;
     font-weight: 900 !important;
-    color: #000 !important;
-    margin: 2px 0 !important;
+    color: #111827 !important;
+    margin-bottom: 4px !important;
+    text-transform: uppercase !important;
   }
-  .print-athlete-line {
+  .print-meta-chips {
+    display: flex !important;
+    gap: 8px !important;
+    justify-content: flex-end !important;
     font-size: 8.5pt !important;
-    color: #333 !important;
+    color: #374151 !important;
   }
+  .print-chip {
+    background: #F3F4F6 !important;
+    border: 1px solid #E5E7EB !important;
+    padding: 3px 8px !important;
+    border-radius: 4px !important;
+    font-weight: 600 !important;
+  }
+
+  /* Table Grid */
   .print-table {
     width: 100% !important;
     border-collapse: collapse !important;
-    margin-bottom: 14px !important;
-  }
-  .print-table th, .print-table td {
-    border: 1px solid #222 !important;
-    padding: 6px 6px !important;
-    font-size: 9.5pt !important;
-    vertical-align: middle !important;
+    margin-bottom: 16px !important;
   }
   .print-table th {
-    background-color: #EFEFEF !important;
+    background: #111827 !important;
+    color: #FFFFFF !important;
     font-weight: 800 !important;
     text-transform: uppercase !important;
     font-size: 8.5pt !important;
-    color: #000 !important;
+    padding: 8px 6px !important;
+    letter-spacing: 0.5px !important;
+    border: 1px solid #111827 !important;
+  }
+  .print-table td {
+    border: 1px solid #D1D5DB !important;
+    padding: 7px 6px !important;
+    font-size: 9.5pt !important;
+    vertical-align: middle !important;
+  }
+  .print-table tr:nth-child(even) td {
+    background-color: #F9FAFB !important;
+  }
+
+  /* Set Registration Chips for Pen */
+  .print-boxes-wrap {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 4px !important;
   }
   .print-set-box {
-    display: inline-block !important;
-    border: 1px solid #777 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    border: 1px solid #9CA3AF !important;
     border-radius: 4px !important;
-    padding: 3px 6px !important;
-    margin: 2px 3px 2px 0 !important;
+    padding: 2px 6px !important;
     font-size: 8pt !important;
     font-family: monospace !important;
-    background: #FAFABA !important;
+    background: #FFFFFF !important;
+    color: #111827 !important;
     white-space: nowrap !important;
+    font-weight: 600 !important;
   }
+
+  /* Notes & Footer */
   .print-notes-section {
-    border: 1px solid #222 !important;
-    border-radius: 6px !important;
-    padding: 8px 10px !important;
-    margin-bottom: 12px !important;
+    border: 1.5px dashed #9CA3AF !important;
+    border-radius: 8px !important;
+    padding: 10px 12px !important;
+    margin-bottom: 14px !important;
     background: #FAFAFA !important;
     flex-grow: 1 !important;
-    min-height: 80px !important;
   }
+  .print-notes-title {
+    font-weight: 800 !important;
+    font-size: 9pt !important;
+    text-transform: uppercase !important;
+    color: #374151 !important;
+    margin-bottom: 8px !important;
+    letter-spacing: 0.5px !important;
+  }
+  .print-notes-line {
+    border-bottom: 1px solid #E5E7EB !important;
+    height: 20px !important;
+    margin-bottom: 4px !important;
+  }
+
   .print-footer {
-    border-top: 1px solid #CCC !important;
-    padding-top: 6px !important;
+    border-top: 1px solid #E5E7EB !important;
+    padding-top: 8px !important;
     font-size: 8pt !important;
-    color: #666 !important;
-    text-align: center !important;
+    color: #6B7280 !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
   }
 }
 </style>
@@ -2356,31 +2428,37 @@ function executePrint(scope, userName) {
   daysToPrint.forEach((d) => {
     html += `
       <div class="print-page">
-        <div class="print-header">
-          <div class="print-brand-box">
-            <div class="print-brand">FORGE</div>
-            <div class="print-subbrand">HIGH PERFORMANCE ATHLETICS</div>
+        <div>
+          <div class="print-header">
+            <div class="print-brand-group">
+              <div class="print-logo-badge">FORGE</div>
+              <div class="print-brand-text">
+                <span class="print-brand-title">HIGH PERFORMANCE</span>
+                <span class="print-brand-sub">${esc(progNameStr)}</span>
+              </div>
+            </div>
+            <div class="print-meta-group">
+              <div class="print-day-badge">${esc(d.name)}</div>
+              <div class="print-meta-chips">
+                <span class="print-chip">👤 Atleta: <b>${esc(userName)}</b></span>
+                <span class="print-chip">📅 ${dateStr}</span>
+              </div>
+            </div>
           </div>
-          <div class="print-meta-box">
-            <div class="print-prog-title">PROGRAMMA: ${esc(progNameStr).toUpperCase()}</div>
-            <div class="print-day-title">${esc(d.name).toUpperCase()}</div>
-            <div class="print-athlete-line">Atleta: <b>${esc(userName)}</b> · Data: ${dateStr}</div>
-          </div>
-        </div>
 
-        <table class="print-table">
-          <thead>
-            <tr>
-              <th style="width:4%;text-align:center">#</th>
-              <th style="width:32%">Esercizio</th>
-              <th style="width:8%;text-align:center">Serie</th>
-              <th style="width:10%;text-align:center">Reps</th>
-              <th style="width:11%;text-align:center">Carico</th>
-              <th style="width:10%;text-align:center">Recupero</th>
-              <th style="width:25%">Registro Serie & Note a Penna</th>
-            </tr>
-          </thead>
-          <tbody>`;
+          <table class="print-table">
+            <thead>
+              <tr>
+                <th style="width:4%;text-align:center">#</th>
+                <th style="width:30%">Esercizio</th>
+                <th style="width:6%;text-align:center">Serie</th>
+                <th style="width:8%;text-align:center">Reps</th>
+                <th style="width:10%;text-align:center">Carico</th>
+                <th style="width:9%;text-align:center">Recupero</th>
+                <th style="width:33%">Registro Serie & Note a Penna</th>
+              </tr>
+            </thead>
+            <tbody>`;
 
     (d.exercises || []).forEach((ex, eIdx) => {
       const restText = ex.restSec ? (ex.restSec >= 60 ? `${Math.floor(ex.restSec/60)}:${String(ex.restSec%60).padStart(2,'0')}m` : `${ex.restSec}s`) : '—';
@@ -2396,13 +2474,13 @@ function executePrint(scope, userName) {
         <tr>
           <td style="text-align:center;font-weight:bold">${eIdx + 1}</td>
           <td>
-            <div style="font-weight:bold;font-size:11pt;color:#000">${esc(ex.name)}</div>
-            ${ex.note ? `<div style="font-size:8.5pt;color:#444;font-style:italic;margin-top:2px">Note: ${esc(ex.note)}</div>` : ''}
+            <div style="font-weight:bold;font-size:10.5pt;color:#111827">${esc(ex.name)}</div>
+            ${ex.note ? `<div style="font-size:8pt;color:#6B7280;font-style:italic;margin-top:1px">Note: ${esc(ex.note)}</div>` : ''}
           </td>
           <td style="text-align:center;font-weight:bold">${numSets}</td>
           <td style="text-align:center;font-weight:bold">${esc(ex.reps || '8')}</td>
           <td style="text-align:center;font-weight:bold">${weightText}</td>
-          <td style="text-align:center">${restText}</td>
+          <td style="text-align:center;font-size:9pt">${restText}</td>
           <td class="notes-col">
             <div class="print-boxes-wrap">${boxesHtml}</div>
           </td>
@@ -2410,16 +2488,22 @@ function executePrint(scope, userName) {
     });
 
     html += `
-          </tbody>
-        </table>
-
-        <div class="print-notes-section">
-          <div style="font-weight:bold;font-size:9.5pt;margin-bottom:4px;text-transform:uppercase;color:#000">Note generali di allenamento / Sensazioni:</div>
-          <div class="print-notes-lines"></div>
+            </tbody>
+          </table>
         </div>
 
-        <div class="print-footer">
-          FORGE App — Scheda di Allenamento A4 · Stampa generata il ${dateStr} per ${esc(userName)}
+        <div>
+          <div class="print-notes-section">
+            <div class="print-notes-title">📝 Note Generali di Allenamento / Sensazioni:</div>
+            <div class="print-notes-line"></div>
+            <div class="print-notes-line"></div>
+            <div class="print-notes-line"></div>
+          </div>
+
+          <div class="print-footer">
+            <span>FORGE App — Scheda Ufficiale di Allenamento A4</span>
+            <span>Generata per <b>${esc(userName)}</b> il ${dateStr}</span>
+          </div>
         </div>
       </div>
     `;
