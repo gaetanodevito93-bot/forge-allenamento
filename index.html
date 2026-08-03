@@ -1118,6 +1118,14 @@ const EXERCISE_LIBRARY = [
 /* ── stato ── */
 let state = load();
 
+function getSingleRepNumber(repsStr) {
+  if (!repsStr) return '';
+  const str = String(repsStr).trim();
+  if (/^\d+s$/i.test(str)) return str;
+  const match = str.match(/^\d+/);
+  return match ? match[0] : str;
+}
+
 function ensureLog(ex) {
   if (!Array.isArray(ex.log)) ex.log = [];
   while (ex.log.length < ex.sets) ex.log.push({ reps: '', weight: '', done: false });
@@ -1128,7 +1136,13 @@ function normalizeState(s) {
   if (!s || !Array.isArray(s.days) || !s.days.length) throw new Error('stato non valido');
   s.programName = String(s.programName || 'Il mio programma');
   s.activeDay = Math.min(Math.max(0, s.activeDay | 0), s.days.length - 1);
-  s.days.forEach(d => { d.name = String(d.name || 'Giorno'); (d.exercises || (d.exercises = [])).forEach(ensureLog); });
+  s.days.forEach(d => {
+    d.name = String(d.name || 'Giorno');
+    (d.exercises || (d.exercises = [])).forEach(ex => {
+      if (ex.reps) ex.reps = getSingleRepNumber(ex.reps);
+      ensureLog(ex);
+    });
+  });
   if (!s.history || typeof s.history !== 'object' || Array.isArray(s.history)) s.history = {};
   if (!Array.isArray(s.measurements)) s.measurements = [];
   s.measurements = s.measurements
@@ -1148,6 +1162,9 @@ function normalizeState(s) {
   if (!Array.isArray(s.customLibrary) || !s.customLibrary.length) {
     s.customLibrary = typeof EXERCISE_LIBRARY !== 'undefined' ? JSON.parse(JSON.stringify(EXERCISE_LIBRARY)) : [];
   }
+  s.customLibrary.forEach(item => {
+    if (item && item.reps) item.reps = getSingleRepNumber(item.reps);
+  });
   return s;
 }
 function getLibrary() {
@@ -1155,6 +1172,9 @@ function getLibrary() {
     if (state && typeof EXERCISE_LIBRARY !== 'undefined') state.customLibrary = JSON.parse(JSON.stringify(EXERCISE_LIBRARY));
     else return typeof EXERCISE_LIBRARY !== 'undefined' ? EXERCISE_LIBRARY : [];
   }
+  state.customLibrary.forEach(item => {
+    if (item && item.reps) item.reps = getSingleRepNumber(item.reps);
+  });
   return state.customLibrary;
 }
 function load() {
@@ -1784,7 +1804,7 @@ function confirmModal(title, text, label, cb) {
 
 /* ── form esercizio (aggiungi / modifica) ── */
 function openExerciseForm(idx) {
-  const ex = idx == null ? { name: '', sets: 3, reps: '8-12', weight: '', restSec: 90, note: '' } : day().exercises[idx];
+  const ex = idx == null ? { name: '', sets: 3, reps: '10', weight: '', restSec: 90, note: '' } : day().exercises[idx];
   const isNew = idx == null;
 
   const libTabsHTML = isNew ? `
@@ -1827,7 +1847,7 @@ function openExerciseForm(idx) {
     <div class="field"><label>Nome esercizio</label><input id="fName" type="text" placeholder="Es. Panca piana" value="${esc(ex.name)}"></div>
     <div class="grid3">
       <div class="field"><label>Serie</label><input id="fSets" type="number" min="1" max="20" inputmode="numeric" value="${ex.sets}"></div>
-      <div class="field"><label>Ripetizioni</label><input id="fReps" type="text" placeholder="10" value="${esc(ex.reps)}"></div>
+      <div class="field"><label>Ripetizioni</label><input id="fReps" type="text" placeholder="10" value="${esc(getSingleRepNumber(ex.reps))}"></div>
       <div class="field"><label>Peso (kg)</label><input id="fWeight" type="text" inputmode="decimal" placeholder="—" value="${ex.weight != null ? esc(ex.weight) : ''}"></div>
     </div>
     <div class="grid2">
@@ -1872,7 +1892,7 @@ function openExerciseForm(idx) {
         const isSel = origIdx === selectedLibIndex;
         const typeIcon = item.type === 'machine' ? '⚙️' : '🏋️';
         const typeLabel = item.type === 'machine' ? 'Macchina' : 'Pesi liberi';
-        const setsReps = `${item.sets}×${item.reps}`;
+        const setsReps = `${item.sets}×${getSingleRepNumber(item.reps)}`;
         return `<div class="lib-card${isSel ? ' selected' : ''}" data-libidx="${origIdx}">
           <div class="lib-card-info">
             <div class="lib-card-title">${esc(item.name)}</div>
@@ -1894,7 +1914,7 @@ function openExerciseForm(idx) {
           if (item) {
             nameInput.value = item.name;
             b.querySelector('#fSets').value = item.sets || 3;
-            b.querySelector('#fReps').value = item.reps || '8-12';
+            b.querySelector('#fReps').value = getSingleRepNumber(item.reps || '10');
             b.querySelector('#fRest').value = item.restSec != null ? item.restSec : 90;
             b.querySelector('#fNote').value = item.note || '';
             if (item.weight != null) b.querySelector('#fWeight').value = item.weight;
@@ -1959,7 +1979,7 @@ function openExerciseForm(idx) {
     const data = {
       name,
       sets: Math.min(20, Math.max(1, parseInt(b.querySelector('#fSets').value, 10) || 3)),
-      reps: b.querySelector('#fReps').value.trim() || '8-12',
+      reps: getSingleRepNumber(b.querySelector('#fReps').value.trim() || '10'),
       weight: w === '' || isNaN(parseFloat(w)) ? null : parseFloat(w),
       restSec: Math.max(0, Math.min(900, parseInt(b.querySelector('#fRest').value, 10) || 0)),
       note: b.querySelector('#fNote').value.trim()
