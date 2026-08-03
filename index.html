@@ -1997,7 +1997,10 @@ function renderSessionBanner() {
 
 function openCompare() {
   const last = lastSessionFor(day().name);
-  if (!last) { toast('Nessuna sessione salvata per questo giorno'); return; }
+  if (!last) {
+    openHistoryManagerModal();
+    return;
+  }
   const fmtSet = s => !s || (!s.reps && !s.weight) ? (s && s.done ? '✓' : '—')
     : `${s.reps || '—'}${s.weight ? ` × ${s.weight}` : ''}`;
   const blocks = day().exercises.map(ex => {
@@ -2019,8 +2022,96 @@ function openCompare() {
     return `<div class="cmp-ex"><h4>${esc(ex.name)}</h4>
       <div class="cmp-head"><span></span><span style="text-align:center">${esc(fmtDateTs(last.ts))}</span><span></span><span style="text-align:center">Oggi</span></div>${rows}</div>`;
   }).join('');
-  openModal('Confronta le varie sessioni', blocks ||
-    '<p style="color:var(--muted);font-size:14px">Nessun esercizio di oggi compare nella sessione salvata.</p>');
+
+  const b = openModal('Confronta le varie sessioni', `
+    <button class="btn btn-ghost btn-block" id="btnManageHistoryFromCmp" style="margin-bottom:14px;font-size:13px;border-color:var(--border)">📜 Gestisci / Elimina Sessioni Salvate</button>
+    ${blocks || '<p style="color:var(--muted);font-size:14px">Nessun esercizio di oggi compare nella sessione salvata.</p>'}
+  `);
+
+  const btnHM = b.querySelector('#btnManageHistoryFromCmp');
+  if (btnHM) btnHM.onclick = () => { closeModal(); openHistoryManagerModal(); };
+}
+
+function openHistoryManagerModal() {
+  const historyKeys = Object.keys(state.history || {}).filter(k => (state.history[k] || []).length > 0);
+  
+  if (!historyKeys.length) {
+    openModal('📜 Storico Sessioni', `
+      <div style="text-align:center;padding:20px 10px">
+        <div style="font-size:40px;margin-bottom:10px">📜</div>
+        <h3 style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:6px">Nessuna sessione salvata</h3>
+        <p style="color:var(--muted);font-size:13px">Quando completi e salvi un allenamento col tasto "Fine", comparirà qui nel tuo storico.</p>
+      </div>
+    `);
+    return;
+  }
+
+  let html = `<div style="display:flex;flex-direction:column;gap:14px;max-height:65vh;overflow-y:auto;padding-right:2px">`;
+
+  historyKeys.forEach(dayName => {
+    const sessions = state.history[dayName] || [];
+    html += `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:14px">
+      <div style="font-weight:800;font-size:14px;color:var(--volt);margin-bottom:10px;display:flex;justify-content:space-between;align-items:center">
+        <span>📅 ${esc(dayName)}</span>
+        <span style="font-size:12px;color:var(--muted);font-weight:600">${sessions.length} ${sessions.length === 1 ? 'sessione' : 'sessioni'}</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">`;
+
+    sessions.slice().reverse().forEach((sess, revIdx) => {
+      const origIdx = sessions.length - 1 - revIdx;
+      const dateStr = new Date(sess.ts).toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+      const exCount = (sess.exercises || []).length;
+      
+      let totalVol = 0;
+      (sess.exercises || []).forEach(e => {
+        (e.sets || []).forEach(s => {
+          if (s.done || s.reps || s.weight) {
+            const r = parseFloat(String(s.reps).replace(',', '.')) || 0;
+            const w = parseFloat(String(s.weight).replace(',', '.')) || 0;
+            totalVol += (r * w);
+          }
+        });
+      });
+
+      html += `
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px">
+          <div>
+            <div style="font-weight:700;font-size:13px;color:var(--text)" class="sess-date-title">${dateStr}</div>
+            <div style="font-size:12px;color:var(--muted)">${exCount} esercizi ${totalVol > 0 ? `· Vol: ${Math.round(totalVol)} kg` : ''}</div>
+          </div>
+          <button class="btn btn-ghost danger btn-del-sess" data-day="${esc(dayName)}" data-idx="${origIdx}" style="padding:6px 10px;font-size:12px;color:var(--coral);border-color:rgba(255,107,107,.2)" title="Elimina questa sessione">
+            🗑️ Elimina
+          </button>
+        </div>
+      `;
+    });
+
+    html += `</div></div>`;
+  });
+
+  html += `</div>`;
+
+  const b = openModal('📜 Storico & Gestione Sessioni', html);
+
+  b.querySelectorAll('.btn-del-sess').forEach(btn => {
+    btn.onclick = () => {
+      const dName = btn.dataset.day;
+      const idx = parseInt(btn.dataset.idx, 10);
+      const titleEl = btn.closest('div').querySelector('.sess-date-title');
+      const dateText = titleEl ? titleEl.textContent.trim() : '';
+      confirmModal('Elimina Sessione', `Cancellare definitivamente la sessione del ${dateText} dallo storico per "${esc(dName)}"?`, 'Elimina', () => {
+        if (state.history[dName]) {
+          state.history[dName].splice(idx, 1);
+          if (state.history[dName].length === 0) delete state.history[dName];
+        }
+        save();
+        render();
+        closeModal();
+        openHistoryManagerModal();
+        toast('Sessione eliminata dallo storico');
+      });
+    };
+  });
 }
 
 const btnCmp = $('btnCompare');
@@ -2109,6 +2200,10 @@ function openAppMenu() {
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
             🛒 Libreria Schede PRO (€5.99)
           </button>
+          <button class="sheet-btn" id="aManageHistory">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 3"></path><circle cx="12" cy="12" r="9"></circle></svg>
+            📜 Storico &amp; Elimina Sessioni
+          </button>
           <button class="sheet-btn" data-testid="menu-add-exercise" id="aAddEx"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg>Aggiungi esercizio a questa giornata</button>
           <button class="sheet-btn" id="aManageLib"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>Gestisci Libreria Esercizi</button>
           <button class="sheet-btn" id="aRename"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"></path></svg>Rinomina giorno / programma</button>
@@ -2147,6 +2242,8 @@ function openAppMenu() {
   if (btnLoadL) btnLoadL.onclick = () => { closeModal(); openImport(); };
   const btnPM = b.querySelector('#aProMarket');
   if (btnPM) btnPM.onclick = () => { closeModal(); openProSchedaMarketModal(); };
+  const btnMH = b.querySelector('#aManageHistory');
+  if (btnMH) btnMH.onclick = () => { closeModal(); openHistoryManagerModal(); };
   b.querySelector('#aAddEx').onclick = () => { closeModal(); openExerciseForm(null); };
   b.querySelector('#aManageLib').onclick = () => { closeModal(); openLibraryManager(); };
   b.querySelector('#aRename').onclick = () => { closeModal(); openRename(); };
