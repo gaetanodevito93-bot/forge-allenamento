@@ -445,13 +445,19 @@ body.kb #fabSave,body.kb #fabAddMeas{display:none!important}
 .lib-search-wrap svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:19px;height:19px;stroke:var(--muted);pointer-events:none;transition:stroke .2s}
 .lib-search-wrap input:focus~svg,.lib-search-wrap:focus-within svg{stroke:var(--volt)}
 
-/* ── Filter Labels ── */
+/* ── Filter Labels & Chips Slider ── */
 .lib-filter-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:-2px;padding-left:2px}
-
-/* ── Chips ── */
-.lib-chips-row{display:flex;gap:7px;overflow-x:auto;padding-bottom:5px;scrollbar-width:none}
-.lib-chips-row::-webkit-scrollbar{display:none}
-.lib-chip{white-space:nowrap;font-size:12.5px;font-weight:700;padding:7px 14px;border-radius:999px;background:var(--bg);border:1.5px solid var(--border);color:var(--muted);transition:all .18s ease;flex-shrink:0;cursor:pointer}
+.chips-slider-wrap{position:relative;display:flex;align-items:center;gap:6px}
+.chips-arrow{width:30px;height:30px;border-radius:50%;background:var(--surface2);border:1.5px solid var(--border);color:var(--text);font-size:16px;font-weight:800;display:grid;place-items:center;flex-shrink:0;cursor:pointer;transition:all .18s ease;user-select:none}
+.chips-arrow:hover{background:var(--volt);color:#0A0A0F;border-color:var(--volt);box-shadow:0 3px 10px rgba(198,255,61,.25)}
+.chips-arrow:active{transform:scale(.92)}
+.lib-chips-row{display:flex;gap:7px;overflow-x:auto;padding:2px 0 6px;scroll-behavior:smooth;scrollbar-width:thin;scrollbar-color:var(--border) transparent;flex:1;cursor:grab}
+.lib-chips-row:active{cursor:grabbing}
+.lib-chips-row::-webkit-scrollbar{height:5px}
+.lib-chips-row::-webkit-scrollbar-track{background:var(--bg);border-radius:4px}
+.lib-chips-row::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+.lib-chips-row::-webkit-scrollbar-thumb:hover{background:var(--volt-dim)}
+.lib-chip{white-space:nowrap;font-size:12.5px;font-weight:700;padding:7px 14px;border-radius:999px;background:var(--bg);border:1.5px solid var(--border);color:var(--muted);transition:all .18s ease;flex-shrink:0;cursor:pointer;user-select:none}
 .lib-chip:hover{border-color:var(--volt-dim);color:var(--text);background:var(--surface2)}
 .lib-chip.active{background:var(--volt);color:#0A0A0F;border-color:var(--volt);box-shadow:0 4px 14px rgba(198,255,61,.22);font-weight:800}
 
@@ -1819,21 +1825,29 @@ function openExerciseForm(idx) {
           <input type="text" id="libSearch" placeholder="🔍 Cerca esercizio..." spellcheck="false" autocapitalize="off">
         </div>
         <div class="lib-filter-label">Muscolo</div>
-        <div class="lib-chips-row" id="groupChips">
-          <button type="button" class="lib-chip active" data-grp="all">Tutti</button>
-          <button type="button" class="lib-chip" data-grp="Petto">💪 Petto</button>
-          <button type="button" class="lib-chip" data-grp="Dorso">🔙 Dorso</button>
-          <button type="button" class="lib-chip" data-grp="Gambe">🦵 Gambe</button>
-          <button type="button" class="lib-chip" data-grp="Spalle">🙆 Spalle</button>
-          <button type="button" class="lib-chip" data-grp="Bicipiti">💪 Bicipiti</button>
-          <button type="button" class="lib-chip" data-grp="Tricipiti">💪 Tricipiti</button>
-          <button type="button" class="lib-chip" data-grp="Addome">🧱 Addome</button>
+        <div class="chips-slider-wrap">
+          <button type="button" class="chips-arrow left" id="btnGroupPrev" title="Scorri indietro">‹</button>
+          <div class="lib-chips-row" id="groupChips">
+            <button type="button" class="lib-chip active" data-grp="all">Tutti</button>
+            <button type="button" class="lib-chip" data-grp="Petto">💪 Petto</button>
+            <button type="button" class="lib-chip" data-grp="Dorso">🔙 Dorso</button>
+            <button type="button" class="lib-chip" data-grp="Gambe">🦵 Gambe</button>
+            <button type="button" class="lib-chip" data-grp="Spalle">🙆 Spalle</button>
+            <button type="button" class="lib-chip" data-grp="Bicipiti">💪 Bicipiti</button>
+            <button type="button" class="lib-chip" data-grp="Tricipiti">💪 Tricipiti</button>
+            <button type="button" class="lib-chip" data-grp="Addome">🧱 Addome</button>
+          </div>
+          <button type="button" class="chips-arrow right" id="btnGroupNext" title="Scorri avanti">›</button>
         </div>
         <div class="lib-filter-label">Attrezzo</div>
-        <div class="lib-chips-row" id="equipChips">
-          <button type="button" class="lib-chip active" data-eq="all">Tutti</button>
-          <button type="button" class="lib-chip" data-eq="free">🏋️ Pesi liberi</button>
-          <button type="button" class="lib-chip" data-eq="machine">⚙️ Macchine</button>
+        <div class="chips-slider-wrap">
+          <button type="button" class="chips-arrow left" id="btnEquipPrev" title="Scorri indietro">‹</button>
+          <div class="lib-chips-row" id="equipChips">
+            <button type="button" class="lib-chip active" data-eq="all">Tutti</button>
+            <button type="button" class="lib-chip" data-eq="free">🏋️ Pesi liberi</button>
+            <button type="button" class="lib-chip" data-eq="machine">⚙️ Macchine</button>
+          </div>
+          <button type="button" class="chips-arrow right" id="btnEquipNext" title="Scorri avanti">›</button>
         </div>
       </div>
       <div id="libResultCount" class="lib-result-count"></div>
@@ -1861,6 +1875,43 @@ function openExerciseForm(idx) {
   // Gestione dinamica della libreria se in modalità Nuovo Esercizio
   if (isNew) {
     let curGrp = 'all', curEq = 'all', curQuery = '', selectedLibIndex = -1;
+
+    // Setup interattività slider desktop (frecce, wheel, mouse drag)
+    const bindChipsSlider = (rowId, prevBtnId, nextBtnId) => {
+      const row = b.querySelector('#' + rowId);
+      const btnPrev = b.querySelector('#' + prevBtnId);
+      const btnNext = b.querySelector('#' + nextBtnId);
+      if (!row) return;
+
+      if (btnPrev) btnPrev.onclick = () => row.scrollBy({ left: -150, behavior: 'smooth' });
+      if (btnNext) btnNext.onclick = () => row.scrollBy({ left: 150, behavior: 'smooth' });
+
+      row.addEventListener('wheel', e => {
+        if (e.deltaY) {
+          e.preventDefault();
+          row.scrollLeft += e.deltaY;
+        }
+      }, { passive: false });
+
+      let isDown = false, startX, scrollLeft;
+      row.addEventListener('mousedown', e => {
+        isDown = true;
+        startX = e.pageX - row.offsetLeft;
+        scrollLeft = row.scrollLeft;
+      });
+      row.addEventListener('mouseleave', () => isDown = false);
+      row.addEventListener('mouseup', () => isDown = false);
+      row.addEventListener('mousemove', e => {
+        if (!isDown) return;
+        e.preventDefault();
+        const x = e.pageX - row.offsetLeft;
+        const walk = (x - startX) * 1.5;
+        row.scrollLeft = scrollLeft - walk;
+      });
+    };
+
+    bindChipsSlider('groupChips', 'btnGroupPrev', 'btnGroupNext');
+    bindChipsSlider('equipChips', 'btnEquipPrev', 'btnEquipNext');
 
     const renderLibItems = () => {
       const listEl = b.querySelector('#libList');
