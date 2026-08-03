@@ -496,6 +496,131 @@ body.kb #fabSave,body.kb #fabAddMeas{display:none!important}
 /* ── chart metric chips ── */
 .chart-metric-chips{display:flex;gap:6px;overflow-x:auto;padding:8px 0 12px;scrollbar-width:none}
 .chart-metric-chips::-webkit-scrollbar{display:none}
+
+/* ── A4 Print Stylesheet ── */
+#printArea { display: none; }
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm 10mm 12mm 10mm;
+  }
+  body * {
+    visibility: hidden !important;
+  }
+  #printArea, #printArea * {
+    visibility: visible !important;
+  }
+  #printArea {
+    display: block !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    background: #FFFFFF !important;
+    color: #111111 !important;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  }
+  .print-page {
+    page-break-after: always !important;
+    break-after: page !important;
+    padding-bottom: 20px !important;
+    box-sizing: border-box !important;
+    min-height: 95vh !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+  }
+  .print-page:last-child {
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+  }
+  .print-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: flex-start !important;
+    border-bottom: 2.5px solid #111 !important;
+    padding-bottom: 8px !important;
+    margin-bottom: 14px !important;
+  }
+  .print-brand {
+    font-family: 'Anton', Arial, sans-serif !important;
+    font-size: 26pt !important;
+    line-height: 1 !important;
+    letter-spacing: 1px !important;
+    color: #000 !important;
+  }
+  .print-subbrand {
+    font-size: 8pt !important;
+    font-weight: bold !important;
+    letter-spacing: 1.5px !important;
+    color: #444 !important;
+    margin-top: 2px !important;
+  }
+  .print-meta-box {
+    text-align: right !important;
+  }
+  .print-prog-title {
+    font-size: 9pt !important;
+    font-weight: 800 !important;
+    color: #555 !important;
+  }
+  .print-day-title {
+    font-size: 16pt !important;
+    font-weight: 900 !important;
+    color: #000 !important;
+    margin: 2px 0 !important;
+  }
+  .print-athlete-line {
+    font-size: 8.5pt !important;
+    color: #333 !important;
+  }
+  .print-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    margin-bottom: 14px !important;
+  }
+  .print-table th, .print-table td {
+    border: 1px solid #222 !important;
+    padding: 6px 6px !important;
+    font-size: 9.5pt !important;
+    vertical-align: middle !important;
+  }
+  .print-table th {
+    background-color: #EFEFEF !important;
+    font-weight: 800 !important;
+    text-transform: uppercase !important;
+    font-size: 8.5pt !important;
+    color: #000 !important;
+  }
+  .print-set-box {
+    display: inline-block !important;
+    border: 1px solid #777 !important;
+    border-radius: 4px !important;
+    padding: 3px 6px !important;
+    margin: 2px 3px 2px 0 !important;
+    font-size: 8pt !important;
+    font-family: monospace !important;
+    background: #FAFABA !important;
+    white-space: nowrap !important;
+  }
+  .print-notes-section {
+    border: 1px solid #222 !important;
+    border-radius: 6px !important;
+    padding: 8px 10px !important;
+    margin-bottom: 12px !important;
+    background: #FAFAFA !important;
+    flex-grow: 1 !important;
+    min-height: 80px !important;
+  }
+  .print-footer {
+    border-top: 1px solid #CCC !important;
+    padding-top: 6px !important;
+    font-size: 8pt !important;
+    color: #666 !important;
+    text-align: center !important;
+  }
+}
 </style>
 </head>
 <body>
@@ -519,7 +644,7 @@ body.kb #fabSave,body.kb #fabAddMeas{display:none!important}
       <svg viewBox="0 0 24 24" fill="none" stroke="#0A0A0F" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5 17.5 17.5M4 8l1-1M20 16l-1 1M7 4l1 1M17 19l-1-1"></path><rect x="2.5" y="9" width="4" height="6" rx="1"></rect><rect x="17.5" y="9" width="4" height="6" rx="1"></rect><path d="M6.5 12h11"></path></svg>
     </div>
     <h1>FORGE</h1>
-    <p>Cosa vuoi fare oggi?</p>
+    <p id="homeGreeting">Cosa vuoi fare oggi?</p>
     <div id="homeStreakBadge" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,183,3,.12);border:1px solid rgba(255,183,3,.3);color:#FFB703;padding:6px 14px;border-radius:20px;font-size:12.5px;font-weight:700;margin-top:6px"></div>
   </div>
   <div class="home-btns">
@@ -583,6 +708,9 @@ body.kb #fabSave,body.kb #fabAddMeas{display:none!important}
       <button class="icon-btn" id="btnCloudSync" title="Stato Cloud Sync" aria-label="Stato Cloud Sync" style="position:relative">
         <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"></path></svg>
         <span id="cloudDot" style="position:absolute;top:8px;right:8px;width:8px;height:8px;border-radius:50%;background:var(--muted)"></span>
+      </button>
+      <button class="icon-btn" id="btnPrint" title="Stampa la scheda in formato A4" aria-label="Stampa Scheda A4">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
       </button>
       <button class="icon-btn" id="btnCompare" data-testid="header-compare-btn" title="Confronta sessioni" aria-label="Confronta sessioni">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10M12 20V4M6 20v-6"></path></svg>
@@ -1022,12 +1150,32 @@ function downloadText(name, text, mime) {
   setTimeout(() => URL.revokeObjectURL(a.href), 3000);
 }
 
+function getUserFirstName() {
+  const user = window.FORGE_CLOUD ? FORGE_CLOUD.getUser() : null;
+  if (!user) return '';
+  const fullName = user.displayName || user.email || '';
+  const namePart = fullName.split(' ')[0].split('@')[0];
+  return namePart ? (namePart.charAt(0).toUpperCase() + namePart.slice(1)) : '';
+}
+
+function updatePersonalizedGreeting() {
+  const el = $('homeGreeting');
+  if (!el) return;
+  const name = getUserFirstName();
+  if (name) {
+    el.innerHTML = `Ciao <b>${esc(name)}</b>! 👋 Cosa vuoi fare oggi?`;
+  } else {
+    el.textContent = 'Cosa vuoi fare oggi?';
+  }
+}
+
 /* ── render ── */
 function render() {
   renderDayBar();
   renderDayHead();
   renderList();
   renderStreakBadge();
+  updatePersonalizedGreeting();
   $('progName').textContent = state.programName;
   if (document.body.getAttribute('data-view') === 'training') renderSessionBanner();
 }
@@ -2147,6 +2295,142 @@ function openHistoryManagerModal() {
 
 const btnCmp = $('btnCompare');
 if (btnCmp) btnCmp.onclick = openCompare;
+const btnPrn = $('btnPrint');
+if (btnPrn) btnPrn.onclick = openPrintModal;
+
+function openPrintModal() {
+  const name = getUserFirstName();
+  const userName = name || 'Atleta';
+  const totalDays = state.days.length;
+  const currentDayName = day().name;
+
+  const b = openModal('🖨️ Stampa Scheda (A4)', `
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <p style="color:var(--muted);font-size:13.5px;line-height:1.45;margin-bottom:4px">
+        Seleziona il formato di stampa. Ogni foglio A4 conterrà <b>1 giornata di allenamento</b> con gli spazi per registrare le serie a penna!
+      </p>
+
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:700;font-size:14px;color:var(--text)">
+          <input type="radio" name="printScope" value="current" checked style="accent-color:var(--volt);width:18px;height:18px">
+          <span>Stampa solo il giorno attuale (<b>${esc(currentDayName)}</b> - 1 Foglio A4)</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:700;font-size:14px;color:var(--text)">
+          <input type="radio" name="printScope" value="all" style="accent-color:var(--volt);width:18px;height:18px">
+          <span>Stampa l'intera scheda (<b>Tutti i ${totalDays} giorni</b> - ${totalDays} Fogli A4)</span>
+        </label>
+      </div>
+
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:12px;font-size:12.5px;color:var(--muted)">
+        💡 <b>Suggerimento per la stampa:</b> Nella finestra del browser, imposta i margini su <i>"Predefiniti"</i> e disattiva <i>"Intestazioni e piè di pagina"</i>.
+      </div>
+
+      <button class="btn btn-primary btn-block" id="btnExecutePrint" style="margin-top:4px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" style="vertical-align:middle;margin-right:6px"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+        Avvia Stampa A4 🖨️
+      </button>
+    </div>
+  `);
+
+  b.querySelector('#btnExecutePrint').onclick = () => {
+    const scope = b.querySelector('input[name="printScope"]:checked').value;
+    closeModal();
+    executePrint(scope, userName);
+  };
+}
+
+function executePrint(scope, userName) {
+  const daysToPrint = scope === 'all' ? state.days : [day()];
+  const dateStr = new Date().toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' });
+  const progNameStr = state.programName || 'Il mio programma';
+
+  let printContainer = $('printArea');
+  if (!printContainer) {
+    printContainer = document.createElement('div');
+    printContainer.id = 'printArea';
+    document.body.appendChild(printContainer);
+  }
+
+  let html = '';
+
+  daysToPrint.forEach((d) => {
+    html += `
+      <div class="print-page">
+        <div class="print-header">
+          <div class="print-brand-box">
+            <div class="print-brand">FORGE</div>
+            <div class="print-subbrand">HIGH PERFORMANCE ATHLETICS</div>
+          </div>
+          <div class="print-meta-box">
+            <div class="print-prog-title">PROGRAMMA: ${esc(progNameStr).toUpperCase()}</div>
+            <div class="print-day-title">${esc(d.name).toUpperCase()}</div>
+            <div class="print-athlete-line">Atleta: <b>${esc(userName)}</b> · Data: ${dateStr}</div>
+          </div>
+        </div>
+
+        <table class="print-table">
+          <thead>
+            <tr>
+              <th style="width:4%;text-align:center">#</th>
+              <th style="width:32%">Esercizio</th>
+              <th style="width:8%;text-align:center">Serie</th>
+              <th style="width:10%;text-align:center">Reps</th>
+              <th style="width:11%;text-align:center">Carico</th>
+              <th style="width:10%;text-align:center">Recupero</th>
+              <th style="width:25%">Registro Serie & Note a Penna</th>
+            </tr>
+          </thead>
+          <tbody>`;
+
+    (d.exercises || []).forEach((ex, eIdx) => {
+      const restText = ex.restSec ? (ex.restSec >= 60 ? `${Math.floor(ex.restSec/60)}:${String(ex.restSec%60).padStart(2,'0')}m` : `${ex.restSec}s`) : '—';
+      const weightText = ex.weight ? `${ex.weight} kg` : '—';
+      const numSets = ex.sets || 3;
+
+      let boxesHtml = '';
+      for (let s = 1; s <= numSets; s++) {
+        boxesHtml += `<span class="print-set-box">[ ] S${s}: ____ kg</span> `;
+      }
+
+      html += `
+        <tr>
+          <td style="text-align:center;font-weight:bold">${eIdx + 1}</td>
+          <td>
+            <div style="font-weight:bold;font-size:11pt;color:#000">${esc(ex.name)}</div>
+            ${ex.note ? `<div style="font-size:8.5pt;color:#444;font-style:italic;margin-top:2px">Note: ${esc(ex.note)}</div>` : ''}
+          </td>
+          <td style="text-align:center;font-weight:bold">${numSets}</td>
+          <td style="text-align:center;font-weight:bold">${esc(ex.reps || '8')}</td>
+          <td style="text-align:center;font-weight:bold">${weightText}</td>
+          <td style="text-align:center">${restText}</td>
+          <td class="notes-col">
+            <div class="print-boxes-wrap">${boxesHtml}</div>
+          </td>
+        </tr>`;
+    });
+
+    html += `
+          </tbody>
+        </table>
+
+        <div class="print-notes-section">
+          <div style="font-weight:bold;font-size:9.5pt;margin-bottom:4px;text-transform:uppercase;color:#000">Note generali di allenamento / Sensazioni:</div>
+          <div class="print-notes-lines"></div>
+        </div>
+
+        <div class="print-footer">
+          FORGE App — Scheda di Allenamento A4 · Stampa generata il ${dateStr} per ${esc(userName)}
+        </div>
+      </div>
+    `;
+  });
+
+  printContainer.innerHTML = html;
+
+  setTimeout(() => {
+    window.print();
+  }, 150);
+}
 
 function openLegalModal() {
   const b = openModal('Privacy & Note Legali', `
