@@ -310,6 +310,10 @@ table.cmp2{border-collapse:collapse;width:100%;font-size:13px}
 .sheet-btn.danger svg{stroke:var(--coral)}
 .timer-overlay{position:fixed;inset:0;z-index:80;background:radial-gradient(circle at 50% 40%,#12121C,#06060A);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:24px;opacity:0;pointer-events:none;transition:opacity .3s}
 .timer-overlay.open{opacity:1;pointer-events:auto}
+.timer-top-bar{position:absolute;top:calc(20px + env(safe-area-inset-top));left:20px;right:20px;display:flex;align-items:center;justify-content:space-between}
+.timer-min-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:var(--text);font-size:12.5px;font-weight:700;transition:all .18s ease}
+.timer-min-btn:hover{background:var(--volt);color:#0A0A0F;border-color:var(--volt);box-shadow:0 4px 16px rgba(198,255,61,.3)}
+.timer-min-btn:active{transform:scale(.94)}
 .timer-overlay .label{font-size:13px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--volt)}
 .timer-overlay .next{color:var(--muted);font-size:14px;font-weight:600;margin-bottom:18px;text-align:center}
 .timer-ring{position:relative;width:min(78vw,320px);height:min(78vw,320px)}
@@ -318,6 +322,15 @@ table.cmp2{border-collapse:collapse;width:100%;font-size:13px}
 .timer-ring .num .t{font-family:Anton,sans-serif;font-size:76px;line-height:1;letter-spacing:1px}
 .timer-ring .num small{color:var(--muted);font-size:13px;font-weight:700;letter-spacing:1px;margin-top:4px}
 .timer-adjust{display:flex;gap:12px;margin-top:34px}
+
+/* ── Timer Mini Capsule (Solo Numeri & X, Cornice Spessa, Centrale) ── */
+.timer-mini-capsule{position:fixed;top:calc(14px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:99;display:flex;align-items:center;gap:10px;background:rgba(18,18,26,.96);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:2.5px solid var(--volt);border-radius:999px;padding:6px 14px 6px 16px;box-shadow:0 14px 38px rgba(0,0,0,.7),0 0 24px rgba(198,255,61,.3);cursor:pointer;user-select:none;animation:miniPillPopCenter .3s cubic-bezier(.175,.885,.32,1.275) both;transition:border-color .2s,box-shadow .2s,transform .15s}
+@keyframes miniPillPopCenter{0%{opacity:0;transform:translate(-50%,-12px) scale(.9)}100%{opacity:1;transform:translate(-50%,0) scale(1)}}
+.timer-mini-capsule:hover{border-color:#D4FF5F;box-shadow:0 16px 46px rgba(0,0,0,.8),0 0 32px rgba(198,255,61,.45)}
+.tmc-time{font-family:Anton,sans-serif;font-size:16px;color:var(--volt);letter-spacing:1px;font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:6px}
+.tmc-time::before{content:"⏱️";font-size:14px}
+.tmc-btn.tmc-close{background:var(--surface2);border:1px solid rgba(255,84,104,.3);color:var(--coral);border-radius:999px;font-size:12px;font-weight:800;padding:4px 8px;cursor:pointer;transition:all .15s ease;display:grid;place-items:center}
+.tmc-btn.tmc-close:hover{background:var(--coral);color:#FFF;border-color:var(--coral)}
 .timer-adjust button{width:64px;height:64px;border-radius:50%;background:var(--surface);border:1px solid var(--border);font-family:Anton,sans-serif;font-size:16px;color:var(--text);transition:.15s}
 .timer-adjust button:hover{background:var(--surface2);border-color:var(--volt-dim)}
 .timer-adjust button:active{transform:scale(.92)}
@@ -532,46 +545,53 @@ body.kb #fabSave,body.kb #fabAddMeas{display:none!important}
 @media print {
   @page {
     size: A4 portrait;
-    margin: 6mm 6mm 6mm 6mm;
+    margin: 5mm !important;
   }
   html, body {
     background: #FFFFFF !important;
     color: #111827 !important;
     margin: 0 !important;
     padding: 0 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
-  body * {
-    visibility: hidden !important;
-  }
-  #printArea, #printArea * {
-    visibility: visible !important;
+  body > *:not(#printArea) {
+    display: none !important;
   }
   #printArea {
     display: block !important;
-    position: absolute !important;
-    left: 0 !important;
-    top: 0 !important;
+    position: static !important;
     width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
     background: #FFFFFF !important;
     color: #111827 !important;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+  }
+  #printArea * {
+    visibility: visible !important;
   }
   .print-page {
     page-break-after: always !important;
     break-after: page !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
-    padding: 2mm !important;
+    padding: 0 !important;
     box-sizing: border-box !important;
-    min-height: 280mm !important;
-    max-height: 282mm !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
     display: flex !important;
     flex-direction: column !important;
     justify-content: space-between !important;
   }
-  .print-page:last-child {
+  .print-page:last-child,
+  .print-page:last-of-type {
+    page-break-after: auto !important;
+    break-after: auto !important;
     page-break-after: avoid !important;
     break-after: avoid !important;
   }
@@ -1002,7 +1022,13 @@ body.kb #fabSave,body.kb #fabAddMeas{display:none!important}
 
 <!-- REST TIMER -->
 <div class="timer-overlay" id="timerOverlay">
-  <div class="label">Recupero</div>
+  <div class="timer-top-bar">
+    <div class="label">Recupero</div>
+    <button class="timer-min-btn" id="timerMinimize" data-testid="timer-minimize" title="Riduci a pillola fluttuante">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M4 14h6v6M20 10h-6V4"></path></svg>
+      Riduci
+    </button>
+  </div>
   <div class="next" id="timerNext"></div>
   <div class="timer-ring">
     <svg viewBox="0 0 120 120">
@@ -1017,6 +1043,12 @@ body.kb #fabSave,body.kb #fabAddMeas{display:none!important}
   </div>
   <button class="timer-skip" id="timerSkip" data-testid="timer-skip">Salta recupero</button>
   <button class="timer-pause" id="timerPause" data-testid="timer-pause">Pausa</button>
+</div>
+
+<!-- FLOATING MINI CAPSULE TIMER -->
+<div class="timer-mini-capsule" id="timerMiniCapsule" style="display:none" data-testid="timer-mini-capsule" title="Tocca per espandere">
+  <div class="tmc-time" id="timerMiniText">01:30</div>
+  <button class="tmc-btn tmc-close" id="timerMiniSkip" title="Salta recupero">✕</button>
 </div>
 
 <div id="toast"></div>
@@ -1592,6 +1624,7 @@ function nextLabel(i, j) {
 
 /* ── timer di recupero ── */
 const T = { remain: 0, total: 90, running: false, last: 0, iv: null };
+let isTimerMinimized = false;
 
 /* Suono: la vibrazione non funziona su iOS, quindi a fine recupero suona un beep.
    Il contesto audio va creato/ripreso durante un tocco (spunta serie): lo facciamo
@@ -1630,20 +1663,90 @@ async function acquireWake() {
 }
 function releaseWake() { try { if (wakeLock) { wakeLock.release(); wakeLock = null; } } catch (_) {} }
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible' && T.running && $('timerOverlay').classList.contains('open')) acquireWake();
+  if (document.visibilityState === 'visible' && T.running && ($('timerOverlay').classList.contains('open') || isTimerMinimized)) acquireWake();
 });
+
+function updateMediaSession() {
+  if (!('mediaSession' in navigator)) return;
+  if (!T.running && T.remain <= 0) return;
+
+  const seconds = Math.ceil(Math.max(0, T.remain));
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  const timeFmt = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  const nextEx = $('timerNext') && $('timerNext').textContent ? `Avanti: ${$('timerNext').textContent}` : 'Recupero Serie';
+
+  try {
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: `⏱️ ${timeFmt} — Recupero FORGE`,
+      artist: nextEx,
+      album: 'FORGE Training',
+      artwork: [
+        { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },
+        { src: 'icon-512.png', sizes: '512x512', type: 'image/png' }
+      ]
+    });
+    navigator.mediaSession.playbackState = T.running ? 'playing' : 'paused';
+
+    navigator.mediaSession.setActionHandler('play', () => {
+      T.running = true;
+      T.last = Date.now();
+      if ($('timerPause')) $('timerPause').textContent = 'Pausa';
+      paintTimer();
+    });
+    navigator.mediaSession.setActionHandler('pause', () => {
+      T.running = false;
+      if ($('timerPause')) $('timerPause').textContent = 'Riprendi';
+      paintTimer();
+    });
+    navigator.mediaSession.setActionHandler('previoustrack', () => {
+      T.remain += 15;
+      T.total = Math.max(T.total, T.remain);
+      paintTimer();
+    });
+    navigator.mediaSession.setActionHandler('nexttrack', () => {
+      stopTimer();
+    });
+  } catch (_) {}
+}
+
+function minimizeTimer() {
+  isTimerMinimized = true;
+  $('timerOverlay').classList.remove('open');
+  if ($('timerMiniCapsule')) $('timerMiniCapsule').style.display = 'flex';
+  buzz(15);
+  paintTimer();
+}
+
+function expandTimer() {
+  isTimerMinimized = false;
+  if ($('timerMiniCapsule')) $('timerMiniCapsule').style.display = 'none';
+  $('timerOverlay').classList.add('open');
+  buzz(15);
+  paintTimer();
+}
 
 function startRestTimer(sec, next) {
   T.remain = sec; T.total = sec; T.running = true; T.last = Date.now();
   $('timerNext').textContent = next || '';
+  if ($('timerMiniNext')) $('timerMiniNext').textContent = next || 'Prossima serie';
   $('timerPause').textContent = 'Pausa';
-  $('timerOverlay').classList.add('open');
+
+  if (isTimerMinimized) {
+    if ($('timerMiniCapsule')) $('timerMiniCapsule').style.display = 'flex';
+    $('timerOverlay').classList.remove('open');
+  } else {
+    $('timerOverlay').classList.add('open');
+    if ($('timerMiniCapsule')) $('timerMiniCapsule').style.display = 'none';
+  }
+
   ensureAudio();
   acquireWake();
   clearInterval(T.iv);
   T.iv = setInterval(tickTimer, 200);
   paintTimer();
 }
+
 function tickTimer() {
   const now = Date.now();
   if (T.running) T.remain -= (now - T.last) / 1000;
@@ -1657,16 +1760,52 @@ function tickTimer() {
   }
   paintTimer();
 }
+
 function paintTimer() {
-  $('timerText').textContent = Math.ceil(Math.max(0, T.remain));
-  const C = 339.29;
-  $('timerArc').style.strokeDashoffset = C * (1 - Math.max(0, T.remain) / Math.max(1, T.total));
+  const remSec = Math.ceil(Math.max(0, T.remain));
+  $('timerText').textContent = remSec;
+  const C_full = 339.29;
+  $('timerArc').style.strokeDashoffset = C_full * (1 - Math.max(0, T.remain) / Math.max(1, T.total));
+
+  if ($('timerMiniText')) {
+    const mins = Math.floor(remSec / 60);
+    const secs = remSec % 60;
+    $('timerMiniText').textContent = mins > 0 ? `${mins}:${String(secs).padStart(2, '0')}` : `${remSec}s`;
+  }
+
+  updateMediaSession();
 }
-function stopTimer() { clearInterval(T.iv); T.iv = null; T.running = false; $('timerOverlay').classList.remove('open'); releaseWake(); }
+
+function stopTimer() {
+  clearInterval(T.iv);
+  T.iv = null;
+  T.running = false;
+  isTimerMinimized = false;
+  $('timerOverlay').classList.remove('open');
+  if ($('timerMiniCapsule')) $('timerMiniCapsule').style.display = 'none';
+  releaseWake();
+  if ('mediaSession' in navigator) {
+    try { navigator.mediaSession.playbackState = 'none'; } catch (_) {}
+  }
+}
+
 $('timerSkip').onclick = stopTimer;
 $('timerMinus').onclick = () => { T.remain = Math.max(0.5, T.remain - 15); paintTimer(); };
 $('timerPlus').onclick = () => { T.remain += 15; T.total = Math.max(T.total, T.remain); paintTimer(); };
 $('timerPause').onclick = function () { T.running = !T.running; T.last = Date.now(); this.textContent = T.running ? 'Pausa' : 'Riprendi'; };
+if ($('timerMinimize')) $('timerMinimize').onclick = minimizeTimer;
+if ($('timerMiniCapsule')) {
+  $('timerMiniCapsule').onclick = (e) => {
+    if (e.target.closest('#timerMiniSkip')) return;
+    expandTimer();
+  };
+}
+if ($('timerMiniSkip')) {
+  $('timerMiniSkip').onclick = (e) => {
+    e.stopPropagation();
+    stopTimer();
+  };
+}
 
 /* ── riordino: pressione prolungata + vibrazione (unico modo per spostare) ── */
 const HOLD_MS = 350, MOVE_TOL = 10;
@@ -1844,6 +1983,8 @@ $('overlay').addEventListener('click', e => {
   if (overlayMouseDownTarget === $('overlay') && e.target === $('overlay')) closeModal();
   overlayMouseDownTarget = null;
 });
+$('modal').addEventListener('mousedown', e => e.stopPropagation());
+$('modal').addEventListener('click', e => e.stopPropagation());
 $('modal').setAttribute('role', 'dialog');
 $('modal').setAttribute('aria-modal', 'true');
 // Esc: chiude prima il timer di recupero, poi un'eventuale finestra aperta
@@ -2696,6 +2837,11 @@ function executePrint(scope, userName) {
     window.print();
   }, 150);
 }
+
+window.addEventListener('afterprint', () => {
+  const printContainer = $('printArea');
+  if (printContainer) printContainer.innerHTML = '';
+});
 
 function openLegalModal() {
   const b = openModal('Privacy & Note Legali', `
