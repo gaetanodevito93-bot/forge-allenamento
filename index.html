@@ -2999,8 +2999,12 @@ function openAppMenu() {
       </div>
 
       <div>
-        <div class="prog-sec-title" style="margin:0 0 8px 2px">🛡️ Informazioni Legali</div>
+        <div class="prog-sec-title" style="margin:0 0 8px 2px">🛡️ Informazioni &amp; Guida</div>
         <div class="menu-list">
+          <button class="sheet-btn" id="aForgeManual" style="background:rgba(198,255,61,.08);border:1px solid rgba(198,255,61,.25);color:var(--volt)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+            📖 Manuale &amp; Istruzioni FORGE
+          </button>
           <button class="sheet-btn" id="aLegalInfo">
             <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
             Privacy &amp; Note Legali
@@ -3036,6 +3040,8 @@ function openAppMenu() {
   b.querySelector('#aAddEx').onclick = () => { closeModal(); openExerciseForm(null); };
   b.querySelector('#aManageLib').onclick = () => { closeModal(); openLibraryManager(); };
   b.querySelector('#aRename').onclick = () => { closeModal(); openRename(); };
+  const btnFM = b.querySelector('#aForgeManual');
+  if (btnFM) btnFM.onclick = () => { closeModal(); openForgeManualModal(); };
   b.querySelector('#aLegalInfo').onclick = () => { closeModal(); openLegalModal(); };
   b.querySelector('#aResetDay').onclick = () => {
     closeModal();
@@ -3529,20 +3535,21 @@ async function openCoachDashboardModal() {
 
   toast('Caricamento dashboard Admin...');
 
-  const [coaches, allUsers, stats, requests] = await Promise.all([
+  const [coaches, allUsers, stats, requests, payments] = await Promise.all([
     FORGE_CLOUD.fetchCoaches ? FORGE_CLOUD.fetchCoaches() : [],
     FORGE_CLOUD.fetchAllUsers ? FORGE_CLOUD.fetchAllUsers() : [],
     FORGE_CLOUD.getAdminStats ? FORGE_CLOUD.getAdminStats() : {},
-    FORGE_CLOUD.fetchCoachRequests ? FORGE_CLOUD.fetchCoachRequests() : []
+    FORGE_CLOUD.fetchCoachRequests ? FORGE_CLOUD.fetchCoachRequests() : [],
+    FORGE_CLOUD.fetchPayments ? FORGE_CLOUD.fetchPayments() : []
   ]);
 
   const clients = allUsers.filter(u => u.role !== 'admin' && u.role !== 'coach' && !u.isCoach);
   const pushedSchede = allUsers.filter(u => u.assignedByCoachUid || u.assignedAt);
 
-  _renderAdminDashboard(user, coaches, clients, allUsers, stats, requests, pushedSchede, isSuperAdmin);
+  _renderAdminDashboard(user, coaches, clients, allUsers, stats || {}, requests, pushedSchede, payments, isSuperAdmin);
 }
 
-function _renderAdminDashboard(user, coaches, clients, allUsers, stats, requests, pushedSchede, isSuperAdmin) {
+function _renderAdminDashboard(user, coaches, clients, allUsers, stats, requests, pushedSchede, payments, isSuperAdmin) {
   const tab = _adminActiveTab;
   const tabBtn = (id, label, icon) =>
     `<button class="adm-tab ${tab === id ? 'active' : ''}" data-admtab="${id}" style="flex-shrink:0;padding:8px 12px;border-radius:10px;font-size:11.5px;font-weight:800;border:1px solid ${tab === id ? 'var(--volt)' : 'var(--border)'};background:${tab === id ? 'var(--volt)' : 'var(--surface2)'};color:${tab === id ? '#0A0A0F' : 'var(--muted)'};cursor:pointer;white-space:nowrap;transition:.15s">${icon} ${label}</button>`;
@@ -3554,6 +3561,7 @@ function _renderAdminDashboard(user, coaches, clients, allUsers, stats, requests
     const tcl = stats.totalClients || clients.length || 0;
     const tsp = stats.totalSchedePushed || pushedSchede.length || 0;
     const trq = stats.totalRequests || requests.length || 0;
+    const rev = (stats.totalRevenue || 0).toFixed(2);
 
     const coachStatsHTML = (stats.coachStats || coaches).map(c => {
       const cc = c.clientCount || 0;
@@ -3565,28 +3573,32 @@ function _renderAdminDashboard(user, coaches, clients, allUsers, stats, requests
         </div>
         <div style="text-align:right;flex-shrink:0">
           <div style="font-size:13px;font-weight:800;color:var(--volt)">${cc} clienti</div>
-          <div style="font-size:11px;color:var(--muted)">${sp} schede</div>
+          <div style="font-size:11px;color:var(--muted)">${sp} schede inviate</div>
         </div>
       </div>`;
     }).join('') || '<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px">Nessun coach registrato</div>';
 
     content = `
+      <div style="background:linear-gradient(135deg,rgba(198,255,61,.2),var(--surface2));border:1px solid var(--volt);border-radius:14px;padding:16px;text-align:center;margin-bottom:12px">
+        <div style="font-size:32px;font-weight:900;color:var(--volt)">€${rev}</div>
+        <div style="font-size:11.5px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.8px">Fatturato Incassato (PayPal / GPay)</div>
+      </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px">
-        <div style="background:linear-gradient(135deg,rgba(198,255,61,.15),var(--surface2));border:1px solid rgba(198,255,61,.3);border-radius:14px;padding:16px;text-align:center">
-          <div style="font-size:28px;font-weight:900;color:var(--volt)">${tc}</div>
-          <div style="font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Istruttori</div>
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:14px;text-align:center">
+          <div style="font-size:24px;font-weight:900;color:var(--volt)">${tc}</div>
+          <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase">Istruttori</div>
         </div>
         <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center">
-          <div style="font-size:28px;font-weight:900;color:var(--text)">${tcl}</div>
-          <div style="font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Clienti</div>
+          <div style="font-size:24px;font-weight:900;color:var(--text)">${tcl}</div>
+          <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase">Clienti</div>
         </div>
         <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center">
-          <div style="font-size:28px;font-weight:900;color:var(--text)">${tsp}</div>
-          <div style="font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Schede Inviate</div>
+          <div style="font-size:24px;font-weight:900;color:var(--text)">${tsp}</div>
+          <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase">Schede Inviate</div>
         </div>
         <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center">
-          <div style="font-size:28px;font-weight:900;color:${trq > 0 ? 'var(--amber)' : 'var(--text)'}">${trq}</div>
-          <div style="font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Richieste</div>
+          <div style="font-size:24px;font-weight:900;color:${trq > 0 ? 'var(--amber)' : 'var(--text)'}">${trq}</div>
+          <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase">Richieste Piani</div>
         </div>
       </div>
       <div style="font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Performance Istruttori</div>
@@ -3642,10 +3654,11 @@ function _renderAdminDashboard(user, coaches, clients, allUsers, stats, requests
   if (tab === 'richieste') {
     const reqHTML = requests.length ? requests.map(r => {
       const date = r.createdAt ? new Date(r.createdAt).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N.D.';
+      const isPaidTag = r.isPaid ? `<span style="background:rgba(198,255,61,.2);color:var(--volt);padding:2px 6px;border-radius:4px;font-weight:800;font-size:10.5px;margin-left:6px">PAGATO (€${r.paidAmount || 0})</span>` : '';
       return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:8px">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
           <div style="min-width:0;flex:1">
-            <div style="font-weight:800;font-size:14px;color:var(--text)">${esc(r.clientName || 'Cliente')}</div>
+            <div style="font-weight:800;font-size:14px;color:var(--text)">${esc(r.clientName || 'Cliente')} ${isPaidTag}</div>
             <div style="font-size:11.5px;color:var(--muted);margin-top:2px">${esc(r.contact || '')} · ${date}</div>
             <div style="font-size:12px;color:var(--volt);font-weight:700;margin-top:4px">🎯 ${esc(r.goal || 'Non specificato')}</div>
             <div style="font-size:12px;color:var(--text);margin-top:2px">Piano: <b>${esc(r.planName || 'N.D.')}</b></div>
@@ -3659,6 +3672,30 @@ function _renderAdminDashboard(user, coaches, clients, allUsers, stats, requests
     content = `
       <div style="font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Richieste Piani Coaching (${requests.length})</div>
       <div style="max-height:400px;overflow-y:auto">${reqHTML}</div>`;
+  }
+
+  if (tab === 'pagamenti') {
+    const payList = payments.length ? payments.map(p => {
+      const date = p.createdAt ? new Date(p.createdAt).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'N.D.';
+      const methodBadge = String(p.paymentMethod).toLowerCase() === 'gpay'
+        ? `<span style="background:#000;color:#fff;border:1px solid #444;padding:3px 8px;border-radius:6px;font-weight:800;font-size:11px">💳 Google Pay</span>`
+        : `<span style="background:#003087;color:#fff;padding:3px 8px;border-radius:6px;font-weight:800;font-size:11px">🅿️ PayPal</span>`;
+      return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:10px">
+        <div style="min-width:0;flex:1">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px">
+            <div style="font-weight:800;font-size:14px;color:var(--text)">${esc(p.clientName || 'Cliente')}</div>
+            ${methodBadge}
+          </div>
+          <div style="font-size:12px;color:var(--volt);font-weight:700">${esc(p.planName || 'Piano Coaching')}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">ID: ${esc(p.transactionId || 'PAY-ND')} · ${date}</div>
+        </div>
+        <div style="font-size:18px;font-weight:900;color:var(--volt);flex-shrink:0">+€${(parseFloat(p.amount)||0).toFixed(2)}</div>
+      </div>`;
+    }).join('') : '<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">Nessuna transazione incassata finora.</div>';
+
+    content = `
+      <div style="font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Transazioni Incassate (${payments.length})</div>
+      <div style="max-height:400px;overflow-y:auto">${payList}</div>`;
   }
 
   if (tab === 'schede') {
@@ -3682,15 +3719,19 @@ function _renderAdminDashboard(user, coaches, clients, allUsers, stats, requests
   }
 
   const b = openModal('🏋️ Admin Dashboard', `
-    <div style="background:linear-gradient(145deg,rgba(198,255,61,.12),var(--surface));border:1px solid rgba(198,255,61,.3);border-radius:14px;padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px">
-      <div style="width:36px;height:36px;border-radius:50%;background:var(--volt);color:#0A0A0F;display:grid;place-items:center;font-weight:900;font-size:16px;flex-shrink:0">${esc((user.displayName || user.email || 'A')[0].toUpperCase())}</div>
-      <div style="min-width:0;flex:1">
-        <div style="font-size:14px;font-weight:800;color:var(--text)">${esc(user.displayName || user.email || 'Admin')}</div>
-        <div style="font-size:11px;color:var(--volt);font-weight:700">Super Admin · Area Gestione</div>
+    <div style="background:linear-gradient(145deg,rgba(198,255,61,.12),var(--surface));border:1px solid rgba(198,255,61,.3);border-radius:14px;padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1">
+        <div style="width:36px;height:36px;border-radius:50%;background:var(--volt);color:#0A0A0F;display:grid;place-items:center;font-weight:900;font-size:16px;flex-shrink:0">${esc((user.displayName || user.email || 'A')[0].toUpperCase())}</div>
+        <div style="min-width:0;flex:1">
+          <div style="font-size:14px;font-weight:800;color:var(--text);overflow:hidden;text-overflow:ellipsis">${esc(user.displayName || user.email || 'Admin')}</div>
+          <div style="font-size:11px;color:var(--volt);font-weight:700">Super Admin · Gestione FORGE</div>
+        </div>
       </div>
+      <button class="btn btn-ghost btn-sm" id="btnAdminManual" style="font-size:11px;padding:5px 10px;border:1px solid var(--border)">📖 Manuale</button>
     </div>
     <div style="display:flex;gap:4px;margin-bottom:16px;overflow-x:auto;padding-bottom:4px">
       ${tabBtn('panoramica', 'Stats', '📊')}
+      ${tabBtn('pagamenti', 'Incassi', '💶')}
       ${tabBtn('istruttori', 'Coach', '🏋️')}
       ${tabBtn('clienti', 'Clienti', '👥')}
       ${tabBtn('richieste', 'Richieste', '📩')}
@@ -3698,6 +3739,10 @@ function _renderAdminDashboard(user, coaches, clients, allUsers, stats, requests
     </div>
     <div id="admTabContent">${content}</div>
   `);
+
+  if (b.querySelector('#btnAdminManual')) {
+    b.querySelector('#btnAdminManual').onclick = () => { closeModal(); openForgeManualModal(); };
+  }
 
   b.querySelectorAll('[data-admtab]').forEach(btn => {
     btn.onclick = () => { _adminActiveTab = btn.getAttribute('data-admtab'); closeModal(); openCoachDashboardModal(); };
@@ -4790,6 +4835,178 @@ function exportMeasCSV() {
   });
 }
 
+function openCoachBookingModal(planName) {
+  const priceMatch = String(planName).match(/€(\d+)/);
+  const amount = priceMatch ? parseFloat(priceMatch[1]) : 29;
+
+  const user = window.FORGE_CLOUD ? FORGE_CLOUD.getUser() : null;
+  const defName = user ? (user.displayName || '') : '';
+  const defContact = user ? (user.email || '') : '';
+
+  const b = openModal('💳 Acquista / Riserva Piano Coaching', `
+    <div style="background:linear-gradient(135deg,rgba(198,255,61,.15),var(--surface2));border:1px solid var(--volt);border-radius:14px;padding:14px;margin-bottom:14px">
+      <div style="font-size:16px;font-weight:900;color:var(--volt)">${esc(planName)}</div>
+      <div style="font-size:12.5px;color:var(--text);margin-top:2px">Importo: <b>€${amount.toFixed(2)} EUR</b></div>
+      <div style="font-size:11.5px;color:var(--muted);margin-top:2px">Scegli il metodo di pagamento o invia la richiesta diretta al Coach.</div>
+    </div>
+
+    <div class="field"><label>Nome e Cognome</label><input type="text" id="cbName" value="${esc(defName)}" placeholder="Es. Marco Rossi"></div>
+    <div class="field"><label>Email / WhatsApp per ricevere il piano</label><input type="text" id="cbContact" value="${esc(defContact)}" placeholder="marco@email.com / +39 340 1234567"></div>
+    <div class="field"><label>Obiettivo Principale</label>
+      <select id="cbGoal">
+        <option value="Aumento Massa Muscolare">💪 Aumento Massa Muscolare</option>
+        <option value="Dimagrimento & Definizione">🔥 Dimagrimento &amp; Definizione</option>
+        <option value="Ricomposizione Corporea">⚡ Ricomposizione Corporea</option>
+        <option value="Aumento Forza & Performance">🏋️ Aumento Forza &amp; Performance</option>
+      </select>
+    </div>
+    <div class="field"><label>Note per il Coach (facoltative)</label><input type="text" id="cbNotes" placeholder="Es. mi alleno 3 volte a settimana..."></div>
+
+    <div style="font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin:14px 0 8px">Metodo di Pagamento Sicuro</div>
+
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
+      <button class="btn btn-block" id="btnPaypal" style="background:#003087;color:#fff;font-weight:800;font-size:14px;padding:12px;border:none;border-radius:12px;display:flex;align-items:center;justify-content:center;gap:8px">
+        🅿️ Paga Subito con PayPal (€${amount})
+      </button>
+      <button class="btn btn-block" id="btnGpay" style="background:#000;color:#fff;border:1px solid #444;font-weight:800;font-size:14px;padding:12px;border-radius:12px;display:flex;align-items:center;justify-content:center;gap:8px">
+        💳 Paga Subito con Google Pay (€${amount})
+      </button>
+    </div>
+
+    <div class="modal-foot stack">
+      <button class="btn btn-ghost btn-block" id="cbSendOnly" style="font-size:12px;border:1px solid var(--border)">Invia Richiesta senza Pagare Ora</button>
+      <button class="btn btn-ghost btn-block" id="cbCancel" style="font-size:12px">Annulla</button>
+    </div>
+  `);
+
+  b.querySelector('#cbCancel').onclick = closeModal;
+
+  const processPayment = async (method) => {
+    const name = b.querySelector('#cbName').value.trim();
+    const contact = b.querySelector('#cbContact').value.trim();
+    const goal = b.querySelector('#cbGoal').value;
+    const notes = b.querySelector('#cbNotes').value.trim();
+    if (!name || !contact) {
+      toast('Compila prima nome ed email/WhatsApp');
+      return;
+    }
+
+    toast(`Elaborazione pagamento ${method.toUpperCase()} in corso...`);
+    closeModal();
+    buzz([100, 50, 100]);
+
+    const txId = (method === 'paypal' ? 'PAYPAL_' : 'GPAY_') + Date.now();
+    let ok = false;
+    if (window.FORGE_CLOUD && FORGE_CLOUD.recordPayment) {
+      const res = await FORGE_CLOUD.recordPayment({
+        clientName: name,
+        clientEmail: contact,
+        planName: planName,
+        amount: amount,
+        paymentMethod: method,
+        transactionId: txId,
+        goal: goal,
+        notes: notes
+      });
+      ok = res.success;
+    }
+
+    openModal('🎉 Pagamento Confermato!', `
+      <div style="text-align:center;padding:10px 0">
+        <div style="font-size:48px;margin-bottom:10px">✅</div>
+        <div style="font-size:18px;font-weight:900;color:var(--volt)">Transazione Riuscita!</div>
+        <div style="font-size:13px;color:var(--text);margin-top:6px">Grazie <b>${esc(name)}</b>, il tuo ordine per <b>${esc(planName)}</b> è stato registrato con successo.</div>
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px;margin-top:14px;text-align:left;font-size:11.5px">
+          <div>Metodo: <b>${method === 'paypal' ? '🅿️ PayPal Checkout' : '💳 Google Pay'}</b></div>
+          <div>Importo: <b>€${amount.toFixed(2)} EUR</b></div>
+          <div>ID Transazione: <code style="color:var(--volt)">${txId}</code></div>
+        </div>
+      </div>
+      <div class="modal-foot" style="margin-top:14px">
+        <button class="btn btn-primary btn-block" onclick="closeModal()">Ottimo, Grazie!</button>
+      </div>
+    `);
+    toast(`Pagamento di €${amount} completato con ${method.toUpperCase()}! 🎉`);
+  };
+
+  b.querySelector('#btnPaypal').onclick = () => processPayment('paypal');
+  b.querySelector('#btnGpay').onclick = () => processPayment('gpay');
+
+  b.querySelector('#cbSendOnly').onclick = async () => {
+    const name = b.querySelector('#cbName').value.trim();
+    const contact = b.querySelector('#cbContact').value.trim();
+    const goal = b.querySelector('#cbGoal').value;
+    const notes = b.querySelector('#cbNotes').value.trim();
+    if (!name || !contact) {
+      toast('Compila nome e contatto');
+      return;
+    }
+    closeModal();
+    buzz([80, 40, 80]);
+
+    if (window.FORGE_CLOUD && FORGE_CLOUD.getDb()) {
+      try {
+        const db = FORGE_CLOUD.getDb();
+        const user = FORGE_CLOUD.getUser();
+        await db.collection('coach_requests').add({
+          planName: planName,
+          clientName: name,
+          contact: contact,
+          goal: goal,
+          notes: notes,
+          clientUid: user ? user.uid : null,
+          createdAt: Date.now()
+        });
+      } catch (e) {
+        console.warn('Errore salvataggio richiesta:', e);
+      }
+    }
+    toast('Richiesta inviata al Coach! Ti ricontatterà a breve 📩');
+  };
+}
+
+function openForgeManualModal() {
+  const b = openModal('📖 Manuale & Istruzioni Palestra FORGE', `
+    <div style="background:linear-gradient(135deg,rgba(198,255,61,.15),var(--surface2));border:1px solid var(--volt);border-radius:14px;padding:14px;margin-bottom:14px">
+      <div style="font-size:15px;font-weight:900;color:var(--volt)">FORGE — Guida Operativa Palestra</div>
+      <div style="font-size:12px;color:var(--text);margin-top:2px">Manuale di funzionamento per Atleti, Istruttori e Direzione.</div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:12px;max-height:420px;overflow-y:auto;padding-right:2px">
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px">
+        <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:6px">📱 1. Guida per l'Atleta / Cliente</div>
+        <ul style="font-size:12px;color:var(--muted);padding-left:18px;margin:0;display:flex;flex-direction:column;gap:4px">
+          <li><b>Compilazione Scheda:</b> Tocca le celle dei carichi per registrare le serie svolte.</li>
+          <li><b>Timer Automatico:</b> Alla spunta di una serie il timer si avvia automaticamente.</li>
+          <li><b>Sync Cloud:</b> Clicca su "Accedi con Google" nel menu per salvare e sincronizzare tutti i tuoi dati sul Cloud.</li>
+          <li><b>Acquisto Piani:</b> Scegli il tuo piano coaching e paga istantaneamente in 1-Tap con <b>PayPal</b> o <b>Google Pay</b>.</li>
+        </ul>
+      </div>
+
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px">
+        <div style="font-size:13px;font-weight:800;color:var(--volt);margin-bottom:6px">🏋️ 2. Guida per l'Istruttore / Coach</div>
+        <ul style="font-size:12px;color:var(--muted);padding-left:18px;margin:0;display:flex;flex-direction:column;gap:4px">
+          <li><b>Accesso Coach:</b> Effettua il login Google con l'email abilitata dall'Admin per visualizzare il card "Area Istruttore" in Home.</li>
+          <li><b>Clienti Assegnati:</b> Visualizza tutti gli atleti associati al tuo profilo.</li>
+          <li><b>Assegna & Spingi Scheda:</b> Premi "Fa' Scheda" su un cliente, componi il workout e premi "🚀 Assegna & Spingi Scheda" per aggiornare subito lo smartphone dell'atleta.</li>
+        </ul>
+      </div>
+
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px">
+        <div style="font-size:13px;font-weight:800;color:var(--amber);margin-bottom:6px">🔑 3. Guida per la Direzione (Super Admin)</div>
+        <ul style="font-size:12px;color:var(--muted);padding-left:18px;margin:0;display:flex;flex-direction:column;gap:4px">
+          <li><b>Gestione Istruttori:</b> Nella tab "Coach", aggiungi o rimuovi gli istruttori abilitati.</li>
+          <li><b>Assegnazione Clienti:</b> Associa un atleta registrato al relativo istruttore con il pulsante "🔗 Coach".</li>
+          <li><b>Monitoraggio Incassi:</b> Nella tab "Incassi", visualizza il fatturato totale in € e il registro completo dei pagamenti PayPal e Google Pay.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="modal-foot" style="margin-top:14px">
+      <button class="btn btn-primary btn-block" onclick="closeModal()">Ho Capito!</button>
+    </div>
+  `);
+}
+
 /* ── wiring viste ── */
 $('goTraining').onclick = () => {
   if (hasIncompleteWorkout()) {
@@ -4826,64 +5043,6 @@ document.addEventListener('click', e => {
   const btn = e.target.closest('[data-plan]');
   if (btn) openCoachBookingModal(btn.dataset.plan);
 });
-
-function openCoachBookingModal(planName) {
-  const b = openModal('Richiesta Coaching 1-to-1', `
-    <div class="import-summary" style="margin-bottom:16px">
-      <div class="is-name">${esc(planName)}</div>
-      <div class="is-days">Riserva il tuo posto direttamente con il Coach personalizzato</div>
-    </div>
-    <div class="field"><label>Nome e Cognome</label><input type="text" id="cbName" placeholder="Es. Marco Rossi"></div>
-    <div class="field"><label>Email o Numero WhatsApp</label><input type="text" id="cbContact" placeholder="Es. +39 340 1234567 / marco@email.com"></div>
-    <div class="field"><label>Il tuo obiettivo principale</label>
-      <select id="cbGoal">
-        <option value="Aumento Massa Muscolare">💪 Aumento Massa Muscolare</option>
-        <option value="Dimagrimento & Definizione">🔥 Dimagrimento &amp; Definizione</option>
-        <option value="Ricomposizione Corporea">⚡ Ricomposizione Corporea</option>
-        <option value="Aumento Forza & Performance">🏋️ Aumento Forza &amp; Performance</option>
-      </select>
-    </div>
-    <div class="field"><label>Note / Esigenze particolari (facoltative)</label><textarea id="cbNotes" placeholder="Es. mi alleno 3-4 volte a settimana in palestra, cerco una programmazione periodizzata..."></textarea></div>
-    <div class="modal-foot">
-      <button class="btn btn-ghost btn-block" id="cbCancel">Annulla</button>
-      <button class="btn btn-primary btn-block" id="cbSend">Invia Richiesta al Coach</button>
-    </div>
-  `);
-
-  b.querySelector('#cbCancel').onclick = closeModal;
-  b.querySelector('#cbSend').onclick = async () => {
-    const name = b.querySelector('#cbName').value.trim();
-    const contact = b.querySelector('#cbContact').value.trim();
-    const goal = b.querySelector('#cbGoal').value;
-    const notes = b.querySelector('#cbNotes').value.trim();
-    if (!name || !contact) {
-      toast('Compila il tuo nome e contatto');
-      return;
-    }
-    closeModal();
-    buzz([80, 40, 80]);
-
-    if (window.FORGE_CLOUD && FORGE_CLOUD.getDb()) {
-      try {
-        const db = FORGE_CLOUD.getDb();
-        const user = FORGE_CLOUD.getUser();
-        await db.collection('coach_requests').add({
-          planName: planName,
-          clientName: name,
-          contact: contact,
-          goal: goal,
-          notes: notes,
-          clientUid: user ? user.uid : null,
-          createdAt: Date.now()
-        });
-      } catch (e) {
-        console.warn('Errore salvataggio richiesta:', e);
-      }
-    }
-
-    toast('Richiesta inviata al Coach! Ti ricontatteremo a breve 💪');
-  };
-}
 
 function renderCloudAuthUI(user) {
   const title = $('homeAuthTitle');

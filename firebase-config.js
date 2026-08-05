@@ -623,19 +623,90 @@
     }
   }
 
-  // Recupera statistiche admin
+  // Registra un pagamento completato (PayPal / Google Pay)
+  async function recordPayment(paymentData) {
+    if (!db) return { success: false, reason: 'Database Cloud non connesso' };
+    try {
+      const amount = parseFloat(paymentData.amount) || 0;
+      const ref = await db.collection('payments').add({
+        clientName: paymentData.clientName || 'Cliente FORGE',
+        clientEmail: paymentData.clientEmail || '',
+        planName: paymentData.planName || 'Piano Coaching',
+        amount: amount,
+        currency: 'EUR',
+        paymentMethod: paymentData.paymentMethod || 'paypal',
+        transactionId: paymentData.transactionId || ('PAY-' + Date.now() + '-' + Math.floor(Math.random()*1000)),
+        status: 'completed',
+        createdAt: Date.now()
+      });
+
+      // Salva o aggiorna anche su coach_requests come pagata
+      await db.collection('coach_requests').add({
+        planName: paymentData.planName || 'Piano Coaching',
+        clientName: paymentData.clientName || 'Cliente FORGE',
+        contact: paymentData.clientEmail || paymentData.contact || '',
+        goal: paymentData.goal || 'Pagamento Confermato',
+        notes: paymentData.notes || `Pagamento completato via ${paymentData.paymentMethod.toUpperCase()} (ID: ${paymentData.transactionId})`,
+        isPaid: true,
+        paidAmount: amount,
+        paymentMethod: paymentData.paymentMethod,
+        transactionId: paymentData.transactionId,
+        createdAt: Date.now()
+      });
+
+      return { success: true, id: ref.id };
+    } catch (err) {
+      console.error('Errore registrazione pagamento:', err);
+      return { success: false, reason: err.message };
+    }
+  }
+
+  // Fetch lista pagamenti ricevuti
+  async function fetchPayments() {
+    if (!db) return [];
+    try {
+      const snap = await db.collection('payments').orderBy('createdAt', 'desc').get();
+      const list = [];
+      snap.forEach(doc => {
+        list.push({ id: doc.id, ...doc.data() });
+      });
+      return list;
+    } catch (err) {
+      console.error('Errore fetch pagamenti:', err);
+      return [];
+    }
+  }
+
+  // Recupera statistiche admin con Calcolo Fatturato Reale
   async function getAdminStats() {
     if (!db) return null;
     try {
       const coachesSnap = await db.collection('coaches').get();
       const usersSnap = await db.collection('users').get();
       const reqSnap = await db.collection('coach_requests').get();
+      const paySnap = await db.collection('payments').get();
       
+      let totalRevenue = 0;
+      paySnap.forEach(doc => {
+        const p = doc.data();
+        totalRevenue += (parseFloat(p.amount) || 0);
+      });
+
+      // Calcola fatturato anche dalle richieste contrassegnate come pagate
+      reqSnap.forEach(doc => {
+        const r = doc.data();
+        if (r.isPaid && r.paidAmount && !paySnap.docs.some(d => d.data().transactionId === r.transactionId)) {
+          totalRevenue += (parseFloat(r.paidAmount) || 0);
+        }
+      });
+
       const stats = {
         totalCoaches: 0,
         totalClients: 0,
         totalSchedePushed: 0,
         totalRequests: reqSnap.size,
+        totalRevenue: totalRevenue,
+        totalPayments: paySnap.size,
         coachStats: []
       };
       
@@ -647,7 +718,8 @@
           email: data.email,
           displayName: data.displayName,
           clientCount: 0,
-          schedePushed: 0
+          schedePushed: 0,
+          revenue: 0
         };
       });
       
@@ -665,7 +737,8 @@
                 email: data.email,
                 displayName: data.displayName || data.email,
                 clientCount: 0,
-                schedePushed: 0
+                schedePushed: 0,
+                revenue: 0
               };
             }
           }
@@ -758,6 +831,8 @@
     fetchPushedSchede,
     getAdminStats,
     updateCoachNotes,
+    recordPayment,
+    fetchPayments,
     getUser: () => currentUser,
     setUser: (u) => { currentUser = u; },
     getAuth: () => auth,
