@@ -1,13 +1,15 @@
 <div align="center">
 
-# 🏋️ FORGE
+# ⚡ FORGE — Piattaforma Gestionale & App Palestra
 
-### Allenati · Misura · Progredisci
+### Allenati · Programma · Incassa · Progredisci
 
-**La tua scheda di allenamento in tasca: giorni, esercizi, serie, carichi, recuperi e progressi. Funziona anche offline.**
+**L'ecosistema PWA ufficiale per la Palestra FORGE: Gestione Clienti, Area Istruttori, Pagamenti PayPal & Google Pay, Sincronizzazione Cloud e Dashboard Amministrativa per la Direzione.**
 
-[![PWA](https://img.shields.io/badge/PWA-installabile-C6FF3D?style=flat-square)](https://gaetanodevito93-bot.github.io/forge-allenamento/)
-[![Offline](https://img.shields.io/badge/offline-first-0A0A0F?style=flat-square)](#-funziona-offline)
+[![PWA](https://img.shields.io/badge/PWA-installabile--offline-C6FF3D?style=flat-square)](https://gaetanodevito93-bot.github.io/forge-allenamento/)
+[![Versione](https://img.shields.io/badge/versione-v88-0A0A0F?style=flat-square)](#-versione-forge-v88)
+[![Backend](https://img.shields.io/badge/backend-Firebase%20Cloud-FFCA28?style=flat-square)](#-backend--cloud)
+[![Pagamenti](https://img.shields.io/badge/pagamenti-PayPal%20%7C%20GPay-003087?style=flat-square)](#-pagamenti-paypal--google-pay)
 [![Deploy](https://img.shields.io/badge/deploy-GitHub%20Pages-222?style=flat-square)](https://gaetanodevito93-bot.github.io/forge-allenamento/)
 [![Licenza](https://img.shields.io/badge/licenza-proprietaria-red?style=flat-square)](LICENSE)
 
@@ -15,152 +17,106 @@
 
 ---
 
-## 📱 Cos'è
+## 📱 Cos'è FORGE
 
-**FORGE** è un'applicazione web progressiva (PWA) per gestire i tuoi allenamenti in palestra
-direttamente dal telefono. Nessun account, nessun server, nessuna pubblicità: tutti i dati
-restano **sul tuo dispositivo**. Installala sulla home del telefono e usala come una vera app,
-anche senza connessione.
+**FORGE** è una Progressive Web App (PWA) di livello enterprise progettata su misura per la **Palestra FORGE**. 
+Fornisce un'esperienza integrata su 3 livelli:
 
-<div align="center">
+1. **Atleti & Clienti:** Consultazione schede di allenamento, timer di recupero automatico, tracciamento carichi e massimali 1RM, sincronizzazione Cloud e acquisto piani di coaching in 1-Click.
+2. **Istruttori & Coach:** Pannello dedicato per la gestione dei clienti assegnati e la creazione e **spinta in tempo reale ("1-Click Push")** delle schede sui dispositivi mobili degli atleti.
+3. **Direzione Palestra (Super Admin):** Dashboard avanzata a 6 tab per monitorare il **Fatturato Totale Incassato (€)** via PayPal/GPay, registrare nuovi istruttori, assegnare atleti e gestire il parco clienti.
 
-| Home | Allenamento | Progressi |
-|:---:|:---:|:---:|
-| ![Home](docs/home.png) | ![Allenamento](docs/allenamento.png) | ![Progressi](docs/progressi.png) |
+---
 
-</div>
+## ✨ Funzionalità Principali
 
-## ✨ Funzionalità
+### 🏋️ Esperienza Atleta
+- **Schede giornaliere dinamiche** — organizzazione esercizi in split (Giorno A, B, C, D…).
+- **Registro carichi e serie** — tracciamento in tempo reale di peso, ripetizioni, note ed esecuzione.
+- **Timer di recupero automatico** — avvio immediato al completamento di una serie con avviso acustico e vibrazione.
+- **Sincronizzazione Cloud** — login Google per salvare e recuperare i dati su qualsiasi dispositivo.
+- **Marketplace Piani & Coaching** — acquisto di schede PRO e abbonamenti di coaching.
 
-### Allenamento
-- **Schede giornaliere** — organizza gli esercizi in più giorni (Giorno A, B, C…).
-- **Esercizi a schede** — un esercizio alla volta, con navigazione a tab; completato un
-  esercizio si passa automaticamente al successivo.
-- **Serie, ripetizioni e carichi** — registra ripetizioni e peso di ogni serie e spuntale
-  man mano che le completi.
-- **Timer di recupero** — parte in automatico al termine di ogni serie, con vibrazione e
-  segnale sonoro a fine recupero; regolabile al volo (±15 s).
-- **Riordino con pressione prolungata** — tieni premuta una scheda per compattarle tutte e
-  trascinarle nell'ordine che preferisci.
-- **Confronto con l'ultima volta** — vedi a colpo d'occhio se stai migliorando peso e
-  ripetizioni rispetto alla sessione precedente.
-- **Storico sessioni** — ogni allenamento salvato viene conservato (ultime 20 per giorno).
+### 💳 Pagamenti PayPal & Google Pay (GPay)
+- **PayPal Express Checkout:** Pagamento sicuro istantaneo per tutti i piani di coaching.
+- **Google Pay (GPay):** Checkout in 1-Tap con le carte salvate nel wallet Google.
+- **Registrazione Transazioni Cloud:** Ogni incasso genera un record univoco (es. `PAYPAL_...` o `GPAY_...`) aggiornando istantaneamente il fatturato nella Admin Dashboard.
 
-### Progressi
-- **Peso e composizione corporea** — traccia peso, massa grassa e circonferenze (collo,
-  petto, vita, fianchi, braccio, coscia, polpaccio).
-- **Andamento nel tempo** — grafico del peso e variazioni (Δ) rispetto alla misura precedente.
+### 🏋️ Pannello Istruttore / Coach
+- **Riconoscimento automatico dell'account:** L'Area Istruttore si attiva in Home quando l'utente accede con un'email autorizzata.
+- **Gestione atleti assegnati:** Elenco atleti associati, stato e scheda attiva.
+- **Spinta scheda in tempo reale ("Assegna & Spingi"):** Creazione e invio istantaneo di schede personalizzate (o da Template PRO) direttamente sullo smartphone del cliente.
 
-### Scheda & dati
-- **Import / Export JSON** — carica una scheda generata anche da un'AI (formato documentato
-  nell'app) o esporta la tua per condividerla o farne un backup.
-- **Backup completo** — salva e ripristina scheda, storico e misure in un unico file.
+### 🔑 Super Admin Dashboard (6 Tab)
+- **📊 Stats & KPI:** Monitoraggio fatturato complessivo (€), numero istruttori, clienti e schede elaborate.
+- **💶 Incassi:** Log dettagliato di tutte le transazioni incassate via PayPal e Google Pay.
+- **🏋️ Coach:** Registrazione ed eliminazione dei profili istruttore.
+- **👥 Clienti:** Registro completo atleti, assegnazione coach e creazione schede.
+- **📩 Richieste:** Gestione delle richieste di coaching paganti e di contatto.
+- **📋 Schede:** Storico di tutte le programmazioni inviate ai clienti.
 
-## 🔌 Funziona offline
+### 📖 Manuale Operativo Integrato
+- **In-App Manual:** Modale interattiva `openForgeManualModal()` accessibile dal menu e dalla dashboard admin.
+- **Documentazione Ufficiale:** File guida completo [`MANUALE_PALESTRA_FORGE.md`](MANUALE_PALESTRA_FORGE.md) per lo staff della palestra.
 
-FORGE è **offline-first**: un [service worker](sw.js) mette in cache l'app al primo avvio.
-Dopo la prima apertura funziona senza connessione — apri, allenati e registra tutto anche in
-palestra dove il segnale non arriva. I dati vengono salvati nel `localStorage` del browser.
+---
 
-## 🔐 Privacy
+## 🛠️ Stack Tecnico & Architettura
 
-- **Nessun account, nessun tracciamento, nessuna analitica.**
-- Tutti i dati (scheda, storico, misure) sono salvati **solo localmente** sul tuo dispositivo.
-- Nessun dato viene inviato a server esterni.
-- L'unica risorsa esterna è il font (Google Fonts); l'app resta pienamente utilizzabile offline.
+- **Frontend Core:** HTML5 Semantic Markup, Vanilla JavaScript ES6+, CSS Volt Design System (Dark Mode, Neon Accents, Glassmorphism).
+- **Backend & Cloud:** Firebase SDK v9 (Authentication OAuth Google, Cloud Firestore DB, Offline Persistence).
+- **Offline-First PWA:** Service Worker (`sw.js` versione `forge-v88`), Web App Manifest (`manifest.webmanifest`).
+- **Nessuna dipendenza pesante:** 0 npm build steps richiesti, compatibile con qualsiasi hosting statico.
 
-## 🚀 Utilizzo
+---
 
-### Online
+## 🚀 Guida all'Avvio
+
+### 🌐 Utilizzo Online
 Apri l'app pubblicata su GitHub Pages:
+**→ [gaetanodevito93-bot.github.io/forge-allenamento/](https://gaetanodevito93-bot.github.io/forge-allenamento/)**
 
-**→ https://gaetanodevito93-bot.github.io/forge-allenamento/**
-
-Dal menu del browser scegli **"Aggiungi a schermata Home"** / **"Installa app"** per usarla
-come applicazione a schermo intero.
-
-### In locale
-L'app è completamente statica: nessuna build, nessuna dipendenza. Serve solo un web server
-statico (il service worker richiede `http://`, non funziona aprendo il file con `file://`).
+### 💻 Server Locale
+Servono solo i file statici (es. tramite `npx serve` o `python`):
 
 ```bash
-# clona il repository (richiede accesso)
 git clone https://github.com/gaetanodevito93-bot/forge-allenamento.git
 cd forge-allenamento
 
-# avvia un server statico qualsiasi, es. con Python
-python3 -m http.server 8080
-# poi apri http://localhost:8080
-```
+# Avvio con npx serve
+npx serve -l 3000 .
 
-## 🧱 Struttura del progetto
+# Oppure con Python
+python3 -m http.server 3000
+```
+Apri il browser su `http://localhost:3000`.
+
+---
+
+## 🧱 Struttura Repository
 
 ```
 forge-allenamento/
-├── index.html            # L'intera applicazione (HTML + CSS + JS in un unico file)
-├── sw.js                 # Service worker (cache offline-first)
-├── manifest.webmanifest  # Manifest PWA (nome, icone, colori, installazione)
-├── icon-192.png          # Icone dell'app
+├── index.html                # Single Page Application completa (UI, Modali, Controller)
+├── firebase-config.js        # Modulo Cloud Firebase (Auth, Firestore, Payments, Admin API)
+├── sw.js                     # Service Worker PWA Offline (versione forge-v88)
+├── manifest.webmanifest      # Manifest PWA (icone, colori, avvio)
+├── MANUALE_PALESTRA_FORGE.md # Manuale operativo ufficiale Palestra FORGE
+├── icon-192.png              # Icone PWA
 ├── icon-512.png
 ├── apple-touch-icon.png
-├── docs/                 # Screenshot per la documentazione
-└── .github/workflows/    # Deploy automatico su GitHub Pages
+└── .github/workflows/        # Deployment automatico GitHub Pages
 ```
 
-**Stack tecnico:** HTML5, CSS3 e JavaScript vanilla — nessun framework, nessun bundler.
-Un unico file `index.html` autosufficiente, per la massima leggerezza e velocità.
-
-## 📦 Formato import JSON
-
-FORGE importa schede in formato JSON puro. Struttura minima:
-
-```json
-{
-  "programName": "Forza base 2026",
-  "days": [
-    {
-      "name": "Giorno A — Spinta",
-      "exercises": [
-        { "name": "Panca piana", "sets": 4, "reps": "8-12", "weight": 50, "restSec": 90, "note": "Controlla la discesa" },
-        { "name": "Plank", "sets": 3, "reps": "45s", "weight": null, "restSec": 60, "note": "Addome contratto" }
-      ]
-    }
-  ]
-}
-```
-
-| Campo | Tipo | Descrizione |
-|---|---|---|
-| `programName` | stringa | Nome del programma (facoltativo). |
-| `days` | lista | Giorni di allenamento (almeno 1). |
-| `days[].name` | stringa | Nome del giorno. |
-| `days[].exercises` | lista | Esercizi del giorno. |
-| `exercises[].name` | stringa | Nome dell'esercizio (obbligatorio). |
-| `exercises[].sets` | intero 1–20 | Numero di serie (default 3). |
-| `exercises[].reps` | stringa | Ripetizioni: `"8-12"`, `"10"`, o durata `"45s"`. |
-| `exercises[].weight` | numero / null | Peso in kg (`null` per corpo libero). |
-| `exercises[].restSec` | numero | Recupero in **secondi** (es. `90`). |
-| `exercises[].note` | stringa | Nota tecnica breve. |
-
-> Le istruzioni complete (con alias accettati ed esempi) sono scaricabili dall'app dal
-> pulsante **"Istruzioni per l'AI"**, comode da incollare in un assistente per generare la
-> scheda al posto tuo.
-
-## 🌐 Deploy
-
-Il deploy su GitHub Pages è **automatico**: a ogni push su `main`, il workflow
-[`.github/workflows/pages.yml`](.github/workflows/pages.yml) pubblica l'intera root del
-repository (app statica) sull'ambiente GitHub Pages.
+---
 
 ## 📄 Licenza
 
-Questo progetto è distribuito con **licenza proprietaria — tutti i diritti riservati**.
-Il codice sorgente è visibile su GitHub ma **non** ne è consentito l'uso, la copia, la
-modifica o la ridistribuzione senza autorizzazione scritta. Vedi il file [LICENSE](LICENSE)
-per i dettagli completi.
+Questo progetto è distribuito con **licenza proprietaria — tutti i diritti riservati**.  
+Uso esclusivo autorizzato per la **Palestra FORGE**. Vedi il file [LICENSE](LICENSE) per i dettagli.
 
 ---
 
 <div align="center">
-<sub>Fatto con 💪 per allenarsi meglio. © 2026 Gaetano De Vito.</sub>
+<sub>FORGE v88 — Piattaforma Gestionale Palestra. © 2026 Gaetano De Vito.</sub>
 </div>
