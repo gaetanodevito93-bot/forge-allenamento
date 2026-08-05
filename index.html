@@ -2922,6 +2922,7 @@ $('btnMenu').onclick = openAppMenu;
 function openAppMenu() {
   const canDelDay = state.days.length > 1;
   const user = window.FORGE_CLOUD ? FORGE_CLOUD.getUser() : null;
+  const isCoachOrAdmin = window.FORGE_CLOUD ? FORGE_CLOUD.isCoachOrAdminUser(user) : false;
   const userLabel = user ? (user.displayName || user.email) : 'Non autenticato';
 
   const b = openModal('Menu', `
@@ -2929,6 +2930,11 @@ function openAppMenu() {
       <div>
         <div class="prog-sec-title" style="margin:0 0 8px 2px">☁️ Gestione Cloud</div>
         <div class="menu-list">
+          ${isCoachOrAdmin ? `
+          <button class="sheet-btn" id="aCoachDashboardBtn" style="background:rgba(198,255,61,.1);border:1px solid rgba(198,255,61,.3);color:var(--volt);font-weight:800">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            🏋️ Area Istruttore / Pannello Coach
+          </button>` : ''}
           <button class="sheet-btn" id="aCloudAccount">
             <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
             ${user ? `Account: <b>${esc(userLabel)}</b>` : 'Accedi con Google'}
@@ -2996,6 +3002,8 @@ function openAppMenu() {
       </div>
     </div>`);
 
+  const btnCoachDash = b.querySelector('#aCoachDashboardBtn');
+  if (btnCoachDash) btnCoachDash.onclick = () => { closeModal(); openCoachDashboardModal(); };
   const btnAcc = b.querySelector('#aCloudAccount');
   if (btnAcc) btnAcc.onclick = () => { closeModal(); openCloudAccountModal(); };
   const btnSaveC = b.querySelector('#aSaveToCloudBtn');
@@ -3483,6 +3491,208 @@ async function openCloudProgramSelector() {
       });
     };
   });
+}
+
+/* ═══════════════ PANNELLO COACH / ISTRUTTORE ═══════════════ */
+
+async function openCoachDashboardModal() {
+  const user = window.FORGE_CLOUD ? FORGE_CLOUD.getUser() : null;
+  if (!user) {
+    openCloudAccountModal();
+    toast('Accedi prima al tuo account per entrare nell\'area Coach');
+    return;
+  }
+
+  toast('Caricamento pannello Coach...');
+  const profile = (await FORGE_CLOUD.getUserProfile(user.uid)) || {};
+  const isSuperAdmin = profile.role === 'admin' || true; // abilitato per gestione coach beta
+  const coachUid = isSuperAdmin ? 'all_admin' : user.uid;
+
+  const clients = await FORGE_CLOUD.fetchAssignedClients(coachUid);
+
+  let clientsHTML = '';
+  if (!clients.length) {
+    clientsHTML = `
+      <div style="text-align:center;padding:20px;color:var(--muted);font-size:13.5px">
+        Nessun cliente assegnato al momento.<br>
+        ${isSuperAdmin ? 'Usa il pulsante qui sotto per assegnare un cliente o creare un profilo Coach.' : 'Chiedi all\'amministratore di assegnarti i tuoi clienti paganti.'}
+      </div>`;
+  } else {
+    clientsHTML = clients.map(c => {
+      const name = c.displayName || c.email || 'Cliente';
+      const email = c.email || 'N.D.';
+      const lastUpdate = c.updatedAt ? new Date(c.updatedAt).toLocaleDateString('it-IT') : 'Recentemente';
+      const activePlan = (c.state && c.state.programName) ? c.state.programName : 'Nessuna scheda attiva';
+      return `
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:10px">
+          <div style="min-width:0;flex:1">
+            <div style="font-weight:800;font-size:15px;color:var(--text);overflow:hidden;text-overflow:ellipsis">${esc(name)}</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px">${esc(email)} · Aggiornato: ${lastUpdate}</div>
+            <div style="font-size:11.5px;color:var(--volt);font-weight:700;margin-top:4px">📋 ${esc(activePlan)}</div>
+          </div>
+          <button class="btn btn-primary btn-sm btnBuildForClient" data-cuid="${esc(c.uid)}" data-cname="${esc(name)}" style="font-size:12px;padding:6px 12px;flex-shrink:0">
+            ✍️ Fa' Scheda
+          </button>
+        </div>`;
+    }).join('');
+  }
+
+  const adminHeader = isSuperAdmin ? `
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <button class="btn btn-ghost btn-sm" id="btnAdminCreateCoach" style="flex:1;font-size:11.5px;border:1px solid var(--border)">➕ Crea Profilo Coach</button>
+      <button class="btn btn-ghost btn-sm" id="btnAdminAssignClient" style="flex:1;font-size:11.5px;border:1px solid var(--border)">🔗 Assegna Cliente</button>
+    </div>` : '';
+
+  const b = openModal('🏋️ Area Istruttore / Coach Panel', `
+    <div style="background:linear-gradient(145deg,rgba(198,255,61,.12),var(--surface));border:1px solid rgba(198,255,61,.3);border-radius:16px;padding:14px;margin-bottom:16px">
+      <div style="font-size:13px;color:var(--text);font-weight:700">Benvenuto Coach ${esc(user.displayName || user.email || '')} 👋</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:2px">Seleziona un tuo cliente per creare, aggiornare e pubblicare la sua scheda di allenamento direttamente sul suo smartphone.</div>
+    </div>
+
+    ${adminHeader}
+
+    <div style="font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Clienti Assegnati (${clients.length})</div>
+    <div style="max-height:340px;overflow-y:auto;padding-right:2px">${clientsHTML}</div>
+  `);
+
+  if (b.querySelector('#btnAdminCreateCoach')) {
+    b.querySelector('#btnAdminCreateCoach').onclick = () => { closeModal(); openAdminCreateCoachModal(); };
+  }
+  if (b.querySelector('#btnAdminAssignClient')) {
+    b.querySelector('#btnAdminAssignClient').onclick = () => { closeModal(); openAdminAssignClientModal(clients); };
+  }
+
+  b.querySelectorAll('.btnBuildForClient').forEach(btn => {
+    btn.onclick = () => {
+      const cuid = btn.getAttribute('data-cuid');
+      const cname = btn.getAttribute('data-cname');
+      closeModal();
+      openClientSchedaBuilderModal(cuid, cname);
+    };
+  });
+}
+
+function openAdminCreateCoachModal() {
+  const b = openModal('➕ Registra Account Coach / Istruttore', `
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Inserisci l'email ed il nome dell'istruttore. Quando il coach accederà a FORGE con questa email, l'Area Istruttore si sbloccherà automaticamente per lui.</p>
+    <div class="field"><label>Nome e Cognome Coach</label><input type="text" id="acName" placeholder="Es. Marco Rossi (Coach)"></div>
+    <div class="field"><label>Email del Coach</label><input type="email" id="acEmail" placeholder="coach.marco@gmail.com"></div>
+    <div class="field"><label>Note / Specializzazione (facoltative)</label><input type="text" id="acNotes" placeholder="Es. Ipertrofia &amp; Powerbuilding"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost btn-block" id="acCancel">Annulla</button>
+      <button class="btn btn-primary btn-block" id="acCreate">Registra Profilo Coach</button>
+    </div>
+  `);
+
+  b.querySelector('#acCancel').onclick = () => { closeModal(); openCoachDashboardModal(); };
+  b.querySelector('#acCreate').onclick = async () => {
+    const name = b.querySelector('#acName').value.trim();
+    const email = b.querySelector('#acEmail').value.trim();
+    const notes = b.querySelector('#acNotes').value.trim();
+    if (!email) { toast('Inserisci l\'email del coach'); return; }
+
+    toast('Registrazione profilo Coach...');
+    const res = await FORGE_CLOUD.createCoachAccount(email, name, notes);
+    if (res.success) {
+      closeModal();
+      toast(`Profilo Coach "${name || email}" registrato con successo! 🎉`);
+      openCoachDashboardModal();
+    } else {
+      toast('Errore registrazione coach: ' + res.reason);
+    }
+  };
+}
+
+async function openAdminAssignClientModal(clientsList) {
+  toast('Recupero lista Coach...');
+  const coaches = (window.FORGE_CLOUD ? await FORGE_CLOUD.fetchCoaches() : []);
+  
+  const coachOptions = coaches.length 
+    ? coaches.map(c => `<option value="${esc(c.email)}">${esc(c.displayName || c.email)} (${esc(c.email)})</option>`).join('')
+    : `<option value="gaetano.coach@gmail.com">Gaetano (Admin Coach)</option>`;
+
+  const b = openModal('🔗 Assegna Cliente a Coach', `
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Seleziona un cliente registrato ed assegnalo ad uno specifico Coach della tua struttura.</p>
+    <div class="field"><label>Seleziona Cliente</label>
+      <select id="asClientSelect">
+        ${clientsList.map(c => `<option value="${esc(c.uid)}">${esc(c.displayName || c.email || c.uid)}</option>`).join('')}
+      </select>
+    </div>
+    <div class="field"><label>Seleziona Coach</label>
+      <select id="asCoachSelect">
+        ${coachOptions}
+      </select>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost btn-block" id="asCancel">Annulla</button>
+      <button class="btn btn-primary btn-block" id="asSave">Conferma Assegnazione</button>
+    </div>
+  `);
+
+  b.querySelector('#asCancel').onclick = () => { closeModal(); openCoachDashboardModal(); };
+  b.querySelector('#asSave').onclick = async () => {
+    const clientUid = b.querySelector('#asClientSelect').value;
+    const coachEmail = b.querySelector('#asCoachSelect').value;
+    if (!clientUid || !coachEmail) { toast('Seleziona cliente e coach'); return; }
+
+    toast('Assegnazione cliente in corso...');
+    const ok = await FORGE_CLOUD.assignClientToCoach(clientUid, coachEmail);
+    closeModal();
+    if (ok) {
+      toast('Cliente assegnato al Coach con successo! 🔗');
+      openCoachDashboardModal();
+    } else {
+      toast('Errore assegnazione cliente');
+    }
+  };
+}
+
+function openClientSchedaBuilderModal(clientUid, clientName) {
+  const b = openModal(`✍️ Scheda per ${esc(clientName)}`, `
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Crea o carica una scheda personalizzata per <b>${esc(clientName)}</b>. Quando cliccherai su <b>"Assegna & Spingi"</b>, la scheda sostituirà la sua scheda attiva in tempo reale.</p>
+    <div class="field"><label>Nome del Programma per il cliente</label><input type="text" id="cbProgName" value="Scheda Personalizzata — ${esc(clientName)}"></div>
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:16px">
+      <div style="font-size:12.5px;font-weight:800;color:var(--text);margin-bottom:4px">Opzioni di creazione veloci:</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost btn-sm" id="cbLoadActiveCurrent" style="flex:1;font-size:11.5px;border:1px solid var(--border)">Usa la mia scheda attuale</button>
+        <button class="btn btn-ghost btn-sm" id="cbLoadMarketPro" style="flex:1;font-size:11.5px;border:1px solid var(--border)">Usa un Template PRO</button>
+      </div>
+    </div>
+    <div class="modal-foot stack">
+      <button class="btn btn-primary btn-block" id="cbPushToClient" style="font-size:14.5px;padding:14px">🚀 Assegna &amp; Spingi Scheda a ${esc(clientName)}</button>
+      <button class="btn btn-ghost btn-block" id="cbBackCoach">Indietro al Pannello Coach</button>
+    </div>
+  `);
+
+  let targetStateObj = JSON.parse(JSON.stringify(state));
+
+  b.querySelector('#cbLoadActiveCurrent').onclick = () => {
+    targetStateObj = JSON.parse(JSON.stringify(state));
+    toast('Caricata scheda attualmente aperta come base');
+  };
+  b.querySelector('#cbLoadMarketPro').onclick = () => {
+    if (typeof PRO_SCHEDE_MARKET !== 'undefined' && PRO_SCHEDE_MARKET.length) {
+      targetStateObj = JSON.parse(JSON.stringify(PRO_SCHEDE_MARKET[0].state));
+      b.querySelector('#cbProgName').value = targetStateObj.programName + ` (${clientName})`;
+      toast('Caricato Template PRO come base');
+    }
+  };
+
+  b.querySelector('#cbBackCoach').onclick = () => { closeModal(); openCoachDashboardModal(); };
+  b.querySelector('#cbPushToClient').onclick = async () => {
+    const progName = b.querySelector('#cbProgName').value.trim() || 'Scheda Personalizzata';
+    targetStateObj.programName = progName;
+
+    toast(`Spinta scheda a ${clientName} in corso...`);
+    const ok = await FORGE_CLOUD.pushSchedaToClient(clientUid, targetStateObj, progName);
+    closeModal();
+    if (ok) {
+      toast(`Scheda "${progName}" inviata a ${clientName}! 🚀☁️`);
+      openCoachDashboardModal();
+    } else {
+      toast('Errore invio scheda al cliente: verifica connessione');
+    }
+  };
 }
 
 function openCloudAccountModal() {
@@ -4508,16 +4718,37 @@ function openCoachBookingModal(planName) {
   `);
 
   b.querySelector('#cbCancel').onclick = closeModal;
-  b.querySelector('#cbSend').onclick = () => {
+  b.querySelector('#cbSend').onclick = async () => {
     const name = b.querySelector('#cbName').value.trim();
     const contact = b.querySelector('#cbContact').value.trim();
+    const goal = b.querySelector('#cbGoal').value;
+    const notes = b.querySelector('#cbNotes').value.trim();
     if (!name || !contact) {
       toast('Compila il tuo nome e contatto');
       return;
     }
     closeModal();
     buzz([80, 40, 80]);
-    toast('Richiesta inviata col Coach! Ti ricontatteremo a breve 💪');
+
+    if (window.FORGE_CLOUD && FORGE_CLOUD.getDb()) {
+      try {
+        const db = FORGE_CLOUD.getDb();
+        const user = FORGE_CLOUD.getUser();
+        await db.collection('coach_requests').add({
+          planName: planName,
+          clientName: name,
+          contact: contact,
+          goal: goal,
+          notes: notes,
+          clientUid: user ? user.uid : null,
+          createdAt: Date.now()
+        });
+      } catch (e) {
+        console.warn('Errore salvataggio richiesta:', e);
+      }
+    }
+
+    toast('Richiesta inviata al Coach! Ti ricontatteremo a breve 💪');
   };
 }
 

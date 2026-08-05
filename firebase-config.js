@@ -290,6 +290,186 @@
     }
   }
 
+  // Ottiene il profilo ed il ruolo utente (admin / coach / client)
+  async function getUserProfile(uid) {
+    const targetUid = uid || (currentUser ? currentUser.uid : null);
+    if (!db || !targetUid) return null;
+    try {
+      const doc = await db.collection('users').doc(targetUid).get();
+      if (doc.exists) {
+        return doc.data();
+      }
+      return null;
+    } catch (err) {
+      console.error('Errore recupero profilo utente:', err);
+      return null;
+    }
+  }
+
+  // Imposta il ruolo di un utente (es. admin o coach)
+  async function setUserRole(targetUid, role, extraData) {
+    if (!db || !targetUid) return false;
+    try {
+      await db.collection('users').doc(targetUid).set({
+        role: role,
+        ...(extraData || {})
+      }, { merge: true });
+      return true;
+    } catch (err) {
+      console.error('Errore impostazione ruolo utente:', err);
+      return false;
+    }
+  }
+
+  // Registra un nuovo profilo Coach sia su Firestore Cloud che in LocalStorage
+  async function createCoachAccount(email, displayName, notes) {
+    if (!email) return { success: false, reason: 'Email obbligatoria' };
+    const cleanEmail = String(email).toLowerCase().trim();
+    const safeId = 'coach_' + cleanEmail.replace(/[^a-z0-9]/g, '_');
+    const coachData = {
+      id: safeId,
+      email: cleanEmail,
+      displayName: displayName || cleanEmail.split('@')[0],
+      notes: notes || '',
+      role: 'coach',
+      isCoach: true,
+      createdBy: currentUser ? (currentUser.email || currentUser.uid) : 'admin',
+      createdAt: Date.now()
+    };
+
+    // 1. Salva in LocalStorage (fallback offline istantaneo)
+    try {
+      const stored = JSON.parse(localStorage.getItem('forge_coaches_registry') || '[]');
+      const filtered = stored.filter(c => c.email !== cleanEmail);
+      filtered.push(coachData);
+      localStorage.setItem('forge_coaches_registry', JSON.stringify(filtered));
+    } catch (_) {}
+
+    // 2. Salva nel Cloud Firestore se connesso
+    if (db) {
+      try {
+        await db.collection('coaches').doc(safeId).set(coachData, { merge: true });
+        const snapshot = await db.collection('users').where('email', '==', cleanEmail).get();
+        snapshot.forEach(async (doc) => {
+          await doc.ref.set({ role: 'coach', isCoach: true }, { merge: true });
+        });
+      } catch (err) {
+        console.warn('Avviso salvataggio Cloud coach:', err);
+      }
+    }
+
+    return { success: true, coach: coachData };
+  }
+
+  // Recupera l'elenco di tutti i Coach registrati
+  async function fetchCoaches() {
+    let list = [];
+    try {
+      const stored = JSON.parse(localStorage.getItem('forge_coaches_registry') || '[]');
+      if (Array.isArray(stored)) list = stored;
+    } catch (_) {}
+
+    if (db) {
+      try {
+        const snap = await db.collection('coaches').get();
+        snap.forEach(doc => {
+          const data = doc.data();
+          if (!list.some(c => c.email === data.email)) {
+            list.push(data);
+          }
+        });
+      } catch (err) {
+        console.warn('Errore lettura coaches da Cloud:', err);
+      }
+    }
+    return list;
+  }
+
+  // Verifica se l'utente connesso è Admin o Coach
+  function isCoachOrAdminUser(user, profile) {
+    if (!user || !user.email) return false;
+    const email = String(user.email).toLowerCase().trim();
+    const adminEmails = ['gaetano.coach@gmail.com', 'gaeta@gmail.com', 'admin@forge.app'];
+    if (adminEmails.includes(email)) return true;
+    if (profile && (profile.role === 'admin' || profile.role === 'coach' || profile.isCoach === true)) return true;
+
+    try {
+      const stored = JSON.parse(localStorage.getItem('forge_coaches_registry') || '[]');
+      if (stored.some(c => c.email && String(c.email).toLowerCase().trim() === email)) return true;
+    } catch (_) {}
+
+    return false;
+  }
+
+  // Assegna un cliente ad un determinato Coach
+  async function assignClientToCoach(clientUid, coachUid) {
+    if (!db || !clientUid) return false;
+    try {
+      await db.collection('users').doc(clientUid).set({
+        assignedCoachUid: coachUid || null,
+        updatedAt: Date.now()
+      }, { merge: true });
+      return true;
+    } catch (err) {
+      console.error('Errore assegnazione cliente a coach:', err);
+      return false;
+    }
+  }
+
+  // Recupera tutti i clienti assegnati ad uno specifico Coach (o tutti i clienti se Admin)
+  async function fetchAssignedClients(coachUid) {
+    if (!db) return [];
+    try {
+      let snapshot;
+      if (coachUid === 'all_admin') {
+        snapshot = await db.collection('users').get();
+      } else {
+        snapshot = await db.collection('users').where('assignedCoachUid', '==', coachUid).get();
+      }
+      const list = [];
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        if (doc.id !== (currentUser ? currentUser.uid : '')) {
+          list.push({ uid: doc.id, ...data });
+        }
+      });
+      return list;
+    } catch (err) {
+      console.error('Errore lista clienti assegnati:', err);
+      return [];
+    }
+  }
+
+  // Invia/Assegna una scheda direttamente al Cloud del cliente
+  async function pushSchedaToClient(clientUid, schedaObj, schedaName) {
+    if (!db || !clientUid || !schedaObj) return false;
+    try {
+      const name = schedaName || schedaObj.programName || 'Scheda Personalizzata Coach';
+      const safeId = 'scheda_' + String(name).toLowerCase().replace(/[^a-z0-9]/g, '_');
+      
+      const userRef = db.collection('users').doc(clientUid);
+      await userRef.set({
+        activeSchedaId: safeId,
+        state: schedaObj,
+        assignedByCoachUid: currentUser ? currentUser.uid : null,
+        assignedAt: Date.now(),
+        [`schede.${safeId}`]: {
+          id: safeId,
+          name: name,
+          updatedAt: Date.now(),
+          daysCount: (schedaObj.days || []).length,
+          isPro: true,
+          assignedByCoach: true,
+          state: schedaObj
+        }
+      }, { merge: true });
+      return true;
+    } catch (err) {
+      console.error('Errore invio scheda a cliente:', err);
+      return false;
+    }
+  }
+
   // Oggetto globale FORGE_CLOUD
   window.FORGE_CLOUD = {
     getStoredConfig,
@@ -305,6 +485,14 @@
     syncLegalConsentToCloud,
     fetchCloudState,
     listenToCloudState,
+    getUserProfile,
+    setUserRole,
+    createCoachAccount,
+    fetchCoaches,
+    isCoachOrAdminUser,
+    assignClientToCoach,
+    fetchAssignedClients,
+    pushSchedaToClient,
     getUser: () => currentUser,
     setUser: (u) => { currentUser = u; },
     getAuth: () => auth,
