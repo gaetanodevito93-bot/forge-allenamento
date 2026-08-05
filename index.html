@@ -3509,12 +3509,16 @@ function openCloudAccountModal() {
       </div>`);
 
     b.querySelector('#caLoginGoogle').onclick = async () => {
-      closeModal();
       try {
         toast('Autenticazione Google in corso...');
-        await FORGE_CLOUD.signInWithGoogle();
+        const user = await FORGE_CLOUD.signInWithGoogle();
+        if (user) {
+          closeModal();
+          toast(`Benvenuto ${user.displayName || 'Utente'}! ☁️`);
+        }
       } catch (err) {
-        toast('Login fallito: ' + err.message);
+        closeModal();
+        toast('Login non completato: ' + (err.message || 'Verifica il pop-up'));
       }
     };
   }
@@ -4536,6 +4540,18 @@ function setupCloudAuthListeners() {
 
   const auth = FORGE_CLOUD.getAuth();
   if (!auth) return;
+
+  // Gestione automatica del ritorno da redirect Google Auth (mobile / PWA)
+  auth.getRedirectResult().then((result) => {
+    if (result && result.user) {
+      FORGE_CLOUD.setUser(result.user);
+      updateCloudDot('synced');
+      renderCloudAuthUI(result.user);
+      toast(`Benvenuto ${result.user.displayName || 'Utente'}! ☁️`);
+    }
+  }).catch((err) => {
+    console.warn('getRedirectResult info:', err);
+  });
 
   auth.onAuthStateChanged(async (user) => {
     FORGE_CLOUD.setUser(user);
