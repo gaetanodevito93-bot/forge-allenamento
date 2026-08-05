@@ -323,10 +323,10 @@ table.cmp2{border-collapse:collapse;width:100%;font-size:13px}
 .timer-ring .num small{color:var(--muted);font-size:13px;font-weight:700;letter-spacing:1px;margin-top:4px}
 .timer-adjust{display:flex;gap:12px;margin-top:34px}
 
-/* ── Timer Mini Capsule (Solo Numeri & X, Cornice Spessa, Centrale) ── */
-.timer-mini-capsule{position:fixed;top:calc(14px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:99;display:flex;align-items:center;gap:10px;background:rgba(18,18,26,.96);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:2.5px solid var(--volt);border-radius:999px;padding:6px 14px 6px 16px;box-shadow:0 14px 38px rgba(0,0,0,.7),0 0 24px rgba(198,255,61,.3);cursor:pointer;user-select:none;animation:miniPillPopCenter .3s cubic-bezier(.175,.885,.32,1.275) both;transition:border-color .2s,box-shadow .2s,transform .15s}
-@keyframes miniPillPopCenter{0%{opacity:0;transform:translate(-50%,-12px) scale(.9)}100%{opacity:1;transform:translate(-50%,0) scale(1)}}
-.timer-mini-capsule:hover{border-color:#D4FF5F;box-shadow:0 16px 46px rgba(0,0,0,.8),0 0 32px rgba(198,255,61,.45)}
+/* ── Timer Mini Capsule (Integrato nella scheda dell'esercizio) ── */
+.timer-mini-capsule{position:relative;display:inline-flex;align-items:center;gap:8px;background:rgba(18,18,26,.96);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:2.5px solid var(--volt);border-radius:999px;padding:4px 12px 4px 14px;box-shadow:0 4px 18px rgba(0,0,0,.5),0 0 16px rgba(198,255,61,.25);cursor:pointer;user-select:none;animation:miniPillPopInline .3s cubic-bezier(.175,.885,.32,1.275) both;transition:border-color .2s,box-shadow .2s,transform .15s;margin-left:auto}
+@keyframes miniPillPopInline{0%{opacity:0;transform:scale(.88)}100%{opacity:1;transform:scale(1)}}
+.timer-mini-capsule:hover{border-color:#D4FF5F;box-shadow:0 6px 22px rgba(0,0,0,.6),0 0 24px rgba(198,255,61,.4)}
 .tmc-time{font-family:Anton,sans-serif;font-size:16px;color:var(--volt);letter-spacing:1px;font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:6px}
 .tmc-time::before{content:"⏱️";font-size:14px}
 .tmc-btn.tmc-close{background:var(--surface2);border:1px solid rgba(255,84,104,.3);color:var(--coral);border-radius:999px;font-size:12px;font-weight:800;padding:4px 8px;cursor:pointer;transition:all .15s ease;display:grid;place-items:center}
@@ -1437,11 +1437,23 @@ function cardHTML(ex, i, session) {
   }).join('');
   const allDone = ex.sets > 0 && ex.log.every(l => l.done);
 
+  const activeExIdx = (T.exIdx != null && T.exIdx >= 0 && T.exIdx < day().exercises.length) ? T.exIdx : 0;
+  const isTimerHere = T.running && i === activeExIdx;
+  const miniTimerHTML = isTimerHere ? `
+    <div class="timer-mini-capsule" id="timerMiniCapsule" data-testid="timer-mini-capsule" title="Tocca per espandere" style="display:${isTimerMinimized ? 'inline-flex' : 'none'}">
+      <div class="tmc-time" id="timerMiniText">01:30</div>
+      <button class="tmc-btn tmc-close" id="timerMiniSkip" title="Salta recupero">✕</button>
+    </div>
+  ` : '';
+
   return `<div class="ex-card${allDone ? ' done' : ''}" data-testid="exercise-card-${i}" data-exidx="${i}" title="Trascina per riordinare">
     <div class="ex-top">
       <div class="ex-num">${i + 1}</div>
       <div class="ex-info">
-        <h3 data-testid="exercise-name-${i}">${esc(ex.name)}</h3>
+        <div class="ex-title-row" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <h3 data-testid="exercise-name-${i}">${esc(ex.name)}</h3>
+          ${miniTimerHTML}
+        </div>
         <div class="ex-meta">${chips}</div>
         ${ex.note ? `<div class="ex-note">${esc(ex.note)}</div>` : ''}
       </div>
@@ -1501,6 +1513,16 @@ function renderList() {
       else delete $('exList').dataset.manualCompact;
       buzz(15);
       renderList();
+    };
+  }
+
+  if ($('timerMiniCapsule')) {
+    $('timerMiniCapsule').onclick = (e) => {
+      if (e.target.closest('#timerMiniSkip')) {
+        stopTimer();
+        return;
+      }
+      expandTimer();
     };
   }
 }
@@ -1591,7 +1613,8 @@ function toggleSet(i, j, btn) {
       // intera giornata completata: niente recupero, si festeggia
       celebrateDay();
     } else {
-      if (ex.restSec > 0) startRestTimer(ex.restSec, nextLabel(i, j));
+      const restSec = parseRest(ex.restSec);
+      if (restSec > 0) startRestTimer(restSec, nextLabel(i, j), i);
     }
   }
 }
@@ -1632,7 +1655,7 @@ function nextLabel(i, j) {
 }
 
 /* ── timer di recupero ── */
-const T = { remain: 0, total: 90, running: false, last: 0, iv: null };
+const T = { remain: 0, total: 90, running: false, last: 0, iv: null, exIdx: 0 };
 let isTimerMinimized = false;
 
 /* Suono: la vibrazione non funziona su iOS, quindi a fine recupero suona un beep.
@@ -1722,7 +1745,7 @@ function updateMediaSession() {
 function minimizeTimer() {
   isTimerMinimized = true;
   $('timerOverlay').classList.remove('open');
-  if ($('timerMiniCapsule')) $('timerMiniCapsule').style.display = 'flex';
+  renderList();
   buzz(15);
   paintTimer();
 }
@@ -1735,14 +1758,19 @@ function expandTimer() {
   paintTimer();
 }
 
-function startRestTimer(sec, next) {
-  T.remain = sec; T.total = sec; T.running = true; T.last = Date.now();
+function startRestTimer(sec, next, exIdx) {
+  if (exIdx != null) T.exIdx = exIdx;
+  const restSec = parseRest(sec);
+  if (restSec <= 0) return;
+
+  T.remain = restSec; T.total = restSec; T.running = true; T.last = Date.now();
   $('timerNext').textContent = next || '';
   if ($('timerMiniNext')) $('timerMiniNext').textContent = next || 'Prossima serie';
   $('timerPause').textContent = 'Pausa';
 
   if (isTimerMinimized) {
-    if ($('timerMiniCapsule')) $('timerMiniCapsule').style.display = 'flex';
+    renderList();
+    if ($('timerMiniCapsule')) $('timerMiniCapsule').style.display = 'inline-flex';
     $('timerOverlay').classList.remove('open');
   } else {
     $('timerOverlay').classList.add('open');
