@@ -491,6 +491,242 @@
     }
   }
 
+  // Elimina un coach (localStorage e Cloud) e rimuove assegnazioni
+  async function deleteCoach(coachEmail) {
+    if (!coachEmail) return false;
+    const cleanEmail = String(coachEmail).toLowerCase().trim();
+    const safeId = 'coach_' + cleanEmail.replace(/[^a-z0-9]/g, '_');
+    
+    try {
+      const stored = JSON.parse(localStorage.getItem('forge_coaches_registry') || '[]');
+      const filtered = stored.filter(c => c.email !== cleanEmail);
+      localStorage.setItem('forge_coaches_registry', JSON.stringify(filtered));
+    } catch (_) {}
+    
+    if (!db) return false;
+    
+    try {
+      await db.collection('coaches').doc(safeId).delete();
+      
+      let coachUidToRemove = safeId;
+      const snapshot = await db.collection('users').where('email', '==', cleanEmail).get();
+      snapshot.forEach(async (doc) => {
+        coachUidToRemove = doc.id;
+        await doc.ref.set({ role: 'client', isCoach: false }, { merge: true });
+      });
+
+      const uidsToCheck = [coachUidToRemove, safeId];
+      for (const cUid of uidsToCheck) {
+        const clientsSnap = await db.collection('users').where('assignedCoachUid', '==', cUid).get();
+        clientsSnap.forEach(async (doc) => {
+          await doc.ref.update({ assignedCoachUid: null, updatedAt: Date.now() });
+        });
+      }
+      return true;
+    } catch (err) {
+      console.error('Errore eliminazione coach:', err);
+      return false;
+    }
+  }
+
+  // Elimina un cliente dal db
+  async function deleteClient(clientUid) {
+    if (!db || !clientUid) return false;
+    try {
+      await db.collection('users').doc(clientUid).delete();
+      return true;
+    } catch (err) {
+      console.error('Errore eliminazione cliente:', err);
+      return false;
+    }
+  }
+
+  // Fetch richieste coach
+  async function fetchCoachRequests() {
+    if (!db) return [];
+    try {
+      const snap = await db.collection('coach_requests').orderBy('createdAt', 'desc').get();
+      const list = [];
+      snap.forEach(doc => {
+        list.push({ id: doc.id, ...doc.data() });
+      });
+      return list;
+    } catch (err) {
+      console.error('Errore fetch coach requests:', err);
+      return [];
+    }
+  }
+
+  // Elimina richiesta coach
+  async function deleteCoachRequest(requestId) {
+    if (!db || !requestId) return false;
+    try {
+      await db.collection('coach_requests').doc(requestId).delete();
+      return true;
+    } catch (err) {
+      console.error('Errore eliminazione coach request:', err);
+      return false;
+    }
+  }
+
+  // Fetch di tutti gli utenti
+  async function fetchAllUsers() {
+    if (!db) return [];
+    try {
+      const snap = await db.collection('users').get();
+      const list = [];
+      snap.forEach(doc => {
+        const data = doc.data();
+        list.push({
+          uid: doc.id,
+          email: data.email,
+          displayName: data.displayName,
+          role: data.role,
+          isCoach: data.isCoach || false,
+          assignedCoachUid: data.assignedCoachUid,
+          assignedByCoachUid: data.assignedByCoachUid,
+          assignedAt: data.assignedAt,
+          state: data.state || null,
+          updatedAt: data.updatedAt,
+          createdAt: data.createdAt
+        });
+      });
+      return list;
+    } catch (err) {
+      console.error('Errore fetch tutti utenti:', err);
+      return [];
+    }
+  }
+
+  // Fetch delle schede pushati dai coach
+  async function fetchPushedSchede() {
+    if (!db) return [];
+    try {
+      const snap = await db.collection('users').get();
+      const list = [];
+      snap.forEach(doc => {
+        const data = doc.data();
+        if (data.assignedByCoachUid) {
+          list.push({
+            clientName: data.displayName || data.email || 'Sconosciuto',
+            clientEmail: data.email || '',
+            planName: data.activeSchedaId || 'Sconosciuta',
+            coachUid: data.assignedByCoachUid,
+            date: data.assignedAt || data.updatedAt || Date.now()
+          });
+        }
+      });
+      return list;
+    } catch (err) {
+      console.error('Errore fetch schede pushato:', err);
+      return [];
+    }
+  }
+
+  // Recupera statistiche admin
+  async function getAdminStats() {
+    if (!db) return null;
+    try {
+      const coachesSnap = await db.collection('coaches').get();
+      const usersSnap = await db.collection('users').get();
+      const reqSnap = await db.collection('coach_requests').get();
+      
+      const stats = {
+        totalCoaches: 0,
+        totalClients: 0,
+        totalSchedePushed: 0,
+        totalRequests: reqSnap.size,
+        coachStats: []
+      };
+      
+      const coachesMap = {};
+      coachesSnap.forEach(doc => {
+        const data = doc.data();
+        stats.totalCoaches++;
+        coachesMap[doc.id] = {
+          email: data.email,
+          displayName: data.displayName,
+          clientCount: 0,
+          schedePushed: 0
+        };
+      });
+      
+      const coachUidToSafeId = {};
+      usersSnap.forEach(doc => {
+        const data = doc.data();
+        if (data.role === 'coach' || data.isCoach) {
+          if (data.email) {
+            const email = String(data.email).toLowerCase().trim();
+            const safeId = 'coach_' + email.replace(/[^a-z0-9]/g, '_');
+            coachUidToSafeId[doc.id] = safeId;
+            if (!coachesMap[safeId]) {
+              stats.totalCoaches++;
+              coachesMap[safeId] = {
+                email: data.email,
+                displayName: data.displayName || data.email,
+                clientCount: 0,
+                schedePushed: 0
+              };
+            }
+          }
+        }
+      });
+
+      usersSnap.forEach(doc => {
+        const data = doc.data();
+        if (data.role !== 'admin' && data.role !== 'coach' && !data.isCoach) {
+          stats.totalClients++;
+        }
+        
+        if (data.assignedCoachUid) {
+          const cId = coachUidToSafeId[data.assignedCoachUid] || data.assignedCoachUid;
+          if (coachesMap[cId]) {
+            coachesMap[cId].clientCount++;
+          }
+        }
+        
+        if (data.assignedByCoachUid) {
+          stats.totalSchedePushed++;
+          const cId = coachUidToSafeId[data.assignedByCoachUid] || data.assignedByCoachUid;
+          if (coachesMap[cId]) {
+            coachesMap[cId].schedePushed++;
+          }
+        }
+      });
+      
+      stats.coachStats = Object.values(coachesMap);
+      return stats;
+    } catch (err) {
+      console.error('Errore get admin stats:', err);
+      return null;
+    }
+  }
+
+  // Aggiorna note coach
+  async function updateCoachNotes(coachEmail, notes) {
+    if (!coachEmail) return false;
+    const cleanEmail = String(coachEmail).toLowerCase().trim();
+    const safeId = 'coach_' + cleanEmail.replace(/[^a-z0-9]/g, '_');
+    
+    try {
+      const stored = JSON.parse(localStorage.getItem('forge_coaches_registry') || '[]');
+      const index = stored.findIndex(c => c.email === cleanEmail);
+      if (index >= 0) {
+        stored[index].notes = notes;
+        localStorage.setItem('forge_coaches_registry', JSON.stringify(stored));
+      }
+    } catch (_) {}
+    
+    if (!db) return false;
+    try {
+      await db.collection('coaches').doc(safeId).set({ notes: notes }, { merge: true });
+      return true;
+    } catch (err) {
+      console.error('Errore aggiornamento note coach:', err);
+      return false;
+    }
+  }
+
   // Oggetto globale FORGE_CLOUD
   window.FORGE_CLOUD = {
     getStoredConfig,
@@ -514,6 +750,14 @@
     assignClientToCoach,
     fetchAssignedClients,
     pushSchedaToClient,
+    deleteCoach,
+    deleteClient,
+    fetchCoachRequests,
+    deleteCoachRequest,
+    fetchAllUsers,
+    fetchPushedSchede,
+    getAdminStats,
+    updateCoachNotes,
     getUser: () => currentUser,
     setUser: (u) => { currentUser = u; },
     getAuth: () => auth,

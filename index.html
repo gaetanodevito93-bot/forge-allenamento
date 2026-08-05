@@ -3508,7 +3508,9 @@ async function openCloudProgramSelector() {
   });
 }
 
-/* ═══════════════ PANNELLO COACH / ISTRUTTORE ═══════════════ */
+/* ═══════════════ PANNELLO ADMIN / COACH — DASHBOARD COMPLETA ═══════════════ */
+
+let _adminActiveTab = 'panoramica';
 
 async function openCoachDashboardModal() {
   const user = window.FORGE_CLOUD ? FORGE_CLOUD.getUser() : null;
@@ -3518,195 +3520,309 @@ async function openCoachDashboardModal() {
     return;
   }
 
-  toast('Caricamento pannello Coach...');
   const profile = (await FORGE_CLOUD.getUserProfile(user.uid)) || {};
-  const isSuperAdmin = window.FORGE_CLOUD ? FORGE_CLOUD.isCoachOrAdminUser(user, profile) : true;
-  const coachUid = isSuperAdmin ? 'all_admin' : user.uid;
+  const isSuperAdmin = window.FORGE_CLOUD ? FORGE_CLOUD.isCoachOrAdminUser(user, profile) : false;
+  if (!isSuperAdmin) {
+    toast('Accesso non autorizzato: il tuo account non è registrato come Coach o Admin');
+    return;
+  }
 
-  const clients = await FORGE_CLOUD.fetchAssignedClients(coachUid);
+  toast('Caricamento dashboard Admin...');
 
-  let clientsHTML = '';
-  if (!clients.length) {
-    clientsHTML = `
-      <div style="text-align:center;padding:20px;color:var(--muted);font-size:13.5px">
-        Nessun cliente assegnato al momento.<br>
-        ${isSuperAdmin ? 'Usa il pulsante qui sotto per assegnare un cliente o creare un profilo Coach.' : 'Chiedi all\'amministratore di assegnarti i tuoi clienti paganti.'}
+  const [coaches, allUsers, stats, requests] = await Promise.all([
+    FORGE_CLOUD.fetchCoaches ? FORGE_CLOUD.fetchCoaches() : [],
+    FORGE_CLOUD.fetchAllUsers ? FORGE_CLOUD.fetchAllUsers() : [],
+    FORGE_CLOUD.getAdminStats ? FORGE_CLOUD.getAdminStats() : {},
+    FORGE_CLOUD.fetchCoachRequests ? FORGE_CLOUD.fetchCoachRequests() : []
+  ]);
+
+  const clients = allUsers.filter(u => u.role !== 'admin' && u.role !== 'coach' && !u.isCoach);
+  const pushedSchede = allUsers.filter(u => u.assignedByCoachUid || u.assignedAt);
+
+  _renderAdminDashboard(user, coaches, clients, allUsers, stats, requests, pushedSchede, isSuperAdmin);
+}
+
+function _renderAdminDashboard(user, coaches, clients, allUsers, stats, requests, pushedSchede, isSuperAdmin) {
+  const tab = _adminActiveTab;
+  const tabBtn = (id, label, icon) =>
+    `<button class="adm-tab ${tab === id ? 'active' : ''}" data-admtab="${id}" style="flex-shrink:0;padding:8px 12px;border-radius:10px;font-size:11.5px;font-weight:800;border:1px solid ${tab === id ? 'var(--volt)' : 'var(--border)'};background:${tab === id ? 'var(--volt)' : 'var(--surface2)'};color:${tab === id ? '#0A0A0F' : 'var(--muted)'};cursor:pointer;white-space:nowrap;transition:.15s">${icon} ${label}</button>`;
+
+  let content = '';
+
+  if (tab === 'panoramica') {
+    const tc = stats.totalCoaches || coaches.length || 0;
+    const tcl = stats.totalClients || clients.length || 0;
+    const tsp = stats.totalSchedePushed || pushedSchede.length || 0;
+    const trq = stats.totalRequests || requests.length || 0;
+
+    const coachStatsHTML = (stats.coachStats || coaches).map(c => {
+      const cc = c.clientCount || 0;
+      const sp = c.schedePushed || 0;
+      return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px;display:flex;align-items:center;justify-content:space-between;gap:10px">
+        <div style="min-width:0;flex:1">
+          <div style="font-weight:800;font-size:14px;color:var(--text)">${esc(c.displayName || c.email || 'Coach')}</div>
+          <div style="font-size:11.5px;color:var(--muted);margin-top:2px">${esc(c.email || '')}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-size:13px;font-weight:800;color:var(--volt)">${cc} clienti</div>
+          <div style="font-size:11px;color:var(--muted)">${sp} schede</div>
+        </div>
       </div>`;
-  } else {
-    clientsHTML = clients.map(c => {
+    }).join('') || '<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px">Nessun coach registrato</div>';
+
+    content = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px">
+        <div style="background:linear-gradient(135deg,rgba(198,255,61,.15),var(--surface2));border:1px solid rgba(198,255,61,.3);border-radius:14px;padding:16px;text-align:center">
+          <div style="font-size:28px;font-weight:900;color:var(--volt)">${tc}</div>
+          <div style="font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Istruttori</div>
+        </div>
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center">
+          <div style="font-size:28px;font-weight:900;color:var(--text)">${tcl}</div>
+          <div style="font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Clienti</div>
+        </div>
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center">
+          <div style="font-size:28px;font-weight:900;color:var(--text)">${tsp}</div>
+          <div style="font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Schede Inviate</div>
+        </div>
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center">
+          <div style="font-size:28px;font-weight:900;color:${trq > 0 ? 'var(--amber)' : 'var(--text)'}">${trq}</div>
+          <div style="font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Richieste</div>
+        </div>
+      </div>
+      <div style="font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Performance Istruttori</div>
+      <div style="display:flex;flex-direction:column;gap:8px;max-height:220px;overflow-y:auto">${coachStatsHTML}</div>`;
+  }
+
+  if (tab === 'istruttori') {
+    const coachListHTML = coaches.length ? coaches.map(c => `
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:10px">
+        <div style="min-width:0;flex:1">
+          <div style="font-weight:800;font-size:14px;color:var(--text)">${esc(c.displayName || c.email)}</div>
+          <div style="font-size:11.5px;color:var(--muted);margin-top:2px">${esc(c.email || '')} ${c.notes ? '· ' + esc(c.notes) : ''}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">Registrato: ${c.createdAt ? new Date(c.createdAt).toLocaleDateString('it-IT') : 'N.D.'}</div>
+        </div>
+        <button class="btn btn-danger btn-sm btnDelCoach" data-cemail="${esc(c.email)}" data-cname="${esc(c.displayName || c.email)}" style="font-size:11px;padding:5px 10px;flex-shrink:0">🗑️</button>
+      </div>`).join('') : '<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">Nessun istruttore registrato. Clicca ➕ per aggiungerne uno.</div>';
+
+    content = `
+      <div style="display:flex;gap:8px;margin-bottom:14px">
+        <button class="btn btn-primary btn-sm" id="admAddCoach" style="flex:1;font-size:12px">➕ Nuovo Istruttore</button>
+      </div>
+      <div style="max-height:380px;overflow-y:auto">${coachListHTML}</div>`;
+  }
+
+  if (tab === 'clienti') {
+    const clientListHTML = clients.length ? clients.map(c => {
       const name = c.displayName || c.email || 'Cliente';
       const email = c.email || 'N.D.';
-      const lastUpdate = c.updatedAt ? new Date(c.updatedAt).toLocaleDateString('it-IT') : 'Recentemente';
-      const activePlan = (c.state && c.state.programName) ? c.state.programName : 'Nessuna scheda attiva';
-      return `
-        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:10px">
+      const plan = (c.state && c.state.programName) ? c.state.programName : 'Nessuna scheda';
+      const coach = c.assignedCoachUid || 'Non assegnato';
+      return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:8px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
           <div style="min-width:0;flex:1">
-            <div style="font-weight:800;font-size:15px;color:var(--text);overflow:hidden;text-overflow:ellipsis">${esc(name)}</div>
-            <div style="font-size:12px;color:var(--muted);margin-top:2px">${esc(email)} · Aggiornato: ${lastUpdate}</div>
-            <div style="font-size:11.5px;color:var(--volt);font-weight:700;margin-top:4px">📋 ${esc(activePlan)}</div>
+            <div style="font-weight:800;font-size:14px;color:var(--text)">${esc(name)}</div>
+            <div style="font-size:11.5px;color:var(--muted);margin-top:2px">${esc(email)}</div>
+            <div style="font-size:11px;color:var(--volt);font-weight:700;margin-top:3px">📋 ${esc(plan)}</div>
+            <div style="font-size:10.5px;color:var(--muted);margin-top:2px">Coach: ${esc(coach)}</div>
           </div>
-          <button class="btn btn-primary btn-sm btnBuildForClient" data-cuid="${esc(c.uid)}" data-cname="${esc(name)}" style="font-size:12px;padding:6px 12px;flex-shrink:0">
-            ✍️ Fa' Scheda
-          </button>
-        </div>`;
-    }).join('');
+          <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
+            <button class="btn btn-primary btn-sm btnBuildForClient" data-cuid="${esc(c.uid)}" data-cname="${esc(name)}" style="font-size:10.5px;padding:4px 10px">✍️ Scheda</button>
+            <button class="btn btn-ghost btn-sm btnAssignClient" data-cuid="${esc(c.uid)}" data-cname="${esc(name)}" style="font-size:10.5px;padding:4px 10px;border:1px solid var(--border)">🔗 Coach</button>
+            <button class="btn btn-danger btn-sm btnDelClient" data-cuid="${esc(c.uid)}" data-cname="${esc(name)}" style="font-size:10.5px;padding:4px 10px">🗑️</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('') : '<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">Nessun cliente registrato in piattaforma.</div>';
+
+    content = `
+      <div style="font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Clienti Registrati (${clients.length})</div>
+      <div style="max-height:400px;overflow-y:auto">${clientListHTML}</div>`;
   }
 
-  const adminHeader = isSuperAdmin ? `
-    <div style="display:flex;gap:8px;margin-bottom:14px">
-      <button class="btn btn-ghost btn-sm" id="btnAdminCreateCoach" style="flex:1;font-size:11.5px;border:1px solid var(--border)">➕ Crea Profilo Coach</button>
-      <button class="btn btn-ghost btn-sm" id="btnAdminAssignClient" style="flex:1;font-size:11.5px;border:1px solid var(--border)">🔗 Assegna Cliente</button>
-    </div>` : '';
+  if (tab === 'richieste') {
+    const reqHTML = requests.length ? requests.map(r => {
+      const date = r.createdAt ? new Date(r.createdAt).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N.D.';
+      return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:8px">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
+          <div style="min-width:0;flex:1">
+            <div style="font-weight:800;font-size:14px;color:var(--text)">${esc(r.clientName || 'Cliente')}</div>
+            <div style="font-size:11.5px;color:var(--muted);margin-top:2px">${esc(r.contact || '')} · ${date}</div>
+            <div style="font-size:12px;color:var(--volt);font-weight:700;margin-top:4px">🎯 ${esc(r.goal || 'Non specificato')}</div>
+            <div style="font-size:12px;color:var(--text);margin-top:2px">Piano: <b>${esc(r.planName || 'N.D.')}</b></div>
+            ${r.notes ? `<div style="font-size:11px;color:var(--muted);margin-top:4px;font-style:italic">"${esc(r.notes)}"</div>` : ''}
+          </div>
+          <button class="btn btn-danger btn-sm btnDelReq" data-rid="${esc(r.id)}" style="font-size:11px;padding:5px 10px;flex-shrink:0">🗑️</button>
+        </div>
+      </div>`;
+    }).join('') : '<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">Nessuna richiesta di coaching ricevuta al momento.</div>';
 
-  const b = openModal('🏋️ Area Istruttore / Coach Panel', `
-    <div style="background:linear-gradient(145deg,rgba(198,255,61,.12),var(--surface));border:1px solid rgba(198,255,61,.3);border-radius:16px;padding:14px;margin-bottom:16px">
-      <div style="font-size:13px;color:var(--text);font-weight:700">Benvenuto Coach ${esc(user.displayName || user.email || '')} 👋</div>
-      <div style="font-size:12px;color:var(--muted);margin-top:2px">Seleziona un tuo cliente per creare, aggiornare e pubblicare la sua scheda di allenamento direttamente sul suo smartphone.</div>
+    content = `
+      <div style="font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Richieste Piani Coaching (${requests.length})</div>
+      <div style="max-height:400px;overflow-y:auto">${reqHTML}</div>`;
+  }
+
+  if (tab === 'schede') {
+    const schedeHTML = pushedSchede.length ? pushedSchede.map(s => {
+      const name = s.displayName || s.email || 'Cliente';
+      const plan = (s.state && s.state.programName) ? s.state.programName : 'Scheda senza nome';
+      const date = s.assignedAt ? new Date(s.assignedAt).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N.D.';
+      return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:10px">
+        <div style="min-width:0;flex:1">
+          <div style="font-weight:800;font-size:14px;color:var(--text)">${esc(name)}</div>
+          <div style="font-size:12px;color:var(--volt);font-weight:700;margin-top:3px">📋 ${esc(plan)}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">Inviata il ${date}</div>
+        </div>
+        <button class="btn btn-primary btn-sm btnBuildForClient" data-cuid="${esc(s.uid)}" data-cname="${esc(name)}" style="font-size:10.5px;padding:5px 10px;flex-shrink:0">✍️ Aggiorna</button>
+      </div>`;
+    }).join('') : '<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">Nessuna scheda ancora inviata ai clienti.</div>';
+
+    content = `
+      <div style="font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Storico Schede Inviate (${pushedSchede.length})</div>
+      <div style="max-height:400px;overflow-y:auto">${schedeHTML}</div>`;
+  }
+
+  const b = openModal('🏋️ Admin Dashboard', `
+    <div style="background:linear-gradient(145deg,rgba(198,255,61,.12),var(--surface));border:1px solid rgba(198,255,61,.3);border-radius:14px;padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px">
+      <div style="width:36px;height:36px;border-radius:50%;background:var(--volt);color:#0A0A0F;display:grid;place-items:center;font-weight:900;font-size:16px;flex-shrink:0">${esc((user.displayName || user.email || 'A')[0].toUpperCase())}</div>
+      <div style="min-width:0;flex:1">
+        <div style="font-size:14px;font-weight:800;color:var(--text)">${esc(user.displayName || user.email || 'Admin')}</div>
+        <div style="font-size:11px;color:var(--volt);font-weight:700">Super Admin · Area Gestione</div>
+      </div>
     </div>
-
-    ${adminHeader}
-
-    <div style="font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Clienti Assegnati (${clients.length})</div>
-    <div style="max-height:340px;overflow-y:auto;padding-right:2px">${clientsHTML}</div>
+    <div style="display:flex;gap:4px;margin-bottom:16px;overflow-x:auto;padding-bottom:4px">
+      ${tabBtn('panoramica', 'Stats', '📊')}
+      ${tabBtn('istruttori', 'Coach', '🏋️')}
+      ${tabBtn('clienti', 'Clienti', '👥')}
+      ${tabBtn('richieste', 'Richieste', '📩')}
+      ${tabBtn('schede', 'Schede', '📋')}
+    </div>
+    <div id="admTabContent">${content}</div>
   `);
 
-  if (b.querySelector('#btnAdminCreateCoach')) {
-    b.querySelector('#btnAdminCreateCoach').onclick = () => { closeModal(); openAdminCreateCoachModal(); };
+  b.querySelectorAll('[data-admtab]').forEach(btn => {
+    btn.onclick = () => { _adminActiveTab = btn.getAttribute('data-admtab'); closeModal(); openCoachDashboardModal(); };
+  });
+  if (b.querySelector('#admAddCoach')) {
+    b.querySelector('#admAddCoach').onclick = () => { closeModal(); openAdminCreateCoachModal(); };
   }
-  if (b.querySelector('#btnAdminAssignClient')) {
-    b.querySelector('#btnAdminAssignClient').onclick = () => { closeModal(); openAdminAssignClientModal(clients); };
-  }
-
-  b.querySelectorAll('.btnBuildForClient').forEach(btn => {
+  b.querySelectorAll('.btnDelCoach').forEach(btn => {
     btn.onclick = () => {
-      const cuid = btn.getAttribute('data-cuid');
+      const email = btn.getAttribute('data-cemail');
+      const name = btn.getAttribute('data-cname');
+      confirmModal('Elimina Istruttore', `Eliminare definitivamente il coach "${name}"? I clienti assegnati verranno disassociati.`, 'Elimina', async () => {
+        closeModal();
+        if (FORGE_CLOUD.deleteCoach) await FORGE_CLOUD.deleteCoach(email);
+        toast(`Coach "${name}" eliminato`);
+        _adminActiveTab = 'istruttori'; openCoachDashboardModal();
+      });
+    };
+  });
+  b.querySelectorAll('.btnBuildForClient').forEach(btn => {
+    btn.onclick = () => { closeModal(); openClientSchedaBuilderModal(btn.getAttribute('data-cuid'), btn.getAttribute('data-cname')); };
+  });
+  b.querySelectorAll('.btnAssignClient').forEach(btn => {
+    btn.onclick = () => { closeModal(); _openQuickAssignModal(btn.getAttribute('data-cuid'), btn.getAttribute('data-cname')); };
+  });
+  b.querySelectorAll('.btnDelClient').forEach(btn => {
+    btn.onclick = () => {
       const cname = btn.getAttribute('data-cname');
-      closeModal();
-      openClientSchedaBuilderModal(cuid, cname);
+      confirmModal('Elimina Cliente', `Eliminare definitivamente "${cname}" e tutti i suoi dati?`, 'Elimina', async () => {
+        closeModal();
+        if (FORGE_CLOUD.deleteClient) await FORGE_CLOUD.deleteClient(btn.getAttribute('data-cuid'));
+        toast(`Cliente "${cname}" eliminato`);
+        _adminActiveTab = 'clienti'; openCoachDashboardModal();
+      });
+    };
+  });
+  b.querySelectorAll('.btnDelReq').forEach(btn => {
+    btn.onclick = () => {
+      confirmModal('Elimina Richiesta', 'Eliminare questa richiesta di coaching?', 'Elimina', async () => {
+        closeModal();
+        if (FORGE_CLOUD.deleteCoachRequest) await FORGE_CLOUD.deleteCoachRequest(btn.getAttribute('data-rid'));
+        toast('Richiesta eliminata');
+        _adminActiveTab = 'richieste'; openCoachDashboardModal();
+      });
     };
   });
 }
 
+async function _openQuickAssignModal(clientUid, clientName) {
+  const coaches = (window.FORGE_CLOUD ? await FORGE_CLOUD.fetchCoaches() : []);
+  const coachOpts = coaches.length
+    ? coaches.map(c => `<option value="${esc(c.email)}">${esc(c.displayName || c.email)}</option>`).join('')
+    : '<option value="">Nessun coach</option>';
+  const b = openModal(`🔗 Assegna "${esc(clientName)}"`, `
+    <div class="field"><label>Seleziona Coach</label><select id="qaCoachSel">${coachOpts}</select></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost btn-block" id="qaCancel">Annulla</button>
+      <button class="btn btn-primary btn-block" id="qaSave">Conferma</button>
+    </div>`);
+  b.querySelector('#qaCancel').onclick = () => { closeModal(); _adminActiveTab = 'clienti'; openCoachDashboardModal(); };
+  b.querySelector('#qaSave').onclick = async () => {
+    const ce = b.querySelector('#qaCoachSel').value;
+    if (!ce) { toast('Seleziona un coach'); return; }
+    await FORGE_CLOUD.assignClientToCoach(clientUid, ce);
+    closeModal(); toast(`"${clientName}" assegnato! 🔗`);
+    _adminActiveTab = 'clienti'; openCoachDashboardModal();
+  };
+}
+
 function openAdminCreateCoachModal() {
-  const b = openModal('➕ Registra Account Coach / Istruttore', `
-    <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Inserisci l'email ed il nome dell'istruttore. Quando il coach accederà a FORGE con questa email, l'Area Istruttore si sbloccherà automaticamente per lui.</p>
-    <div class="field"><label>Nome e Cognome Coach</label><input type="text" id="acName" placeholder="Es. Marco Rossi (Coach)"></div>
-    <div class="field"><label>Email del Coach</label><input type="email" id="acEmail" placeholder="coach.marco@gmail.com"></div>
-    <div class="field"><label>Note / Specializzazione (facoltative)</label><input type="text" id="acNotes" placeholder="Es. Ipertrofia &amp; Powerbuilding"></div>
+  const b = openModal('➕ Registra Istruttore', `
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Inserisci l'email ed il nome dell'istruttore. Quando il coach accederà a FORGE con questa email, l'Area Istruttore si sbloccherà automaticamente.</p>
+    <div class="field"><label>Nome e Cognome</label><input type="text" id="acName" placeholder="Es. Marco Rossi"></div>
+    <div class="field"><label>Email</label><input type="email" id="acEmail" placeholder="coach@gmail.com"></div>
+    <div class="field"><label>Note (facoltative)</label><input type="text" id="acNotes" placeholder="Specializzazione..."></div>
     <div class="modal-foot">
       <button class="btn btn-ghost btn-block" id="acCancel">Annulla</button>
-      <button class="btn btn-primary btn-block" id="acCreate">Registra Profilo Coach</button>
-    </div>
-  `);
-
-  b.querySelector('#acCancel').onclick = () => { closeModal(); openCoachDashboardModal(); };
+      <button class="btn btn-primary btn-block" id="acCreate">Registra Coach</button>
+    </div>`);
+  b.querySelector('#acCancel').onclick = () => { closeModal(); _adminActiveTab = 'istruttori'; openCoachDashboardModal(); };
   b.querySelector('#acCreate').onclick = async () => {
     const name = b.querySelector('#acName').value.trim();
     const email = b.querySelector('#acEmail').value.trim();
     const notes = b.querySelector('#acNotes').value.trim();
-    if (!email) { toast('Inserisci l\'email del coach'); return; }
-
-    toast('Registrazione profilo Coach...');
+    if (!email) { toast('Inserisci l\'email'); return; }
     const res = await FORGE_CLOUD.createCoachAccount(email, name, notes);
-    if (res.success) {
-      closeModal();
-      toast(`Profilo Coach "${name || email}" registrato con successo! 🎉`);
-      openCoachDashboardModal();
-    } else {
-      toast('Errore registrazione coach: ' + res.reason);
-    }
-  };
-}
-
-async function openAdminAssignClientModal(clientsList) {
-  toast('Recupero lista Coach...');
-  const coaches = (window.FORGE_CLOUD ? await FORGE_CLOUD.fetchCoaches() : []);
-  
-  const coachOptions = coaches.length 
-    ? coaches.map(c => `<option value="${esc(c.email)}">${esc(c.displayName || c.email)} (${esc(c.email)})</option>`).join('')
-    : `<option value="gaetano.coach@gmail.com">Gaetano (Admin Coach)</option>`;
-
-  const b = openModal('🔗 Assegna Cliente a Coach', `
-    <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Seleziona un cliente registrato ed assegnalo ad uno specifico Coach della tua struttura.</p>
-    <div class="field"><label>Seleziona Cliente</label>
-      <select id="asClientSelect">
-        ${clientsList.map(c => `<option value="${esc(c.uid)}">${esc(c.displayName || c.email || c.uid)}</option>`).join('')}
-      </select>
-    </div>
-    <div class="field"><label>Seleziona Coach</label>
-      <select id="asCoachSelect">
-        ${coachOptions}
-      </select>
-    </div>
-    <div class="modal-foot">
-      <button class="btn btn-ghost btn-block" id="asCancel">Annulla</button>
-      <button class="btn btn-primary btn-block" id="asSave">Conferma Assegnazione</button>
-    </div>
-  `);
-
-  b.querySelector('#asCancel').onclick = () => { closeModal(); openCoachDashboardModal(); };
-  b.querySelector('#asSave').onclick = async () => {
-    const clientUid = b.querySelector('#asClientSelect').value;
-    const coachEmail = b.querySelector('#asCoachSelect').value;
-    if (!clientUid || !coachEmail) { toast('Seleziona cliente e coach'); return; }
-
-    toast('Assegnazione cliente in corso...');
-    const ok = await FORGE_CLOUD.assignClientToCoach(clientUid, coachEmail);
     closeModal();
-    if (ok) {
-      toast('Cliente assegnato al Coach con successo! 🔗');
-      openCoachDashboardModal();
-    } else {
-      toast('Errore assegnazione cliente');
-    }
+    if (res.success) { toast(`Coach "${name || email}" registrato! 🎉`); } else { toast('Errore: ' + res.reason); }
+    _adminActiveTab = 'istruttori'; openCoachDashboardModal();
   };
 }
 
 function openClientSchedaBuilderModal(clientUid, clientName) {
   const b = openModal(`✍️ Scheda per ${esc(clientName)}`, `
-    <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Crea o carica una scheda personalizzata per <b>${esc(clientName)}</b>. Quando cliccherai su <b>"Assegna & Spingi"</b>, la scheda sostituirà la sua scheda attiva in tempo reale.</p>
-    <div class="field"><label>Nome del Programma per il cliente</label><input type="text" id="cbProgName" value="Scheda Personalizzata — ${esc(clientName)}"></div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Crea o carica una scheda per <b>${esc(clientName)}</b>. Cliccando "Assegna & Spingi" la scheda si aggiorna in tempo reale sul suo dispositivo.</p>
+    <div class="field"><label>Nome del Programma</label><input type="text" id="cbProgName" value="Scheda — ${esc(clientName)}"></div>
     <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:16px">
-      <div style="font-size:12.5px;font-weight:800;color:var(--text);margin-bottom:4px">Opzioni di creazione veloci:</div>
+      <div style="font-size:12.5px;font-weight:800;color:var(--text);margin-bottom:4px">Creazione veloce:</div>
       <div style="display:flex;gap:8px">
-        <button class="btn btn-ghost btn-sm" id="cbLoadActiveCurrent" style="flex:1;font-size:11.5px;border:1px solid var(--border)">Usa la mia scheda attuale</button>
-        <button class="btn btn-ghost btn-sm" id="cbLoadMarketPro" style="flex:1;font-size:11.5px;border:1px solid var(--border)">Usa un Template PRO</button>
+        <button class="btn btn-ghost btn-sm" id="cbLoadActive" style="flex:1;font-size:11.5px;border:1px solid var(--border)">Usa scheda attuale</button>
+        <button class="btn btn-ghost btn-sm" id="cbLoadPro" style="flex:1;font-size:11.5px;border:1px solid var(--border)">Template PRO</button>
       </div>
     </div>
     <div class="modal-foot stack">
-      <button class="btn btn-primary btn-block" id="cbPushToClient" style="font-size:14.5px;padding:14px">🚀 Assegna &amp; Spingi Scheda a ${esc(clientName)}</button>
-      <button class="btn btn-ghost btn-block" id="cbBackCoach">Indietro al Pannello Coach</button>
-    </div>
-  `);
-
-  let targetStateObj = JSON.parse(JSON.stringify(state));
-
-  b.querySelector('#cbLoadActiveCurrent').onclick = () => {
-    targetStateObj = JSON.parse(JSON.stringify(state));
-    toast('Caricata scheda attualmente aperta come base');
-  };
-  b.querySelector('#cbLoadMarketPro').onclick = () => {
+      <button class="btn btn-primary btn-block" id="cbPush" style="font-size:14.5px;padding:14px">🚀 Assegna &amp; Spingi Scheda</button>
+      <button class="btn btn-ghost btn-block" id="cbBack">Indietro alla Dashboard</button>
+    </div>`);
+  let tgt = JSON.parse(JSON.stringify(state));
+  b.querySelector('#cbLoadActive').onclick = () => { tgt = JSON.parse(JSON.stringify(state)); toast('Scheda attuale caricata'); };
+  b.querySelector('#cbLoadPro').onclick = () => {
     if (typeof PRO_SCHEDE_MARKET !== 'undefined' && PRO_SCHEDE_MARKET.length) {
-      targetStateObj = JSON.parse(JSON.stringify(PRO_SCHEDE_MARKET[0].state));
-      b.querySelector('#cbProgName').value = targetStateObj.programName + ` (${clientName})`;
-      toast('Caricato Template PRO come base');
+      tgt = JSON.parse(JSON.stringify(PRO_SCHEDE_MARKET[0].state));
+      b.querySelector('#cbProgName').value = tgt.programName + ` (${clientName})`;
+      toast('Template PRO caricato');
     }
   };
-
-  b.querySelector('#cbBackCoach').onclick = () => { closeModal(); openCoachDashboardModal(); };
-  b.querySelector('#cbPushToClient').onclick = async () => {
-    const progName = b.querySelector('#cbProgName').value.trim() || 'Scheda Personalizzata';
-    targetStateObj.programName = progName;
-
-    toast(`Spinta scheda a ${clientName} in corso...`);
-    const ok = await FORGE_CLOUD.pushSchedaToClient(clientUid, targetStateObj, progName);
+  b.querySelector('#cbBack').onclick = () => { closeModal(); openCoachDashboardModal(); };
+  b.querySelector('#cbPush').onclick = async () => {
+    const pn = b.querySelector('#cbProgName').value.trim() || 'Scheda Personalizzata';
+    tgt.programName = pn;
+    toast(`Invio scheda a ${clientName}...`);
+    const ok = await FORGE_CLOUD.pushSchedaToClient(clientUid, tgt, pn);
     closeModal();
-    if (ok) {
-      toast(`Scheda "${progName}" inviata a ${clientName}! 🚀☁️`);
-      openCoachDashboardModal();
-    } else {
-      toast('Errore invio scheda al cliente: verifica connessione');
-    }
+    if (ok) { toast(`"${pn}" inviata a ${clientName}! 🚀☁️`); _adminActiveTab = 'schede'; openCoachDashboardModal(); }
+    else { toast('Errore invio scheda'); }
   };
 }
 
