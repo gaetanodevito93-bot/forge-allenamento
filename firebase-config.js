@@ -240,9 +240,17 @@
     if (!db || !currentUser || !schedaId) return false;
     try {
       const userRef = db.collection('users').doc(currentUser.uid);
-      await userRef.update({
-        [`schede.${schedaId}`]: firebase.firestore.FieldValue.delete()
-      });
+      try {
+        await userRef.update({
+          [`schede.${schedaId}`]: firebase.firestore.FieldValue.delete()
+        });
+      } catch (_) {
+        await userRef.set({
+          schede: {
+            [schedaId]: firebase.firestore.FieldValue.delete()
+          }
+        }, { merge: true });
+      }
       return true;
     } catch (err) {
       console.error('Errore eliminazione scheda Cloud:', err);
