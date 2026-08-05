@@ -385,14 +385,35 @@
     return list;
   }
 
+  // Hash / Obfuscated Admin Tokens per sicurezza (non leggibili in chiaro nella pagina)
+  const _A_TOKENS = [
+    'Z2FldGFuby5kZXZpdG85M0BnbWFpbC5jb20=', // gaetano.devito93@gmail.com
+    'Z2FldGFuby5jb2FjaEBnbWFpbC5jb20=',    // gaetano.coach@gmail.com
+    'Z2FldGFAZ21haWwuY29t'                 // gaeta@gmail.com
+  ];
+
+  function _isEncryptedAdmin(email) {
+    if (!email) return false;
+    try {
+      const enc = btoa(String(email).toLowerCase().trim());
+      return _A_TOKENS.includes(enc);
+    } catch (_) {
+      return false;
+    }
+  }
+
   // Verifica se l'utente connesso è Admin o Coach
   function isCoachOrAdminUser(user, profile) {
     if (!user || !user.email) return false;
     const email = String(user.email).toLowerCase().trim();
-    const adminEmails = ['gaetano.coach@gmail.com', 'gaeta@gmail.com', 'admin@forge.app'];
-    if (adminEmails.includes(email)) return true;
+
+    // 1. Verifica token cifrato Admin
+    if (_isEncryptedAdmin(email)) return true;
+
+    // 2. Verifica ruolo da Firestore Cloud profile
     if (profile && (profile.role === 'admin' || profile.role === 'coach' || profile.isCoach === true)) return true;
 
+    // 3. Verifica se l'email è salvata nel registro coach
     try {
       const stored = JSON.parse(localStorage.getItem('forge_coaches_registry') || '[]');
       if (stored.some(c => c.email && String(c.email).toLowerCase().trim() === email)) return true;

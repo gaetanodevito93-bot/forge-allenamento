@@ -3520,7 +3520,7 @@ async function openCoachDashboardModal() {
 
   toast('Caricamento pannello Coach...');
   const profile = (await FORGE_CLOUD.getUserProfile(user.uid)) || {};
-  const isSuperAdmin = profile.role === 'admin' || true; // abilitato per gestione coach beta
+  const isSuperAdmin = window.FORGE_CLOUD ? FORGE_CLOUD.isCoachOrAdminUser(user, profile) : true;
   const coachUid = isSuperAdmin ? 'all_admin' : user.uid;
 
   const clients = await FORGE_CLOUD.fetchAssignedClients(coachUid);
