@@ -19,10 +19,10 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="FORGE">
 <!-- Firebase SDKs -->
-<script defer src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script defer src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-<script defer src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-<script defer src="firebase-config.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -3509,16 +3509,12 @@ function openCloudAccountModal() {
       </div>`);
 
     b.querySelector('#caLoginGoogle').onclick = async () => {
+      closeModal();
       try {
         toast('Autenticazione Google in corso...');
-        const user = await FORGE_CLOUD.signInWithGoogle();
-        if (user) {
-          closeModal();
-          toast(`Benvenuto ${user.displayName || 'Utente'}! ☁️`);
-        }
+        await FORGE_CLOUD.signInWithGoogle();
       } catch (err) {
-        closeModal();
-        toast('Login non completato: ' + (err.message || 'Verifica il pop-up'));
+        toast('Login fallito: ' + err.message);
       }
     };
   }
@@ -4540,18 +4536,6 @@ function setupCloudAuthListeners() {
 
   const auth = FORGE_CLOUD.getAuth();
   if (!auth) return;
-
-  // Gestione automatica del ritorno da redirect Google Auth (mobile / PWA)
-  auth.getRedirectResult().then((result) => {
-    if (result && result.user) {
-      FORGE_CLOUD.setUser(result.user);
-      updateCloudDot('synced');
-      renderCloudAuthUI(result.user);
-      toast(`Benvenuto ${result.user.displayName || 'Utente'}! ☁️`);
-    }
-  }).catch((err) => {
-    console.warn('getRedirectResult info:', err);
-  });
 
   auth.onAuthStateChanged(async (user) => {
     FORGE_CLOUD.setUser(user);

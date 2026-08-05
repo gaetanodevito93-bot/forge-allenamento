@@ -92,15 +92,8 @@
       const result = await auth.signInWithPopup(provider);
       return result.user;
     } catch (err) {
-      console.warn('signInWithPopup fallito/bloccato, passo a signInWithRedirect:', err);
-      if (
-        err.code === 'auth/popup-blocked' ||
-        err.code === 'auth/popup-closed-by-user' ||
-        err.code === 'auth/cancelled-popup-request' ||
-        /popup/i.test(err.code || '')
-      ) {
-        await auth.signInWithRedirect(provider);
-        return null;
+      if (err.code === 'auth/popup-blocked' || err.code === 'auth/popup-closed-by-user') {
+        return auth.signInWithRedirect(provider);
       }
       throw err;
     }
