@@ -4836,12 +4836,45 @@ function exportMeasCSV() {
 }
 
 function openCoachBookingModal(planName) {
+  const user = window.FORGE_CLOUD ? FORGE_CLOUD.getUser() : null;
+  if (!user) {
+    openModal('🔒 Accesso Google Richiesto', `
+      <div style="text-align:center;padding:10px 0">
+        <div style="font-size:42px;margin-bottom:10px">🔑</div>
+        <div style="font-size:17px;font-weight:900;color:var(--text);margin-bottom:6px">Accesso Richiesto per l'Acquisto</div>
+        <div style="font-size:13.5px;color:var(--muted);margin-bottom:18px">Per acquistare o prenotare un piano di coaching è necessario accedere prima con il tuo account Google. In questo modo collegheremo il piano ed i pagamenti al tuo profilo.</div>
+        <button class="btn btn-primary btn-block" id="btnLoginToBuy" style="font-size:15px;padding:14px;display:flex;align-items:center;justify-content:center;gap:8px">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12.545 10.239v3.821h5.445c-0.712 2.315-2.647 3.972-5.445 3.972-3.332 0-6.033-2.701-6.033-6.032s2.701-6.032 6.033-6.032c1.498 0 2.866 0.549 3.921 1.453l2.814-2.814C17.503 2.988 15.139 2 12.545 2 6.721 2 2 6.721 2 12.545S6.721 23.09 12.545 23.09c6.08 0 10.106-4.275 10.106-10.287c0-0.732-0.076-1.442-0.211-2.114H12.545z"/></svg>
+          Accedi con Google per Continuare
+        </button>
+      </div>
+      <div class="modal-foot" style="margin-top:14px">
+        <button class="btn btn-ghost btn-block" onclick="closeModal()">Annulla</button>
+      </div>
+    `);
+    const btn = document.querySelector('#btnLoginToBuy');
+    if (btn) {
+      btn.onclick = async () => {
+        closeModal();
+        try {
+          if (window.FORGE_CLOUD) {
+            await FORGE_CLOUD.signInWithGoogle();
+            toast('Accesso effettuato! Riapertura finestra acquisto...');
+            setTimeout(() => openCoachBookingModal(planName), 400);
+          }
+        } catch (err) {
+          toast('Errore durante l\'accesso Google');
+        }
+      };
+    }
+    return;
+  }
+
   const priceMatch = String(planName).match(/€(\d+)/);
   const amount = priceMatch ? parseFloat(priceMatch[1]) : 29;
 
-  const user = window.FORGE_CLOUD ? FORGE_CLOUD.getUser() : null;
-  const defName = user ? (user.displayName || '') : '';
-  const defContact = user ? (user.email || '') : '';
+  const defName = user.displayName || '';
+  const defContact = user.email || '';
 
   const b = openModal('💳 Acquista / Riserva Piano Coaching', `
     <div style="background:linear-gradient(135deg,rgba(198,255,61,.15),var(--surface2));border:1px solid var(--volt);border-radius:14px;padding:14px;margin-bottom:14px">
