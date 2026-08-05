@@ -1363,15 +1363,23 @@ function renderDayHead() {
     </div></div>`;
 }
 
+function parseWeightVal(val) {
+  if (val == null || val === '') return 0;
+  const str = String(val).replace(',', '.').replace(/[^0-9.]/g, '');
+  const n = parseFloat(str);
+  return isNaN(n) ? 0 : n;
+}
+
 function getPreviousMaxWeight(exName) {
   let maxW = 0;
-  const normName = exName.trim().toLowerCase();
+  if (!exName) return 0;
+  const normName = String(exName).trim().toLowerCase();
   Object.values(state.history || {}).forEach(arr => {
     (arr || []).forEach(sess => {
       (sess.exercises || []).forEach(e => {
-        if (e.name && e.name.trim().toLowerCase() === normName) {
+        if (e && e.name && String(e.name).trim().toLowerCase() === normName) {
           (e.sets || []).forEach(s => {
-            const w = parseFloat(String(s.weight).replace(',', '.')) || 0;
+            const w = parseWeightVal(s.weight);
             if (w > maxW) maxW = w;
           });
         }
@@ -1382,16 +1390,17 @@ function getPreviousMaxWeight(exName) {
 }
 
 function cardHTML(ex, i, session) {
-  let maxW = parseFloat(String(ex.weight).replace(',', '.')) || 0;
-  ex.log.forEach(l => {
-    const w = parseFloat(String(l.weight).replace(',', '.')) || 0;
+  if (!ex) return '';
+  let maxW = parseWeightVal(ex.weight);
+  (ex.log || []).forEach(l => {
+    const w = parseWeightVal(l.weight);
     if (w > maxW) maxW = w;
   });
 
   let best1RM = 0;
-  ex.log.forEach(l => {
-    const r = parseFloat(String(l.reps).replace(',', '.')) || parseFloat(String(ex.reps).replace(',', '.')) || 1;
-    const w = parseFloat(String(l.weight).replace(',', '.')) || maxW;
+  (ex.log || []).forEach(l => {
+    const r = parseWeightVal(l.reps) || parseWeightVal(ex.reps) || 1;
+    const w = parseWeightVal(l.weight) || maxW;
     if (w > 0) {
       const rm = r === 1 ? w : w * (1 + r / 30);
       if (rm > best1RM) best1RM = rm;
@@ -1409,14 +1418,14 @@ function cardHTML(ex, i, session) {
 
   const prevEx = prevExercise(session, ex.name);
   const rows = ex.log.map((l, j) => {
-    const ps = prevEx && prevEx.sets[j];
+    const ps = prevEx && prevEx.sets && prevEx.sets[j];
     let prevLine = '';
     if (ps && (ps.reps || ps.weight)) {
       prevLine = `<div class="set-prev">ultima volta: <b>${esc(ps.reps || '—')}${ps.weight ? ` × ${esc(ps.weight)} kg` : ''}</b></div>`;
     } else if (ps && ps.done) {
       prevLine = `<div class="set-prev">ultima volta: <b>✓ completata</b></div>`;
     }
-    const currW = parseFloat(String(l.weight).replace(',', '.')) || 0;
+    const currW = parseWeightVal(l.weight);
     const isPR = l.done && currW > prevMaxW && prevMaxW > 0;
     const prBadge = isPR ? `<span class="chip-pr" style="background:linear-gradient(135deg,#FFD700,#FFA500);color:#0A0A0F;font-weight:900;font-size:10px;padding:2px 6px;border-radius:4px;margin-left:4px;box-shadow:0 0 8px rgba(255,215,0,.5)">🏅 PR</span>` : '';
 
