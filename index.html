@@ -784,6 +784,17 @@ body.kb #fabSave,body.kb #fabAddMeas{display:none!important}
       <span class="hb-tx"><strong>Fatti seguire dai nostri Coach</strong><span>Schede su misura o coaching fisico 1-to-1</span></span>
       <span class="hb-arrow"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"></path></svg></span>
     </button>
+    <!-- COACH DASHBOARD BUTTON (VISIBILE SOLO SE LOGGATO CON EMAIL COACH/ADMIN) -->
+    <button class="home-btn coach-dash" id="btnCoachDashHome" style="display:none;background:linear-gradient(135deg,rgba(198,255,61,.18),var(--surface));border:1px solid rgba(198,255,61,.45)">
+      <span class="hb-ic" style="background:var(--volt);color:#0A0A0F">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+      </span>
+      <span class="hb-tx">
+        <strong style="color:var(--volt)">🏋️ Area Istruttore (Coach Panel)</strong>
+        <span>Gestisci i tuoi clienti e spingi le loro schede su misura</span>
+      </span>
+      <span class="hb-arrow"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"></path></svg></span>
+    </button>
     <!-- GOOGLE LOGIN / CLOUD PROFILE CARD -->
     <button class="home-btn cloud" id="btnGoogleAuthHome">
       <span class="hb-ic" id="homeAuthIcon">
@@ -905,6 +916,18 @@ body.kb #fabSave,body.kb #fabAddMeas{display:none!important}
   </div>
 </header>
 <main id="coachMain">
+  <div style="background:var(--surface2);border:1px solid rgba(198,255,61,.3);border-radius:18px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">
+    <div style="min-width:220px;flex:1">
+      <div style="font-size:15px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:6px">
+        <span style="color:var(--volt)">🏋️</span> Sei un Istruttore o Personal Trainer?
+      </div>
+      <div style="font-size:12.5px;color:var(--muted);margin-top:3px">Accedi al tuo pannello per creare, modificare e pubblicare le schede ai clienti della tua struttura.</div>
+    </div>
+    <button class="btn btn-primary" id="btnOpenCoachDashFromView" style="font-size:13px;padding:10px 18px;white-space:nowrap;font-weight:800">
+      Apri Area Istruttore ➔
+    </button>
+  </div>
+
   <div class="coach-hero">
     <h2>RAGGIUNGI IL TUO MASSIMO POTENZIALE</h2>
     <p>Scegli se farti guidare nella creazione di schede di allenamento periodizzate o intraprendere un percorso completo di trasformazione fisica con un Coach esperto.</p>
@@ -2922,7 +2945,6 @@ $('btnMenu').onclick = openAppMenu;
 function openAppMenu() {
   const canDelDay = state.days.length > 1;
   const user = window.FORGE_CLOUD ? FORGE_CLOUD.getUser() : null;
-  const isCoachOrAdmin = window.FORGE_CLOUD ? FORGE_CLOUD.isCoachOrAdminUser(user) : false;
   const userLabel = user ? (user.displayName || user.email) : 'Non autenticato';
 
   const b = openModal('Menu', `
@@ -2930,11 +2952,6 @@ function openAppMenu() {
       <div>
         <div class="prog-sec-title" style="margin:0 0 8px 2px">☁️ Gestione Cloud</div>
         <div class="menu-list">
-          ${isCoachOrAdmin ? `
-          <button class="sheet-btn" id="aCoachDashboardBtn" style="background:rgba(198,255,61,.1);border:1px solid rgba(198,255,61,.3);color:var(--volt);font-weight:800">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-            🏋️ Area Istruttore / Pannello Coach
-          </button>` : ''}
           <button class="sheet-btn" id="aCloudAccount">
             <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
             ${user ? `Account: <b>${esc(userLabel)}</b>` : 'Accedi con Google'}
@@ -3002,8 +3019,6 @@ function openAppMenu() {
       </div>
     </div>`);
 
-  const btnCoachDash = b.querySelector('#aCoachDashboardBtn');
-  if (btnCoachDash) btnCoachDash.onclick = () => { closeModal(); openCoachDashboardModal(); };
   const btnAcc = b.querySelector('#aCloudAccount');
   if (btnAcc) btnAcc.onclick = () => { closeModal(); openCloudAccountModal(); };
   const btnSaveC = b.querySelector('#aSaveToCloudBtn');
@@ -4669,6 +4684,7 @@ $('goTraining').onclick = () => {
 };
 $('goProgress').onclick = () => setView('progress');
 $('goCoach').onclick = () => setView('coach');
+if ($('btnCoachDashHome')) $('btnCoachDashHome').onclick = openCoachDashboardModal;
 $('btnHome').onclick = () => setView('home');
 $('btnHomeP').onclick = () => setView('home');
 $('btnHomeC').onclick = () => setView('home');
@@ -4676,6 +4692,7 @@ $('fabAddMeas').onclick = () => openMeasurementForm();
 $('btnProgMenu').onclick = openProgressMenu;
 
 /* ── coach view handlers ── */
+if ($('btnOpenCoachDashFromView')) $('btnOpenCoachDashFromView').onclick = openCoachDashboardModal;
 $('cTabWorkout').onclick = () => {
   $('cTabWorkout').classList.add('active');
   $('cTabPhysical').classList.remove('active');
@@ -4756,10 +4773,16 @@ function renderCloudAuthUI(user) {
   const title = $('homeAuthTitle');
   const sub = $('homeAuthSub');
   const icon = $('homeAuthIcon');
+  const btnCoachHome = $('btnCoachDashHome');
+
+  const isCoach = (user && window.FORGE_CLOUD) ? FORGE_CLOUD.isCoachOrAdminUser(user) : false;
+  if (btnCoachHome) {
+    btnCoachHome.style.display = isCoach ? 'flex' : 'none';
+  }
 
   if (user) {
     if (title) title.textContent = user.displayName || user.email || 'Utente Connesso';
-    if (sub) sub.textContent = 'Sincronizzato in tempo reale nel Cloud ☁️';
+    if (sub) sub.textContent = isCoach ? 'Account Istruttore / Coach Autenticato ☁️' : 'Sincronizzato in tempo reale nel Cloud ☁️';
     if (icon) {
       if (user.photoURL) {
         icon.innerHTML = `<img src="${esc(user.photoURL)}" style="width:28px;height:28px;border-radius:50%">`;
