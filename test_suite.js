@@ -87,6 +87,25 @@ setTimeout(async () => {
     }
     assert('Verify training day exercises structure', curDay.exercises.length > 0);
 
+    window.openAddChoiceModal();
+    assert('Open choice modal for Single vs Superset vs Circuit', !!document.getElementById('addTypeSuperset'));
+    window.closeModal();
+
+    window.openGroupWizardModal('superset');
+    const addMoreBtn = document.getElementById('grpAddMoreBtn');
+    assert('Group wizard modal contains + button for adding unlimited stations/exercises', !!addMoreBtn);
+    window.closeModal();
+
+    curDay.exercises.push({
+      name: 'Croci Manubri', sets: 3, reps: '10', weight: 14, restSec: 90, circuitGroup: 'Superset', groupId: 'ss_test',
+      log: [{ reps: 10, weight: 14, done: false }, { reps: 10, weight: 14, done: false }, { reps: 10, weight: 14, done: false }]
+    }, {
+      name: 'Pushdown Tricipiti', sets: 3, reps: '12', weight: 25, restSec: 90, circuitGroup: 'Superset', groupId: 'ss_test',
+      log: [{ reps: 12, weight: 25, done: false }, { reps: 12, weight: 25, done: false }, { reps: 12, weight: 25, done: false }]
+    });
+    window.renderList();
+    assert('Render unified workout group box for Superset', !!document.querySelector('.workout-group-box'));
+
     const setCheck = document.querySelector('.set-check');
     if (setCheck) setCheck.click();
     assert('Complete exercise set without errors', Array.isArray(curDay.exercises[0].log));

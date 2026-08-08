@@ -1432,24 +1432,20 @@ function cardHTML(ex, i, session) {
     if (w > maxW) maxW = w;
   });
 
-  let best1RM = 0;
-  (ex.log || []).forEach(l => {
-    const r = parseWeightVal(l.reps) || parseWeightVal(ex.reps) || 1;
-    const w = parseWeightVal(l.weight) || maxW;
-    if (w > 0) {
-      const rm = r === 1 ? w : w * (1 + r / 30);
-      if (rm > best1RM) best1RM = rm;
-    }
-  });
-
   const prevMaxW = getPreviousMaxWeight(ex.name);
 
+  const isSuperset = ex.circuitGroup && /superset|super|ss\b/i.test(ex.circuitGroup);
+  const circuitChip = ex.circuitGroup ? (
+    isSuperset
+      ? `<span class="chip" style="background:rgba(255,183,3,.14);color:#FFB703;border:1px solid rgba(255,183,3,.35);font-weight:800">⚡ ${esc(ex.circuitGroup)}</span>`
+      : `<span class="chip" style="background:rgba(0,229,255,.14);color:#00E5FF;border:1px solid rgba(0,229,255,.35);font-weight:800">🔁 ${esc(ex.circuitGroup)}</span>`
+  ) : '';
   const chips = [
     `<span class="chip">${ICONS.reps}${ex.sets}×${esc(ex.reps)}</span>`,
     ex.weight != null && ex.weight !== '' ? `<span class="chip">${ICONS.weight}${esc(ex.weight)} kg</span>` : '',
     `<span class="chip rest">${ICONS.rest}${fmtRest(ex.restSec)} recupero</span>`,
-    best1RM > 0 ? `<button class="chip rm-btn" data-exname="${esc(ex.name)}" data-rm="${Math.round(best1RM)}" style="background:rgba(255,183,3,.1);color:#FFB703;cursor:pointer;border:1px solid rgba(255,183,3,.25)" title="Massimale teorico">🔥 1RM: ~${Math.round(best1RM)}kg</button>` : ''
-  ].join('');
+    circuitChip
+  ].filter(Boolean).join('');
 
   const prevEx = prevExercise(session, ex.name);
   const rows = ex.log.map((l, j) => {
@@ -1483,7 +1479,9 @@ function cardHTML(ex, i, session) {
     </div>
   ` : '';
 
-  return `<div class="ex-card${allDone ? ' done' : ''}" data-testid="exercise-card-${i}" data-exidx="${i}" title="Trascina per riordinare">
+  const circuitBorder = ex.circuitGroup ? (isSuperset ? 'border-left:4.5px solid #FFB703;' : 'border-left:4.5px solid #00E5FF;') : '';
+
+  return `<div class="ex-card${allDone ? ' done' : ''}" data-testid="exercise-card-${i}" data-exidx="${i}" title="Trascina per riordinare" style="${circuitBorder}">
     <div class="ex-top">
       <div class="ex-num">${i + 1}</div>
       <div class="ex-info">
@@ -1518,13 +1516,60 @@ function renderList() {
     </div>`;
 
     const quickBtn = $('btnQuickAddEx');
-    if (quickBtn) quickBtn.onclick = () => openExerciseForm(null);
+    if (quickBtn) quickBtn.onclick = () => openAddChoiceModal();
     return;
   }
   const session = lastSessionFor(d.name);
   const isCompact = $('exList').classList.contains('compact');
 
-  const cardsHTML = d.exercises.map((ex, i) => cardHTML(ex, i, session)).join('');
+  let cardsHTML = '';
+  let i = 0;
+  while (i < d.exercises.length) {
+    const ex = d.exercises[i];
+    const groupKey = ex.groupId || ex.circuitGroup;
+    if (groupKey) {
+      const isSS = /superset|super|ss/i.test(groupKey);
+      const groupExs = [];
+      let j = i;
+      while (j < d.exercises.length && ((d.exercises[j].groupId && d.exercises[j].groupId === groupKey) || (d.exercises[j].circuitGroup && d.exercises[j].circuitGroup === groupKey) || (isSS && /superset|super|ss/i.test(d.exercises[j].circuitGroup || '')) || (!isSS && d.exercises[j].circuitGroup && !/superset|super|ss/i.test(d.exercises[j].circuitGroup)))) {
+        groupExs.push({ ex: d.exercises[j], idx: j });
+        j++;
+      }
+
+      if (groupExs.length > 1) {
+        const themeColor = isSS ? '#FFB703' : '#00E5FF';
+        const bgAlpha = isSS ? 'rgba(255,183,3,.04)' : 'rgba(0,229,255,.04)';
+        const borderAlpha = isSS ? 'rgba(255,183,3,.3)' : 'rgba(0,229,255,.3)';
+        const groupTitle = isSS ? `⚡ SUPERSET (${groupExs.length} ESERCIZI)` : `🔁 CIRCUITO GIRO (${groupExs.length} ESERCIZI)`;
+        const lastExRest = groupExs[groupExs.length - 1].ex.restSec || 90;
+
+        let groupCardsHTML = groupExs.map((item, gIdx) => {
+          const card = cardHTML(item.ex, item.idx, session);
+          const arrow = gIdx < groupExs.length - 1 ? (isSS ? `<div style="text-align:center;font-weight:900;font-size:11px;color:#FFB703;padding:6px 0;letter-spacing:.8px">⚡ SENZA PAUSA INTERMEDIA ⚡</div>` : `<div style="text-align:center;font-weight:900;font-size:11px;color:#00E5FF;padding:6px 0;letter-spacing:.8px">⬇️ STAZIONE SUCCESSIVA (SENZA PAUSA) ⬇️</div>`) : '';
+          return card + arrow;
+        }).join('');
+
+        cardsHTML += `
+          <div class="workout-group-box" style="background:${bgAlpha};border:1.5px solid ${borderAlpha};border-radius:20px;padding:12px;margin-bottom:16px;box-shadow:0 4px 16px rgba(0,0,0,.2)">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding-bottom:8px;border-bottom:1px dashed ${borderAlpha}">
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="background:${themeColor};color:#0A0A0F;font-weight:900;font-size:11px;padding:3px 8px;border-radius:6px;letter-spacing:.5px">${groupTitle}</span>
+                <span style="font-weight:800;font-size:12.5px;color:var(--text)">Esecuzione senza sosta</span>
+              </div>
+              <span style="font-size:11px;font-weight:800;color:${themeColor}">Recupero finale: ${fmtRest(lastExRest)}</span>
+            </div>
+            ${groupCardsHTML}
+          </div>`;
+
+        i = j;
+        continue;
+      }
+    }
+
+    cardsHTML += cardHTML(ex, i, session);
+    i++;
+  }
+
   const bottomBarHTML = `
     <div style="margin-top:20px;display:flex;gap:10px;align-items:center">
       <button class="btn btn-primary" id="btnDayAddEx" style="flex:1;padding:14px 16px;font-size:14.5px;font-weight:800;border-radius:16px;box-shadow:var(--glow-volt);display:flex;align-items:center;justify-content:center;gap:8px">
@@ -1540,7 +1585,7 @@ function renderList() {
   $('exList').innerHTML = cardsHTML + bottomBarHTML;
 
   const addBtn = $('btnDayAddEx');
-  if (addBtn) addBtn.onclick = () => openExerciseForm(null);
+  if (addBtn) addBtn.onclick = () => openAddChoiceModal();
 
   const reorderBtn = $('btnToggleReorder');
   if (reorderBtn) {
@@ -1607,8 +1652,6 @@ $('exList').addEventListener('click', e => {
   }
   const opts = e.target.closest('.ex-opts-btn');
   if (opts) { openExMenu(+opts.dataset.exidx); return; }
-  const rm = e.target.closest('.rm-btn');
-  if (rm) { open1RMModal(rm.dataset.exname, +rm.dataset.rm, 8); return; }
   const chk = e.target.closest('.set-check');
   if (chk) toggleSet(+chk.dataset.ex, +chk.dataset.set, chk);
 });
@@ -1649,6 +1692,51 @@ function toggleSet(i, j, btn) {
       // intera giornata completata: niente recupero, si festeggia
       celebrateDay();
     } else {
+      const exs = day().exercises;
+      const groupKey = ex.groupId || ex.circuitGroup;
+      if (groupKey) {
+        const isSS = /superset|super|ss/i.test(groupKey);
+        let groupExs = [];
+        let k = i;
+        while (k >= 0 && ((exs[k].groupId && exs[k].groupId === groupKey) || (exs[k].circuitGroup && exs[k].circuitGroup === groupKey) || (isSS && /superset|super|ss/i.test(exs[k].circuitGroup || '')) || (!isSS && exs[k].circuitGroup && !/superset|super|ss/i.test(exs[k].circuitGroup)))) {
+          groupExs.unshift({ ex: exs[k], idx: k });
+          k--;
+        }
+        k = i + 1;
+        while (k < exs.length && ((exs[k].groupId && exs[k].groupId === groupKey) || (exs[k].circuitGroup && exs[k].circuitGroup === groupKey) || (isSS && /superset|super|ss/i.test(exs[k].circuitGroup || '')) || (!isSS && exs[k].circuitGroup && !/superset|super|ss/i.test(exs[k].circuitGroup)))) {
+          groupExs.push({ ex: exs[k], idx: k });
+          k++;
+        }
+
+        if (groupExs.length > 1) {
+          const currentPosInGroup = groupExs.findIndex(item => item.idx === i);
+          const isLastInGroup = currentPosInGroup === groupExs.length - 1;
+
+          if (!isLastInGroup) {
+            const nextItem = groupExs[currentPosInGroup + 1];
+            buzz([40, 30, 40]);
+            if (isSS) {
+              toast(`⚡ SUPERSET: Niente pausa! Passa a "${esc(nextItem.ex.name)}" (Serie ${j + 1})`);
+            } else {
+              toast(`🔁 CIRCUITO: Passa alla stazione "${esc(nextItem.ex.name)}" (Giro ${j + 1})`);
+            }
+
+            setTimeout(() => {
+              const nextCard = document.querySelector(`[data-exidx="${nextItem.idx}"]`);
+              if (nextCard) {
+                nextCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                nextCard.style.transition = 'box-shadow .3s, transform .3s';
+                nextCard.style.boxShadow = isSS ? '0 0 24px rgba(255,183,3,.65)' : '0 0 24px rgba(0,229,255,.65)';
+                setTimeout(() => { nextCard.style.boxShadow = ''; }, 1200);
+              }
+            }, 180);
+
+            return; // Niente timer di recupero per le stazioni intermedie!
+          }
+        }
+      }
+
+      // Se è l'ultimo esercizio del Superset/Circuito (o un esercizio singolo), fa scattare il recupero!
       const restSec = parseRest(ex.restSec);
       if (restSec > 0) startRestTimer(restSec, nextLabel(i, j), i);
     }
@@ -2070,6 +2158,240 @@ document.addEventListener('keydown', e => {
   if ($('overlay').classList.contains('open')) closeModal();
 });
 
+/* ── wizard creazione guidata: singolo, superserie, circuito ── */
+function openAddChoiceModal() {
+  const b = openModal('➕ Aggiungi alla Giornata', `
+    <div style="display:flex;flex-direction:column;gap:10px;padding:4px 0">
+      <button class="sheet-btn" id="addTypeSingle" style="padding:14px 16px;border-radius:16px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;gap:14px;text-align:left;cursor:pointer">
+        <div style="font-size:26px;width:42px;height:42px;border-radius:12px;background:var(--surface);display:grid;place-items:center;flex-shrink:0">🏋️</div>
+        <div>
+          <div style="font-weight:800;font-size:14.5px;color:var(--text)">Esercizio Singolo</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">Esercizio classico con recupero standard tra le serie</div>
+        </div>
+      </button>
+
+      <button class="sheet-btn" id="addTypeSuperset" style="padding:14px 16px;border-radius:16px;background:rgba(255,183,3,.08);border:1.5px solid rgba(255,183,3,.3);display:flex;align-items:center;gap:14px;text-align:left;cursor:pointer">
+        <div style="font-size:26px;width:42px;height:42px;border-radius:12px;background:rgba(255,183,3,.15);display:grid;place-items:center;flex-shrink:0">⚡</div>
+        <div>
+          <div style="font-weight:800;font-size:14.5px;color:#FFB703">Superserie (2 Esercizi)</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">Coppia di 2 esercizi senza pausa intermedia. Recupero a fine coppia.</div>
+        </div>
+      </button>
+
+      <button class="sheet-btn" id="addTypeCircuit" style="padding:14px 16px;border-radius:16px;background:rgba(0,229,255,.08);border:1.5px solid rgba(0,229,255,.3);display:flex;align-items:center;gap:14px;text-align:left;cursor:pointer">
+        <div style="font-size:26px;width:42px;height:42px;border-radius:12px;background:rgba(0,229,255,.15);display:grid;place-items:center;flex-shrink:0">🔁</div>
+        <div>
+          <div style="font-weight:800;font-size:14.5px;color:#00E5FF">Circuito (3+ Esercizi)</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">Giro a stazioni senza pause tra esercizi. Recupero a fine giro.</div>
+        </div>
+      </button>
+    </div>
+  `);
+
+  b.querySelector('#addTypeSingle').onclick = () => { closeModal(); openExerciseForm(null); };
+  b.querySelector('#addTypeSuperset').onclick = () => { closeModal(); openSupersetWizardModal(); };
+  b.querySelector('#addTypeCircuit').onclick = () => { closeModal(); openCircuitWizardModal(); };
+}
+
+function openLibraryPickerModal(onSelectCb) {
+  const lib = getLibrary();
+  let curGrp = 'all', curQuery = '';
+
+  const b = openModal('📚 Seleziona dalla Libreria', `
+    <div class="lib-filter-sec" style="margin-bottom:12px">
+      <div class="lib-search-wrap" style="margin-bottom:8px">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+        <input type="text" id="pickerSearch" placeholder="🔍 Cerca esercizio in libreria..." spellcheck="false">
+      </div>
+      <div class="lib-chips-row" id="pickerChips" style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px">
+        <button type="button" class="lib-chip active" data-grp="all">Tutti</button>
+        <button type="button" class="lib-chip" data-grp="Petto">💪 Petto</button>
+        <button type="button" class="lib-chip" data-grp="Dorso">🔙 Dorso</button>
+        <button type="button" class="lib-chip" data-grp="Gambe">🦵 Gambe</button>
+        <button type="button" class="lib-chip" data-grp="Spalle">🙆 Spalle</button>
+        <button type="button" class="lib-chip" data-grp="Bicipiti">💪 Bicipiti</button>
+        <button type="button" class="lib-chip" data-grp="Tricipiti">💪 Tricipiti</button>
+        <button type="button" class="lib-chip" data-grp="Addome">🧱 Addome</button>
+      </div>
+    </div>
+    <div id="pickerList" style="display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto;padding-right:4px"></div>
+  `);
+
+  const renderPickerItems = () => {
+    const listEl = b.querySelector('#pickerList');
+    if (!listEl) return;
+    const q = curQuery.trim().toLowerCase();
+    const items = lib.filter(e => {
+      const matchGrp = curGrp === 'all' || e.group === curGrp;
+      const matchQ = !q || e.name.toLowerCase().includes(q) || e.group.toLowerCase().includes(q);
+      return matchGrp && matchQ;
+    });
+
+    if (!items.length) {
+      listEl.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">Nessun esercizio trovato.</div>`;
+      return;
+    }
+
+    listEl.innerHTML = items.map((item, idx) => `
+      <div class="lib-card" data-idx="${idx}" style="cursor:pointer;padding:10px 12px;border-radius:12px;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-weight:800;font-size:13.5px;color:var(--text)">${esc(item.name)}</div>
+          <div style="font-size:11.5px;color:var(--muted);margin-top:2px">${esc(item.group)} · ${esc(item.sets || 3)}×${esc(item.reps || '10')}</div>
+        </div>
+        <button type="button" class="btn btn-primary" style="padding:6px 12px;font-size:12px;font-weight:800;border-radius:8px">Scegli</button>
+      </div>
+    `).join('');
+
+    listEl.querySelectorAll('.lib-card').forEach(card => {
+      card.onclick = () => {
+        const item = items[+card.dataset.idx];
+        if (item && typeof onSelectCb === 'function') {
+          onSelectCb(item);
+        }
+        closeModal();
+      };
+    });
+  };
+
+  b.querySelectorAll('#pickerChips .lib-chip').forEach(chip => {
+    chip.onclick = (e) => {
+      e.preventDefault();
+      b.querySelectorAll('#pickerChips .lib-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      curGrp = chip.dataset.grp;
+      renderPickerItems();
+    };
+  });
+
+  const searchInput = b.querySelector('#pickerSearch');
+  if (searchInput) {
+    searchInput.oninput = () => {
+      curQuery = searchInput.value;
+      renderPickerItems();
+    };
+  }
+
+  renderPickerItems();
+}
+
+function openGroupWizardModal(mode = 'superset', draft = null) {
+  const isSS = mode === 'superset';
+  const title = isSS ? '⚡ Crea Superserie / Gruppo' : '🔁 Crea Circuito';
+  const defaultRest = isSS ? 90 : 120;
+  
+  let exs = draft && Array.isArray(draft.exs) ? [...draft.exs] : (isSS ? ['', ''] : ['', '', '']);
+  if (exs.length < 2) exs = ['', ''];
+  let sets = draft && draft.sets != null ? draft.sets : 3;
+  let reps = draft && draft.reps != null ? draft.reps : (isSS ? '10' : '12');
+  let rest = draft && draft.rest != null ? draft.rest : defaultRest;
+
+  const fieldsHTML = exs.map((exName, idx) => `
+    <div class="field" style="margin-bottom:10px">
+      <label style="font-weight:800;font-size:12px;color:var(--text);margin-bottom:4px;display:block">Esercizio / Stazione ${idx + 1}</label>
+      <div style="display:flex;gap:6px">
+        <input type="text" class="grp-ex-input" data-idx="${idx}" placeholder="Es. Esercizio ${idx + 1}" value="${esc(exName)}" style="flex:1">
+        <button type="button" class="btn btn-ghost grp-pick-lib" data-idx="${idx}" style="padding:0 10px;font-size:11.5px;font-weight:800;border:1px solid var(--border);border-radius:12px">📚 Libreria</button>
+        ${exs.length > 2 ? `<button type="button" class="btn btn-ghost grp-del-ex" data-idx="${idx}" style="padding:0 10px;font-size:12px;color:var(--coral);border:1px solid var(--border);border-radius:12px" title="Rimuovi stazione">🗑️</button>` : ''}
+      </div>
+    </div>
+  `).join('');
+
+  const b = openModal(title, `
+    <div style="max-height:360px;overflow-y:auto;padding-right:2px;margin-bottom:12px">
+      ${fieldsHTML}
+      <button type="button" id="grpAddMoreBtn" class="btn btn-ghost btn-block" style="padding:10px;font-size:13px;font-weight:800;border:1.5px dashed ${isSS ? '#FFB703' : '#00E5FF'};color:${isSS ? '#FFB703' : '#00E5FF'};background:transparent;margin-top:6px;border-radius:14px">
+        ➕ Aggiungi un altro esercizio (+ Stazione ${exs.length + 1})
+      </button>
+    </div>
+
+    <div class="grid3">
+      <div class="field"><label>Serie / Giri</label><input type="number" id="grpSets" value="${sets}" min="1" max="10"></div>
+      <div class="field"><label>Ripetizioni</label><input type="text" id="grpReps" value="${esc(reps)}" placeholder="10"></div>
+      <div class="field"><label>Recupero Finale (s)</label><input type="number" id="grpRest" value="${rest}" min="0" max="600"></div>
+    </div>
+
+    <div class="modal-foot" style="margin-top:14px">
+      <button class="btn btn-primary btn-block" id="grpSaveBtn" style="padding:14px;font-size:14.5px;font-weight:800;background:${isSS ? '#FFB703' : 'var(--volt)'};color:#0A0A0F">${isSS ? '⚡ Salva Superserie / Gruppo' : '🔁 Salva Circuito'}</button>
+    </div>
+  `);
+
+  const readCurrentDraft = () => {
+    const currentExs = Array.from(b.querySelectorAll('.grp-ex-input')).map(inp => inp.value);
+    return {
+      exs: currentExs,
+      sets: b.querySelector('#grpSets').value,
+      reps: b.querySelector('#grpReps').value,
+      rest: b.querySelector('#grpRest').value
+    };
+  };
+
+  b.querySelector('#grpAddMoreBtn').onclick = () => {
+    const curDraft = readCurrentDraft();
+    curDraft.exs.push('');
+    openGroupWizardModal(mode, curDraft);
+  };
+
+  b.querySelectorAll('.grp-del-ex').forEach(btn => {
+    btn.onclick = () => {
+      const idx = +btn.dataset.idx;
+      const curDraft = readCurrentDraft();
+      curDraft.exs.splice(idx, 1);
+      openGroupWizardModal(mode, curDraft);
+    };
+  });
+
+  b.querySelectorAll('.grp-pick-lib').forEach(btn => {
+    btn.onclick = () => {
+      const idx = +btn.dataset.idx;
+      const curDraft = readCurrentDraft();
+      openLibraryPickerModal(item => {
+        curDraft.exs[idx] = item.name;
+        openGroupWizardModal(mode, curDraft);
+      });
+    };
+  });
+
+  b.querySelector('#grpSaveBtn').onclick = () => {
+    const curDraft = readCurrentDraft();
+    const validExs = curDraft.exs.map((name, i) => name.trim() || `Esercizio ${i + 1}`);
+    if (validExs.length < 2) {
+      toast('⚠️ Aggiungi almeno 2 esercizi al gruppo');
+      return;
+    }
+    const setsVal = Math.min(10, Math.max(1, parseInt(curDraft.sets, 10) || 3));
+    const repsVal = curDraft.reps.trim() || '10';
+    const restVal = Math.max(0, parseInt(curDraft.rest, 10) || defaultRest);
+    const grpId = (isSS ? 'ss_' : 'circ_') + Date.now();
+    const groupName = isSS ? 'Superset' : 'Circuito';
+
+    const newExObjects = validExs.map((name, i) => {
+      const isLast = i === validExs.length - 1;
+      return ensureLog({
+        name,
+        sets: setsVal,
+        reps: repsVal,
+        weight: null,
+        restSec: isLast ? restVal : 0,
+        circuitGroup: groupName,
+        groupId: grpId
+      });
+    });
+
+    delete day().isNew;
+    day().exercises.push(...newExObjects);
+    save(); closeModal(); render();
+    toast(isSS ? `⚡ Superserie (${validExs.length} esercizi) creata!` : `🔁 Circuito (${validExs.length} esercizi) creato!`);
+  };
+}
+
+function openSupersetWizardModal(draft = null) {
+  openGroupWizardModal('superset', draft);
+}
+
+function openCircuitWizardModal(draft = null) {
+  openGroupWizardModal('circuit', draft);
+}
+
 function confirmModal(title, text, label, cb) {
   const b = openModal(title, `<p style="color:var(--muted);font-size:14px;margin-bottom:18px">${esc(text)}</p>
     <div class="modal-foot"><button class="btn btn-ghost btn-block" id="cfNo">Annulla</button>
@@ -2132,17 +2454,64 @@ function openExerciseForm(idx) {
     ${(isNew && state.days.length > 1) ? `<div class="field"><label>Giorno di destinazione</label><select id="fDay">${state.days.map((d, di) => `<option value="${di}"${di === state.activeDay ? ' selected' : ''}>${esc(d.name)}</option>`).join('')}</select></div>` : ''}
     <div class="field"><label>Nome esercizio</label><input id="fName" type="text" placeholder="Es. Panca piana" value="${esc(ex.name)}"></div>
     <div class="grid3">
-      <div class="field"><label>Serie</label><input id="fSets" type="number" min="1" max="20" inputmode="numeric" value="${ex.sets}"></div>
+      <div class="field"><label>Serie / Giri</label><input id="fSets" type="number" min="1" max="20" inputmode="numeric" value="${ex.sets}"></div>
       <div class="field"><label>Ripetizioni</label><input id="fReps" type="text" placeholder="10" value="${esc(getSingleRepNumber(ex.reps))}"></div>
       <div class="field"><label>Peso (kg)</label><input id="fWeight" type="text" inputmode="decimal" placeholder="—" value="${ex.weight != null ? esc(ex.weight) : ''}"></div>
     </div>
     <div class="grid2">
       <div class="field"><label>Recupero (sec)</label><input id="fRest" type="number" min="0" max="900" inputmode="numeric" placeholder="90" value="${ex.restSec}"></div>
-      <div class="field"><label>Note</label><input id="fNote" type="text" placeholder="Facoltative" value="${esc(ex.note)}"></div>
+      <div class="field"><label>Note</label><input id="fNote" type="text" placeholder="Facoltative" value="${esc(ex.note || '')}"></div>
+    </div>
+    <div class="field" style="margin-top:10px;margin-bottom:10px">
+      <label style="font-weight:800;font-size:12px;color:var(--text);margin-bottom:6px;display:block">Modalità Esecuzione</label>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button type="button" class="ex-mode-chip" data-mode="none" style="flex:1;padding:10px 6px;border-radius:12px;font-size:12.5px;font-weight:800;cursor:pointer;transition:.15s">⚪ Singolo</button>
+        <button type="button" class="ex-mode-chip" data-mode="superset" style="flex:1;padding:10px 6px;border-radius:12px;font-size:12.5px;font-weight:800;cursor:pointer;transition:.15s">⚡ Superset</button>
+        <button type="button" class="ex-mode-chip" data-mode="circuit" style="flex:1;padding:10px 6px;border-radius:12px;font-size:12.5px;font-weight:800;cursor:pointer;transition:.15s">🔁 Circuito</button>
+      </div>
+      <input type="hidden" id="fCircuit" value="${esc(ex.circuitGroup || '')}">
     </div>
     <div class="modal-foot" style="margin-top:14px"><button class="btn btn-primary btn-block" id="fSave" style="padding:14px;font-size:15px;font-weight:800;border-radius:14px">${isNew ? '➕ Aggiungi Esercizio' : '💾 Salva Modifiche'}</button></div>`);
 
   const nameInput = b.querySelector('#fName');
+
+  let activeMode = ex.circuitGroup ? (/superset|super|ss/i.test(ex.circuitGroup) ? 'superset' : 'circuit') : 'none';
+
+  const updateCircuitBtnState = () => {
+    const fCircuit = b.querySelector('#fCircuit');
+    if (!fCircuit) return;
+
+    b.querySelectorAll('.ex-mode-chip').forEach(btn => {
+      const mode = btn.dataset.mode;
+      const isActive = mode === activeMode;
+      if (mode === 'none') {
+        btn.style.borderColor = isActive ? 'var(--volt)' : 'var(--border)';
+        btn.style.background = isActive ? 'rgba(198,255,61,.14)' : 'var(--surface2)';
+        btn.style.color = isActive ? 'var(--volt)' : 'var(--muted)';
+      } else if (mode === 'superset') {
+        btn.style.borderColor = isActive ? '#FFB703' : 'var(--border)';
+        btn.style.background = isActive ? 'rgba(255,183,3,.16)' : 'var(--surface2)';
+        btn.style.color = isActive ? '#FFB703' : 'var(--muted)';
+      } else if (mode === 'circuit') {
+        btn.style.borderColor = isActive ? '#00E5FF' : 'var(--border)';
+        btn.style.background = isActive ? 'rgba(0,229,255,.16)' : 'var(--surface2)';
+        btn.style.color = isActive ? '#00E5FF' : 'var(--muted)';
+      }
+    });
+
+    fCircuit.value = activeMode === 'superset' ? 'Superset' : (activeMode === 'circuit' ? 'Circuito' : '');
+  };
+
+  b.querySelectorAll('.ex-mode-chip').forEach(btn => {
+    btn.onclick = (e) => {
+      e.preventDefault();
+      activeMode = btn.dataset.mode;
+      buzz(10);
+      updateCircuitBtnState();
+    };
+  });
+
+  updateCircuitBtnState();
 
   // Gestione dinamica della libreria se in modalità Nuovo Esercizio
   if (isNew) {
@@ -2244,6 +2613,7 @@ function openExerciseForm(idx) {
             b.querySelector('#fSets').value = item.sets || 3;
             b.querySelector('#fReps').value = getSingleRepNumber(item.reps || '10');
             b.querySelector('#fRest').value = item.restSec != null ? item.restSec : 90;
+            if (b.querySelector('#fCircuit')) b.querySelector('#fCircuit').value = item.circuitGroup || '';
             b.querySelector('#fNote').value = item.note || '';
             if (item.weight != null) b.querySelector('#fWeight').value = item.weight;
             buzz(15);
@@ -2308,6 +2678,7 @@ function openExerciseForm(idx) {
     const name = nameInput.value.trim();
     if (!name) { nameInput.focus(); nameInput.style.borderColor = 'var(--coral)'; return; }
     const w = b.querySelector('#fWeight').value.trim().replace(',', '.');
+    const circuitVal = b.querySelector('#fCircuit') ? b.querySelector('#fCircuit').value.trim() : (ex.circuitGroup || '');
     const data = {
       name,
       sets: Math.min(20, Math.max(1, parseInt(b.querySelector('#fSets').value, 10) || 3)),
@@ -2357,14 +2728,12 @@ function openExMenu(i) {
   const isCompact = $('exList') && $('exList').classList.contains('compact');
   const b = openModal(ex.name, `<div style="display:flex;flex-direction:column;gap:4px">
     <button class="sheet-btn" id="mEdit"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"></path></svg>Modifica esercizio</button>
-    <button class="sheet-btn" id="m1RM"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"></path></svg>🔥 Massimale Teorico (1RM)</button>
     <button class="sheet-btn" id="mReorder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>${isCompact ? '✨ Fine Riordino' : '🪟 Ordina Scheda'}</button>
     <button class="sheet-btn" id="mDup"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>Duplica esercizio</button>
     <button class="sheet-btn" id="mClear"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 4v4h4"></path></svg>Azzera serie completate</button>
     <button class="sheet-btn danger" id="mDel"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path></svg>Elimina esercizio</button>
   </div>`);
   b.querySelector('#mEdit').onclick = () => { closeModal(); openExerciseForm(i); };
-  b.querySelector('#m1RM').onclick = () => { closeModal(); open1RMModal(ex.name, maxW || 60, 8); };
   b.querySelector('#mReorder').onclick = () => {
     closeModal();
     const active = $('exList').classList.toggle('compact');
@@ -2413,48 +2782,7 @@ function renderStreakBadge() {
   }
 }
 
-function open1RMModal(exName, weight, reps) {
-  const w = parseFloat(weight) || 60;
-  const r = parseInt(reps, 10) || 8;
-  const oneRM = r === 1 ? w : Math.round(w * (1 + r / 30));
 
-  const pctTable = [
-    { pct: 100, reps: '1', load: Math.round(oneRM * 1) },
-    { pct: 95, reps: '2', load: Math.round(oneRM * 0.95) },
-    { pct: 90, reps: '3-4', load: Math.round(oneRM * 0.90) },
-    { pct: 85, reps: '5-6', load: Math.round(oneRM * 0.85) },
-    { pct: 80, reps: '7-8', load: Math.round(oneRM * 0.80) },
-    { pct: 75, reps: '9-10', load: Math.round(oneRM * 0.75) },
-    { pct: 70, reps: '11-12', load: Math.round(oneRM * 0.70) }
-  ];
-
-  const rows = pctTable.map(t => `
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg);border-radius:10px;font-size:13px">
-      <span style="font-weight:700;color:var(--volt)">${t.pct}% 1RM</span>
-      <span style="color:var(--muted)">${t.reps} reps</span>
-      <span style="font-weight:800;color:var(--text)">~${t.load} kg</span>
-    </div>
-  `).join('');
-
-  openModal('🔥 Massimale Teorico (1RM)', `
-    <div style="padding:4px 0">
-      <h4 style="font-size:16px;font-weight:800;color:var(--text);margin-bottom:2px">${esc(exName)}</h4>
-      <p style="font-size:12.5px;color:var(--muted);margin-bottom:16px">Basato sul tuo carico di <b>${w}kg × ${r} reps</b> (Formula di Epley)</p>
-
-      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:16px;padding:16px;text-align:center;margin-bottom:18px">
-        <div style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px">Massimale Stimato (1RM)</div>
-        <div style="font-family:Anton,sans-serif;font-size:36px;color:var(--volt);line-height:1">~${oneRM} <span style="font-size:18px;font-family:sans-serif;color:var(--text)">kg</span></div>
-      </div>
-
-      <div style="font-size:12.5px;font-weight:800;color:var(--muted);text-transform:uppercase;margin-bottom:8px;letter-spacing:.6px">Tabella Percentuali Carico</div>
-      <div style="display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto;margin-bottom:18px">
-        ${rows}
-      </div>
-
-      <button class="btn btn-primary btn-block" onclick="closeModal()">Capito!</button>
-    </div>
-  `);
-}
 
 /* ── sessioni: salvataggio e confronto con l'ultima volta ── */
 $('fabSave').onclick = openFinishModal;
@@ -2878,7 +3206,7 @@ function executePrint(scope, userName) {
         <tr>
           <td style="text-align:center;font-weight:bold">${eIdx + 1}</td>
           <td>
-            <div style="font-weight:bold;font-size:10.5pt;color:#111827">${esc(ex.name)}</div>
+            <div style="font-weight:bold;font-size:10.5pt;color:#111827">${esc(ex.name)}${ex.circuitGroup ? ` <span style="font-size:8pt;font-weight:800;color:#0284C7;background:#E0F2FE;padding:1px 5px;border-radius:4px">[🔁 ${esc(ex.circuitGroup)}]</span>` : ''}</div>
             ${ex.note ? `<div style="font-size:8pt;color:#6B7280;font-style:italic;margin-top:1px">Note: ${esc(ex.note)}</div>` : ''}
           </td>
           <td style="text-align:center;font-weight:bold">${numSets}</td>
