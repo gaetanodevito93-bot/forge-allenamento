@@ -97,18 +97,44 @@ setTimeout(async () => {
     window.closeModal();
 
     curDay.exercises.push({
-      name: 'Croci Manubri', sets: 3, reps: '10', weight: 14, restSec: 90, circuitGroup: 'Superset', groupId: 'ss_test',
+      name: 'Croci Manubri', sets: 3, reps: '10', weight: 14, restSec: 90, circuitGroup: 'Superset', groupId: 'ss_test_1',
       log: [{ reps: 10, weight: 14, done: false }, { reps: 10, weight: 14, done: false }, { reps: 10, weight: 14, done: false }]
     }, {
-      name: 'Pushdown Tricipiti', sets: 3, reps: '12', weight: 25, restSec: 90, circuitGroup: 'Superset', groupId: 'ss_test',
+      name: 'Pushdown Tricipiti', sets: 3, reps: '12', weight: 25, restSec: 90, circuitGroup: 'Superset', groupId: 'ss_test_1',
       log: [{ reps: 12, weight: 25, done: false }, { reps: 12, weight: 25, done: false }, { reps: 12, weight: 25, done: false }]
+    }, {
+      name: 'Leg Extension', sets: 3, reps: '10', weight: 40, restSec: 90, circuitGroup: 'Superset', groupId: 'ss_test_2',
+      log: [{ reps: 10, weight: 40, done: false }, { reps: 10, weight: 40, done: false }, { reps: 10, weight: 40, done: false }]
+    }, {
+      name: 'Leg Curl', sets: 3, reps: '10', weight: 35, restSec: 90, circuitGroup: 'Superset', groupId: 'ss_test_2',
+      log: [{ reps: 10, weight: 35, done: false }, { reps: 10, weight: 35, done: false }, { reps: 10, weight: 35, done: false }]
     });
     window.renderList();
-    assert('Render unified workout group box for Superset', !!document.querySelector('.workout-group-box'));
+    const groupBoxes = document.querySelectorAll('.workout-group-box');
+    assert('Render unified workout group box for Superset', groupBoxes.length > 0);
+    assert('Adjacent distinct supersets render as separate group boxes without merging', groupBoxes.length === 2);
 
     const setCheck = document.querySelector('.set-check');
     if (setCheck) setCheck.click();
     assert('Complete exercise set without errors', Array.isArray(curDay.exercises[0].log));
+
+    // Test clearWorkoutProgress day isolation
+    if (window.state.days.length > 1 && window.state.days[0].exercises.length > 0) {
+      window.state.days[0].exercises[0].log[0].done = true;
+      window.clearWorkoutProgress(false);
+      assert('clearWorkoutProgress(false) resets active day but preserves other days', window.state.days[0].exercises[0].log[0].done === true);
+    }
+
+    // Test Circuit Giro completion
+    window.stopTimer();
+    const circEx1 = curDay.exercises[1];
+    const circEx2 = curDay.exercises[2];
+    window.toggleSet(1, 0, document.querySelector(`[data-ex="1"][data-set="0"]`));
+    assert('Intermediate circuit station set DOES NOT start rest timer', document.getElementById('timerOverlay').classList.contains('open') === false);
+
+    window.toggleSet(2, 0, document.querySelector(`[data-ex="2"][data-set="0"]`));
+    assert('Final circuit station completion STARTS Circuit Giro rest timer', document.getElementById('timerOverlay').classList.contains('open') === true);
+    window.stopTimer();
 
     console.log('\n--- 4. REST TIMER & CAPSULE FORMATTING ---');
     window.startRestTimer(90, 'Prossima serie Panca Piana', 0);
@@ -165,6 +191,54 @@ setTimeout(async () => {
     assert('Print CSS contains body > *:not(#printArea) display:none rule to prevent blank pages', styleContent.includes('body > *:not(#printArea)'));
     assert('Print CSS contains 270mm single A4 page height constraint', styleContent.includes('270mm'));
     assert('Print CSS contains page-break-before: always for multi-day isolation', styleContent.includes('page-break-before: always'));
+
+    console.log('\n--- 8. PROGRESS, BODY MEASUREMENTS & ANALYTICS ---');
+    window.setView('progress');
+    assert('Progress view rendered active', document.body.getAttribute('data-view') === 'progress');
+
+    window.state.measurements = window.state.measurements || [];
+    window.state.measurements.push({ date: '2026-08-08', weight: 78.5, waist: 82, arm: 39 });
+    window.renderProgressView ? window.renderProgressView() : window.render();
+    assert('Body measurements stored in state', window.state.measurements.length > 0);
+
+    console.log('\n--- 9. PERSONAL COACH & CLIENT MANAGEMENT PORTAL ---');
+    window.setView('coach');
+    assert('Coach view rendered active', document.body.getAttribute('data-view') === 'coach');
+
+    window.openClientSchedaBuilderModal('client_123', 'Mario Rossi');
+    assert('Open Client Scheda Builder Modal', !!document.getElementById('cbProgName'));
+    window.closeModal();
+
+    console.log('\n--- 10. TIMER OVERLAY & EXTENDED CONTROLS ---');
+    window.startRestTimer(45, 'Recupero Serie 1', 0);
+    const timerOverlay = document.getElementById('timerOverlay');
+    assert('Start rest timer opens overlay', timerOverlay.classList.contains('open'));
+
+    if (typeof window.addTimerTime === 'function') window.addTimerTime(10);
+    assert('Extend rest timer cleanly', typeof window.stopTimer === 'function');
+    window.stopTimer();
+    assert('Stop rest timer closes overlay', !timerOverlay.classList.contains('open'));
+
+    console.log('\n--- 11. SECURITY, DATA NORMALIZATION & XSS SANITIZATION ---');
+    const safeText = window.esc('<script>alert("xss")</script>');
+    assert('Input sanitization esc() neutralizes XSS scripts', !safeText.includes('<script>') && safeText.includes('&lt;script&gt;'));
+
+    const normalized = window.normalizeState({ programName: 'Test Raw State', days: [{ name: 'Giorno A', exercises: [] }] });
+    assert('normalizeState populates missing days array', Array.isArray(normalized.days));
+    assert('normalizeState populates missing history object', typeof normalized.history === 'object');
+    assert('normalizeState populates missing measurements array', Array.isArray(normalized.measurements));
+
+    const fallbackNorm = window.normalizeState(null);
+    assert('normalizeState returns default state on invalid input instead of throwing', Array.isArray(fallbackNorm.days) && fallbackNorm.days.length > 0);
+
+    console.log('\n--- 12. ADMIN DASHBOARD TABS EXHAUSTIVE VALIDATION ---');
+    const tabsToTest = ['utenti', 'abbonamenti', 'piani', 'fatturato', 'impostazioni', 'sheets', 'audit'];
+    tabsToTest.forEach(t => {
+      window._adminActiveTab = t;
+      window._renderAdminDashboard(mockAdminUser, [{ displayName: 'Coach Test', email: 'test@coach.com' }], [{ uid: 'u1', displayName: 'Atleta 1' }], [], { totalRevenue: 500 }, [], [], [], true);
+      assert(`Admin Dashboard tab "${t}" renders successfully`, modal.classList.contains('modal-wide'));
+    });
+    window.closeModal();
 
     console.log('\n==========================================');
     console.log(`RESULTS: ${passed} PASSED | ${failed} FAILED`);

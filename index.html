@@ -1208,7 +1208,7 @@ function ensureLog(ex) {
   return ex;
 }
 function normalizeState(s) {
-  if (!s || !Array.isArray(s.days) || !s.days.length) throw new Error('stato non valido');
+  if (!s || !Array.isArray(s.days) || !s.days.length) return DEFAULT_STATE();
   s.programName = String(s.programName || 'Il mio programma');
   s.activeDay = Math.min(Math.max(0, s.activeDay | 0), s.days.length - 1);
   s.days.forEach(d => {
@@ -1277,7 +1277,11 @@ function updateCloudDot(status) {
 
 window.getState = () => state;
 
+let maxWeightCache = null;
+function invalidateMaxWeightCache() { maxWeightCache = null; }
+
 function save(skipCloud) {
+  invalidateMaxWeightCache();
   window.state = state;
   try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (_) {}
   if (!skipCloud && window.FORGE_CLOUD && FORGE_CLOUD.getUser()) {
@@ -1294,7 +1298,8 @@ function save(skipCloud) {
 /* ── helpers ── */
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const day = () => state.days[state.activeDay];
+window.esc = esc;
+const day = () => (state && Array.isArray(state.days) && state.days[state.activeDay]) || (state && state.days && state.days[0]) || { name: 'Giorno A', exercises: [] };
 const buzz = p => { try { navigator.vibrate && navigator.vibrate(p); } catch (_) {} };
 function fmtRest(sec) { const m = Math.floor(sec / 60), s = sec % 60; return m + ':' + String(s).padStart(2, '0'); }
 function parseRest(v) {
@@ -1376,7 +1381,11 @@ function renderDayBar() {
 
 function dayCounts() {
   let tot = 0, done = 0;
-  day().exercises.forEach(ex => { tot += ex.sets; done += ex.log.filter(l => l.done).length; });
+  (day().exercises || []).forEach(ex => {
+    ensureLog(ex);
+    tot += ex.sets || 0;
+    done += (ex.log || []).filter(l => l && l.done).length;
+  });
   return { tot, done };
 }
 function renderDayHead() {
@@ -1406,22 +1415,27 @@ function parseWeightVal(val) {
 }
 
 function getPreviousMaxWeight(exName) {
-  let maxW = 0;
   if (!exName) return 0;
   const normName = String(exName).trim().toLowerCase();
-  Object.values(state.history || {}).forEach(arr => {
-    (arr || []).forEach(sess => {
-      (sess.exercises || []).forEach(e => {
-        if (e && e.name && String(e.name).trim().toLowerCase() === normName) {
-          (e.sets || []).forEach(s => {
-            const w = parseWeightVal(s.weight);
-            if (w > maxW) maxW = w;
-          });
-        }
+  if (!maxWeightCache) {
+    maxWeightCache = {};
+    Object.values((state && state.history) || {}).forEach(arr => {
+      (arr || []).forEach(sess => {
+        (sess.exercises || []).forEach(e => {
+          if (e && e.name) {
+            const key = String(e.name).trim().toLowerCase();
+            let m = maxWeightCache[key] || 0;
+            (e.sets || []).forEach(s => {
+              const w = parseWeightVal(s.weight);
+              if (w > m) m = w;
+            });
+            maxWeightCache[key] = m;
+          }
+        });
       });
     });
-  });
-  return maxW;
+  }
+  return maxWeightCache[normName] || 0;
 }
 
 function cardHTML(ex, i, session) {
@@ -1471,7 +1485,7 @@ function cardHTML(ex, i, session) {
   const allDone = ex.sets > 0 && ex.log.every(l => l.done);
 
   const activeExIdx = (T.exIdx != null && T.exIdx >= 0 && T.exIdx < day().exercises.length) ? T.exIdx : 0;
-  const isTimerHere = T.running && i === activeExIdx;
+  const isTimerHere = T.running && i === activeExIdx && state.activeDay === T.dayIdx;
   const miniTimerHTML = isTimerHere ? `
     <div class="timer-mini-capsule" id="timerMiniCapsule" data-testid="timer-mini-capsule" title="Tocca per espandere" style="display:${isTimerMinimized ? 'inline-flex' : 'none'}">
       <div class="tmc-time" id="timerMiniText">01:30</div>
@@ -1531,7 +1545,9 @@ function renderList() {
       const isSS = /superset|super|ss/i.test(groupKey);
       const groupExs = [];
       let j = i;
-      while (j < d.exercises.length && ((d.exercises[j].groupId && d.exercises[j].groupId === groupKey) || (d.exercises[j].circuitGroup && d.exercises[j].circuitGroup === groupKey) || (isSS && /superset|super|ss/i.test(d.exercises[j].circuitGroup || '')) || (!isSS && d.exercises[j].circuitGroup && !/superset|super|ss/i.test(d.exercises[j].circuitGroup)))) {
+      while (j < d.exercises.length) {
+        const itemKey = d.exercises[j].groupId || d.exercises[j].circuitGroup;
+        if (!itemKey || itemKey !== groupKey) break;
         groupExs.push({ ex: d.exercises[j], idx: j });
         j++;
       }
@@ -1656,13 +1672,6 @@ $('exList').addEventListener('click', e => {
   if (chk) toggleSet(+chk.dataset.ex, +chk.dataset.set, chk);
 });
 
-function getSingleRepNumber(repsStr) {
-  if (!repsStr) return '';
-  const str = String(repsStr).trim();
-  const match = str.match(/^\d+/);
-  return match ? match[0] : str;
-}
-
 function toggleSet(i, j, btn) {
   const ex = day().exercises[i];
   const l = ex.log[j];
@@ -1698,12 +1707,16 @@ function toggleSet(i, j, btn) {
         const isSS = /superset|super|ss/i.test(groupKey);
         let groupExs = [];
         let k = i;
-        while (k >= 0 && ((exs[k].groupId && exs[k].groupId === groupKey) || (exs[k].circuitGroup && exs[k].circuitGroup === groupKey) || (isSS && /superset|super|ss/i.test(exs[k].circuitGroup || '')) || (!isSS && exs[k].circuitGroup && !/superset|super|ss/i.test(exs[k].circuitGroup)))) {
+        while (k >= 0) {
+          const itemKey = exs[k].groupId || exs[k].circuitGroup;
+          if (!itemKey || itemKey !== groupKey) break;
           groupExs.unshift({ ex: exs[k], idx: k });
           k--;
         }
         k = i + 1;
-        while (k < exs.length && ((exs[k].groupId && exs[k].groupId === groupKey) || (exs[k].circuitGroup && exs[k].circuitGroup === groupKey) || (isSS && /superset|super|ss/i.test(exs[k].circuitGroup || '')) || (!isSS && exs[k].circuitGroup && !/superset|super|ss/i.test(exs[k].circuitGroup)))) {
+        while (k < exs.length) {
+          const itemKey = exs[k].groupId || exs[k].circuitGroup;
+          if (!itemKey || itemKey !== groupKey) break;
           groupExs.push({ ex: exs[k], idx: k });
           k++;
         }
@@ -1718,7 +1731,7 @@ function toggleSet(i, j, btn) {
             if (isSS) {
               toast(`⚡ SUPERSET: Niente pausa! Passa a "${esc(nextItem.ex.name)}" (Serie ${j + 1})`);
             } else {
-              toast(`🔁 CIRCUITO: Passa alla stazione "${esc(nextItem.ex.name)}" (Giro ${j + 1})`);
+              toast(`🔁 CIRCUITO (Giro ${j + 1}): Passa alla stazione "${esc(nextItem.ex.name)}"!`);
             }
 
             setTimeout(() => {
@@ -1738,7 +1751,14 @@ function toggleSet(i, j, btn) {
 
       // Se è l'ultimo esercizio del Superset/Circuito (o un esercizio singolo), fa scattare il recupero!
       const restSec = parseRest(ex.restSec);
-      if (restSec > 0) startRestTimer(restSec, nextLabel(i, j), i);
+      if (restSec > 0) {
+        let timerTitle = nextLabel(i, j);
+        if (groupKey) {
+          const isSS = /superset|super|ss/i.test(groupKey);
+          timerTitle = isSS ? `Recupero Coppia (Serie ${j + 1})` : `Recupero Giro ${j + 1} completato 💪`;
+        }
+        startRestTimer(restSec, timerTitle, i);
+      }
     }
   }
 }
@@ -1779,7 +1799,7 @@ function nextLabel(i, j) {
 }
 
 /* ── timer di recupero ── */
-const T = { remain: 0, total: 90, running: false, last: 0, iv: null, exIdx: 0 };
+const T = { remain: 0, total: 90, running: false, last: 0, iv: null, exIdx: 0, dayIdx: 0 };
 let isTimerMinimized = false;
 
 /* Suono: la vibrazione non funziona su iOS, quindi a fine recupero suona un beep.
@@ -1815,6 +1835,7 @@ function beep() {
 /* Wake Lock: tiene acceso lo schermo durante il recupero (dove supportato). */
 let wakeLock = null;
 async function acquireWake() {
+  if (wakeLock) return;
   try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (_) {}
 }
 function releaseWake() { try { if (wakeLock) { wakeLock.release(); wakeLock = null; } } catch (_) {} }
@@ -1883,7 +1904,7 @@ function expandTimer() {
 }
 
 function startRestTimer(sec, next, exIdx) {
-  if (exIdx != null) T.exIdx = exIdx;
+  if (exIdx != null) { T.exIdx = exIdx; T.dayIdx = state.activeDay; }
   const restSec = parseRest(sec);
   if (restSec <= 0) return;
 
@@ -2111,7 +2132,9 @@ function cleanupEmptyDays() {
 $('dayBar').addEventListener('click', e => {
   const add = e.target.closest('.add-day');
   if (add) {
-    state.days.push({ name: 'Giorno ' + String.fromCharCode(65 + state.days.length), exercises: [] });
+    const charCode = 65 + (state.days.length % 26);
+    const suffix = state.days.length >= 26 ? ` ${Math.floor(state.days.length / 26) + 1}` : '';
+    state.days.push({ name: 'Giorno ' + String.fromCharCode(charCode) + suffix, exercises: [] });
     state.activeDay = state.days.length - 1;
     save(); render();
     return;
@@ -2866,7 +2889,6 @@ function saveSession(clearAfter) {
 }
 
 /* ── check incomplete workout on startup ── */
-/* ── check incomplete workout on startup ── */
 function hasIncompleteWorkout() {
   return state.days.some(d =>
     (d.exercises || []).some(ex =>
@@ -2875,8 +2897,9 @@ function hasIncompleteWorkout() {
   );
 }
 
-function clearWorkoutProgress() {
-  state.days.forEach(d => {
+function clearWorkoutProgress(allDays = false) {
+  const targetDays = allDays ? state.days : [day()];
+  targetDays.forEach(d => {
     (d.exercises || []).forEach(ex => {
       (ex.log || []).forEach(l => {
         l.done = false;
@@ -2906,7 +2929,7 @@ function checkIncompleteWorkout() {
   };
   b.querySelector('#resetWorkout').onclick = () => {
     closeModal();
-    clearWorkoutProgress();
+    clearWorkoutProgress(true);
     toast('Progressi azzerati, nuova giornata 💪');
     setView('training');
   };
@@ -3333,10 +3356,6 @@ function openAppMenu() {
       <div>
         <div class="prog-sec-title" style="margin:0 0 8px 2px">🏋️ Esercizi &amp; Schede</div>
         <div class="menu-list">
-          <button class="sheet-btn" id="aProMarket" style="background:rgba(198,255,61,.08);border:1px solid rgba(198,255,61,.25);color:var(--volt)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
-            🛒 Libreria Schede PRO (€5.99)
-          </button>
           <button class="sheet-btn" id="aManageHistory">
             <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 3"></path><circle cx="12" cy="12" r="9"></circle></svg>
             📜 Storico &amp; Elimina Sessioni
@@ -3454,294 +3473,7 @@ function openAppMenu() {
   };
 }
 
-/* ── Libreria Schede PRO Precompilate (€5.99) ── */
-const PRO_SCHEDE_MARKET = [
-  {
-    id: 'pro_ppl_3d',
-    name: 'Push / Pull / Legs (3-4 Giorni)',
-    tag: 'Ipertrofia & Massa',
-    price: '€5.99',
-    desc: 'Programma di ipertrofia a frequenza medio-alta diviso in Spinta (Petto/Spalle/Tricipiti), Trazione (Dorso/Bicipiti) e Gambe/Addome.',
-    daysCount: 3,
-    state: {
-      programName: 'Push / Pull / Legs PRO',
-      activeDay: 0,
-      days: [
-        {
-          name: 'Giorno A — Push (Spinta)',
-          exercises: [
-            { name: 'Panca piana con bilanciere', sets: 4, reps: '8-10', weight: 60, restSec: 90, note: 'Scapole adotte' },
-            { name: 'Panca inclinata con manubri', sets: 3, reps: '10-12', weight: 22, restSec: 75, note: 'Panca a 30°' },
-            { name: 'Military Press con bilanciere', sets: 4, reps: '8-10', weight: 40, restSec: 90, note: 'Spinta verticale' },
-            { name: 'Alzate laterali con manubri', sets: 4, reps: '12-15', weight: 10, restSec: 60, note: 'Gomiti flessi' },
-            { name: 'Pushdown cavi con corda', sets: 3, reps: '12-15', weight: 25, restSec: 60, note: 'Apri la corda' }
-          ]
-        },
-        {
-          name: 'Giorno B — Pull (Trazione)',
-          exercises: [
-            { name: 'Stacco da terra (Deadlift)', sets: 4, reps: '5', weight: 100, restSec: 150, note: 'Schiena neutra' },
-            { name: 'Lat Machine avanti', sets: 4, reps: '10-12', weight: 55, restSec: 75, note: 'Tira al petto' },
-            { name: 'Pulley basso con presa stretta', sets: 3, reps: '10-12', weight: 50, restSec: 75, note: 'Gomiti aderenti' },
-            { name: 'Curl con bilanciere EZ', sets: 3, reps: '10-12', weight: 28, restSec: 60, note: 'Supinazione' },
-            { name: 'Face Pull ai cavi', sets: 3, reps: '15', weight: 20, restSec: 60, note: 'Rotatori' }
-          ]
-        },
-        {
-          name: 'Giorno C — Legs & Core (Gambe)',
-          exercises: [
-            { name: 'Squat con bilanciere', sets: 4, reps: '8-10', weight: 70, restSec: 120, note: 'Sotto il parallelo' },
-            { name: 'Leg Press 45°', sets: 4, reps: '10-12', weight: 120, restSec: 90, note: 'Non bloccare ginocchia' },
-            { name: 'Leg Curl seduto', sets: 3, reps: '10-12', weight: 40, restSec: 60, note: 'Femorali' },
-            { name: 'Calf Machine (Polpacci)', sets: 4, reps: '15-20', weight: 45, restSec: 45, note: 'Escursione totale' },
-            { name: 'Plank', sets: 3, reps: '45s', weight: null, restSec: 60, note: 'Core saldo' }
-          ]
-        }
-      ],
-      history: {},
-      measurements: []
-    }
-  },
-  {
-    id: 'pro_upper_lower_4d',
-    name: 'Upper / Lower Powerbuilding (4 Giorni)',
-    tag: 'Forza & Estetica',
-    price: '€5.99',
-    desc: 'Focalizzato sia sull\'incremento di forza sui fondamentali (Panca, Squat, Stacco) sia sullo sviluppo estetico armonico.',
-    daysCount: 4,
-    state: {
-      programName: 'Upper / Lower Powerbuilding PRO',
-      activeDay: 0,
-      days: [
-        {
-          name: 'Giorno A — Upper Power',
-          exercises: [
-            { name: 'Panca piana con bilanciere', sets: 5, reps: '5', weight: 70, restSec: 120, note: 'Forza pura' },
-            { name: 'Rematore con bilanciere', sets: 4, reps: '6-8', weight: 60, restSec: 90, note: 'Tira all\'ombelico' },
-            { name: 'Military Press con bilanciere', sets: 3, reps: '8', weight: 42.5, restSec: 90, note: '' },
-            { name: 'Curl Martello (Hammer Curl)', sets: 3, reps: '10', weight: 14, restSec: 60, note: '' }
-          ]
-        },
-        {
-          name: 'Giorno B — Lower Power',
-          exercises: [
-            { name: 'Squat con bilanciere', sets: 5, reps: '5', weight: 80, restSec: 150, note: 'Forza pura' },
-            { name: 'Stacco Rumeno (RDL)', sets: 4, reps: '8-10', weight: 65, restSec: 90, note: 'Glutei e femorali' },
-            { name: 'Leg Extension', sets: 3, reps: '12', weight: 45, restSec: 60, note: '' },
-            { name: 'Calf Machine', sets: 4, reps: '15', weight: 50, restSec: 45, note: '' }
-          ]
-        },
-        {
-          name: 'Giorno C — Upper Hypertrophy',
-          exercises: [
-            { name: 'Panca inclinata con manubri', sets: 4, reps: '10-12', weight: 24, restSec: 75, note: 'Volume petto' },
-            { name: 'Lat Machine avanti', sets: 4, reps: '10-12', weight: 50, restSec: 75, note: '' },
-            { name: 'Alzate laterali con manubri', sets: 4, reps: '12-15', weight: 10, restSec: 60, note: '' },
-            { name: 'Pushdown cavi con barra', sets: 3, reps: '12', weight: 30, restSec: 60, note: '' }
-          ]
-        },
-        {
-          name: 'Giorno D — Lower Hypertrophy',
-          exercises: [
-            { name: 'Leg Press 45°', sets: 4, reps: '10-12', weight: 130, restSec: 90, note: 'Volume quadricipiti' },
-            { name: 'Leg Curl seduto', sets: 4, reps: '12', weight: 35, restSec: 60, note: '' },
-            { name: 'Affondi con manubri', sets: 3, reps: '10 per gamba', weight: 14, restSec: 75, note: '' },
-            { name: 'Plank', sets: 3, reps: '60s', weight: null, restSec: 60, note: '' }
-          ]
-        }
-      ],
-      history: {},
-      measurements: []
-    }
-  },
-  {
-    id: 'pro_fullbody_3d',
-    name: 'Full Body 3 Giorni (Totale Corporeo)',
-    tag: 'Frequenza & Consumo',
-    price: '€5.99',
-    desc: 'Scheda multiarticolare ad elevato consumo energetico per chi si allena 3 volte alla settimana.',
-    daysCount: 3,
-    state: {
-      programName: 'Full Body Total PRO',
-      activeDay: 0,
-      days: [
-        {
-          name: 'Giorno A — Spinta Focus',
-          exercises: [
-            { name: 'Squat con bilanciere', sets: 4, reps: '8-10', weight: 65, restSec: 120, note: '' },
-            { name: 'Panca piana con bilanciere', sets: 4, reps: '8-10', weight: 55, restSec: 90, note: '' },
-            { name: 'Lat Machine avanti', sets: 3, reps: '10-12', weight: 50, restSec: 75, note: '' },
-            { name: 'Alzate laterali con manubri', sets: 3, reps: '12-15', weight: 8, restSec: 60, note: '' },
-            { name: 'Crunch su tappetino', sets: 3, reps: '20', weight: null, restSec: 45, note: '' }
-          ]
-        },
-        {
-          name: 'Giorno B — Trazione Focus',
-          exercises: [
-            { name: 'Stacco Rumeno (RDL)', sets: 4, reps: '8-10', weight: 60, restSec: 90, note: '' },
-            { name: 'Rematore con manubrio', sets: 4, reps: '10-12', weight: 22, restSec: 75, note: '' },
-            { name: 'Military Press con bilanciere', sets: 3, reps: '8-10', weight: 35, restSec: 90, note: '' },
-            { name: 'Curl manubri alternato', sets: 3, reps: '10-12', weight: 12, restSec: 60, note: '' },
-            { name: 'Plank', sets: 3, reps: '45s', weight: null, restSec: 60, note: '' }
-          ]
-        },
-        {
-          name: 'Giorno C — Gambe & Braccia',
-          exercises: [
-            { name: 'Leg Press 45°', sets: 4, reps: '10-12', weight: 110, restSec: 90, note: '' },
-            { name: 'Chest Press', sets: 3, reps: '10-12', weight: 45, restSec: 75, note: '' },
-            { name: 'Pulley basso con presa stretta', sets: 3, reps: '10-12', weight: 45, restSec: 75, note: '' },
-            { name: 'Dip su panca', sets: 3, reps: '12-15', weight: null, restSec: 60, note: '' },
-            { name: 'Calf Machine', sets: 4, reps: '15', weight: 40, restSec: 45, note: '' }
-          ]
-        }
-      ],
-      history: {},
-      measurements: []
-    }
-  },
-  {
-    id: 'pro_glutei_core',
-    name: 'Glutei & Core Sculpt (Donna 3 Giorni)',
-    tag: 'Focus Glutei & Tone',
-    price: '€5.99',
-    desc: 'Programmazione periodizzata sviluppata per la massima attivazione dei glutei, gambe toniche ed addome piatto.',
-    daysCount: 3,
-    state: {
-      programName: 'Glutei & Core Sculpt PRO',
-      activeDay: 0,
-      days: [
-        {
-          name: 'Giorno A — Glutei Heavy',
-          exercises: [
-            { name: 'Hip Thrust con bilanciere', sets: 4, reps: '10-12', weight: 50, restSec: 90, note: 'Squeeze glutei in alto' },
-            { name: 'Affondi con manubri', sets: 3, reps: '10 per gamba', weight: 10, restSec: 75, note: '' },
-            { name: 'Abductor Machine', sets: 3, reps: '15-20', weight: 35, restSec: 45, note: '' },
-            { name: 'Crunch ai cavi', sets: 3, reps: '15', weight: 20, restSec: 60, note: '' }
-          ]
-        },
-        {
-          name: 'Giorno B — Upper & Core Tone',
-          exercises: [
-            { name: 'Lat Machine avanti', sets: 4, reps: '10-12', weight: 35, restSec: 75, note: '' },
-            { name: 'Panca inclinata con manubri', sets: 3, reps: '10-12', weight: 10, restSec: 75, note: '' },
-            { name: 'Alzate laterali con manubri', sets: 3, reps: '12-15', weight: 5, restSec: 60, note: '' },
-            { name: 'Plank', sets: 3, reps: '45s', weight: null, restSec: 60, note: '' }
-          ]
-        },
-        {
-          name: 'Giorno C — Glutei & Leg Sculpt',
-          exercises: [
-            { name: 'Squat sumo con manubrio', sets: 4, reps: '10-12', weight: 20, restSec: 90, note: 'Focus adduttori e glutei' },
-            { name: 'Leg Curl seduto', sets: 3, reps: '12', weight: 25, restSec: 60, note: '' },
-            { name: 'Cable Kickback (Slanci cavi)', sets: 3, reps: '12 per gamba', weight: 12.5, restSec: 60, note: '' },
-            { name: 'Leg Raise alla sbarra', sets: 3, reps: '12', weight: null, restSec: 60, note: '' }
-          ]
-        }
-      ],
-      history: {},
-      measurements: []
-    }
-  },
-  {
-    id: 'pro_home_bodyweight',
-    name: 'Bodyweight & Home Workout (A Casa)',
-    tag: 'A Casa & Zero Attrezzi',
-    price: '€5.99',
-    desc: 'Scheda ad alta intensità a corpo libero o con manubri per allenarsi a casa senza macchinari di palestra.',
-    daysCount: 3,
-    state: {
-      programName: 'Home Bodyweight PRO',
-      activeDay: 0,
-      days: [
-        {
-          name: 'Giorno A — Spinta & Core',
-          exercises: [
-            { name: 'Push-up (Piegamenti)', sets: 4, reps: '12-15', weight: null, restSec: 60, note: '' },
-            { name: 'Alzate laterali con manubri', sets: 4, reps: '15', weight: 6, restSec: 60, note: '' },
-            { name: 'Dip su panca', sets: 3, reps: '15', weight: null, restSec: 60, note: '' },
-            { name: 'Plank', sets: 3, reps: '60s', weight: null, restSec: 60, note: '' }
-          ]
-        },
-        {
-          name: 'Giorno B — Gambe & Glutei',
-          exercises: [
-            { name: 'Affondi con manubri', sets: 4, reps: '12 per gamba', weight: 8, restSec: 75, note: '' },
-            { name: 'Stacco Rumeno con manubri', sets: 4, reps: '12', weight: 12, restSec: 75, note: '' },
-            { name: 'Calf in piedi su gradino', sets: 4, reps: '20', weight: null, restSec: 45, note: '' },
-            { name: 'Crunch su tappetino', sets: 3, reps: '20', weight: null, restSec: 45, note: '' }
-          ]
-        },
-        {
-          name: 'Giorno C — Dorso & Braccia',
-          exercises: [
-            { name: 'Rematore con manubrio', sets: 4, reps: '12 per lato', weight: 14, restSec: 75, note: '' },
-            { name: 'Push-up stretti per tricipiti', sets: 3, reps: '10-12', weight: null, restSec: 60, note: '' },
-            { name: 'Curl manubri alternato', sets: 3, reps: '12', weight: 10, restSec: 60, note: '' },
-            { name: 'Leg Raise a terra', sets: 3, reps: '15', weight: null, restSec: 60, note: '' }
-          ]
-        }
-      ],
-      history: {},
-      measurements: []
-    }
-  }
-];
 
-function openProSchedaMarketModal() {
-  const cards = PRO_SCHEDE_MARKET.map((s, idx) => `
-    <div style="background:var(--bg);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:14px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <span style="background:rgba(198,255,61,.12);color:var(--volt);font-weight:800;font-size:11px;padding:3px 8px;border-radius:6px;text-transform:uppercase">${esc(s.tag)}</span>
-        <span style="font-family:Anton,sans-serif;font-size:18px;color:var(--volt)">${s.price}</span>
-      </div>
-      <h3 style="font-size:16px;font-weight:800;color:var(--text);margin-bottom:4px">${esc(s.name)}</h3>
-      <p style="font-size:12.5px;color:var(--muted);margin-bottom:12px;line-height:1.4">${esc(s.desc)}</p>
-      
-      <div style="font-size:12px;color:var(--text);background:var(--surface2);padding:10px 12px;border-radius:10px;margin-bottom:14px">
-        <b>📅 ${s.daysCount} Giorni di allenamento inclusi:</b>
-        <ul style="margin:4px 0 0 16px;color:var(--muted)">
-          ${s.state.days.map(d => `<li><b>${esc(d.name)}:</b> ${d.exercises.length} esercizi</li>`).join('')}
-        </ul>
-      </div>
-
-      <button class="btn btn-primary btn-block btnBuyProScheda" data-idx="${idx}">🛒 Acquista &amp; Salva nel Cloud (${s.price})</button>
-    </div>
-  `).join('');
-
-  const b = openModal('Libreria Schede PRO (€5.99) 🛒', `
-    <p style="color:var(--muted);font-size:13px;margin-bottom:16px;line-height:1.4">Schede di allenamento professionali pronte all'uso. Una volta acquistata, la scheda rimane <b>per sempre nel tuo Cloud</b> ed avrai accesso a schede Cloud <b>illimitate</b>!</p>
-    <div style="max-height:420px;overflow-y:auto;padding-right:2px">${cards}</div>
-  `);
-
-  b.querySelectorAll('.btnBuyProScheda').forEach(btn => {
-    btn.onclick = async () => {
-      const idx = +btn.getAttribute('data-idx');
-      const item = PRO_SCHEDE_MARKET[idx];
-      if (!item) return;
-
-      const user = window.FORGE_CLOUD ? FORGE_CLOUD.getUser() : null;
-      if (!user) {
-        closeModal();
-        openCloudAccountModal();
-        toast('Accedi con Google per completare l\'acquisto ed il salvataggio Cloud');
-        return;
-      }
-
-      confirmModal('Acquista Scheda PRO', `Confermi l'acquisto della scheda "${item.name}" a ${item.price}? La scheda verrà salvata per sempre nel tuo account Cloud e caricata subito.`, `Acquista (${item.price})`, async () => {
-        closeModal();
-        updateCloudDot('syncing');
-        const res = await FORGE_CLOUD.saveSchedaToCloudList(item.name, item.state, true);
-        updateCloudDot('synced');
-        
-        state = normalizeState(item.state);
-        save(true);
-        render();
-        toast(`Scheda PRO "${item.name}" acquistata e salvata nel Cloud! 🏆☁️`);
-      });
-    };
-  });
-}
 
 async function saveSchedaToCloud() {
   const user = window.FORGE_CLOUD ? FORGE_CLOUD.getUser() : null;
@@ -4357,7 +4089,6 @@ function openClientSchedaBuilderModal(clientUid, clientName) {
       <div style="font-size:12.5px;font-weight:800;color:var(--text);margin-bottom:4px">Creazione veloce:</div>
       <div style="display:flex;gap:8px">
         <button class="btn btn-ghost btn-sm" id="cbLoadActive" style="flex:1;font-size:11.5px;border:1px solid var(--border)">Usa scheda attuale</button>
-        <button class="btn btn-ghost btn-sm" id="cbLoadPro" style="flex:1;font-size:11.5px;border:1px solid var(--border)">Template PRO</button>
       </div>
     </div>
     <div class="modal-foot stack">
@@ -4366,13 +4097,6 @@ function openClientSchedaBuilderModal(clientUid, clientName) {
     </div>`);
   let tgt = JSON.parse(JSON.stringify(state));
   b.querySelector('#cbLoadActive').onclick = () => { tgt = JSON.parse(JSON.stringify(state)); toast('Scheda attuale caricata'); };
-  b.querySelector('#cbLoadPro').onclick = () => {
-    if (typeof PRO_SCHEDE_MARKET !== 'undefined' && PRO_SCHEDE_MARKET.length) {
-      tgt = JSON.parse(JSON.stringify(PRO_SCHEDE_MARKET[0].state));
-      b.querySelector('#cbProgName').value = tgt.programName + ` (${clientName})`;
-      toast('Template PRO caricato');
-    }
-  };
   b.querySelector('#cbBack').onclick = () => { closeModal(); openCoachDashboardModal(); };
   b.querySelector('#cbPush').onclick = async () => {
     const pn = b.querySelector('#cbProgName').value.trim() || 'Scheda Personalizzata';
@@ -4648,8 +4372,10 @@ function openRename() {
     state.programName = b.querySelector('#rProg').value.trim() || state.programName;
     const newName = b.querySelector('#rDay').value.trim() || day().name;
     // lo storico è legato al nome del giorno: seguilo nel rinomino
-    if (newName !== day().name && state.history[day().name] && !state.history[newName]) {
-      state.history[newName] = state.history[day().name];
+    if (newName !== day().name && state.history[day().name]) {
+      const oldHist = state.history[day().name] || [];
+      const newHist = state.history[newName] || [];
+      state.history[newName] = [...newHist, ...oldHist].sort((a, b) => (a.ts || 0) - (b.ts || 0));
       delete state.history[day().name];
     }
     day().name = newName;

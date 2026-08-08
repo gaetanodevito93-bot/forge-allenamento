@@ -1,7 +1,7 @@
 /* FORGE — service worker (offline-first PWA) */
 'use strict';
 
-const VERSION = 'forge-v108';
+const VERSION = 'forge-v112';
 const APP_SHELL = `${VERSION}-shell`;
 const RUNTIME = `${VERSION}-runtime`;
 
@@ -73,8 +73,8 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Risorse esterne (Google Fonts): stale-while-revalidate.
-  if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
+  // Risorse esterne (Google Fonts, Firebase SDKs): stale-while-revalidate.
+  if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com' || url.hostname === 'www.gstatic.com') {
     event.respondWith(
       caches.open(RUNTIME).then((cache) => cache.match(request).then((cached) => {
         const network = fetch(request).then((resp) => {
