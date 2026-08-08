@@ -1,0 +1,21 @@
+{
+  "name": "forge-allenamento",
+  "version": "1.0.0",
+  "description": "FORGE — Progressive Web App per Allenamento, Coaching & PWA Sync Live",
+  "main": "index.html",
+  "scripts": {
+    "test": "node test_suite.js"
+  },
+  "keywords": [
+    "pwa",
+    "fitness",
+    "workout",
+    "firebase",
+    "google-sheets"
+  ],
+  "author": "FORGE Team",
+  "license": "MIT",
+  "devDependencies": {
+    "jsdom": "^26.0.0"
+  }
+}

@@ -160,7 +160,8 @@ body.dragging-active{cursor:grabbing;user-select:none}
 .overlay{position:fixed;inset:0;z-index:60;background:rgba(5,5,9,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .22s ease-out;will-change:opacity}
 .overlay.open{opacity:1;pointer-events:auto}
 @media(min-width:640px){.overlay{align-items:center;padding:20px}}
-.modal{width:100%;max-width:520px;max-height:92vh;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:24px 24px 0 0;box-shadow:var(--shadow);transform:translateY(24px);transition:transform .26s cubic-bezier(.16,1,.3,1);will-change:transform}
+.modal{width:100%;max-width:520px;max-height:92vh;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:24px 24px 0 0;box-shadow:var(--shadow);transform:translateY(24px);transition:transform .26s cubic-bezier(.16,1,.3,1),max-width .22s ease-out;will-change:transform}
+.modal.modal-wide{max-width:880px}
 @media(min-width:640px){.modal{border-radius:24px}}
 .overlay.open .modal{transform:translateY(0)}
 .modal-head{position:sticky;top:0;background:var(--surface);padding:20px 22px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);z-index:2}
@@ -321,22 +322,23 @@ table.cmp2{border-collapse:collapse;width:100%;font-size:13px}
 .timer-ring .num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
 .timer-ring .num .t{font-family:Anton,sans-serif;font-size:76px;line-height:1;letter-spacing:1px}
 .timer-ring .num small{color:var(--muted);font-size:13px;font-weight:700;letter-spacing:1px;margin-top:4px}
-.timer-adjust{display:flex;gap:12px;margin-top:34px}
-
-/* ── Timer Mini Capsule (Integrato nella scheda dell'esercizio) ── */
+.timer-adjust{display:flex;gap:16px;margin-top:28px}
+.timer-adjust button{width:60px;height:60px;border-radius:50%;background:var(--surface);border:1px solid var(--border);font-family:Anton,sans-serif;font-size:16px;color:var(--text);transition:.15s;display:grid;place-items:center}
+.timer-adjust button:hover{background:var(--surface2);border-color:var(--volt-dim)}
+.timer-adjust button:active{transform:scale(.92)}
+.timer-action-btns{display:flex;align-items:center;gap:10px;margin-top:20px;width:100%;max-width:360px;justify-content:center}
+.timer-min-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:14px 20px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:var(--text);font-size:14.5px;font-weight:700;transition:all .18s ease;white-space:nowrap}
+.timer-min-btn:hover{background:var(--surface2);color:var(--text);border-color:var(--volt-dim)}
+.timer-min-btn:active{transform:scale(.94)}
+.timer-skip{flex:1;padding:14px 20px;border-radius:999px;background:var(--volt);color:#0A0A0F;font-weight:800;font-size:15px;transition:.15s;display:inline-flex;align-items:center;justify-content:center;white-space:nowrap}
+.timer-skip:active{transform:scale(.96)}
+.timer-pause{margin-top:14px;color:var(--muted);font-weight:700;font-size:13px}
 .timer-mini-capsule{position:relative;display:inline-flex;align-items:center;gap:8px;background:rgba(18,18,26,.96);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:2.5px solid var(--volt);border-radius:999px;padding:4px 12px 4px 14px;box-shadow:0 4px 18px rgba(0,0,0,.5),0 0 16px rgba(198,255,61,.25);cursor:pointer;user-select:none;animation:miniPillPopInline .3s cubic-bezier(.175,.885,.32,1.275) both;transition:border-color .2s,box-shadow .2s,transform .15s;margin-left:auto}
 @keyframes miniPillPopInline{0%{opacity:0;transform:scale(.88)}100%{opacity:1;transform:scale(1)}}
 .timer-mini-capsule:hover{border-color:#D4FF5F;box-shadow:0 6px 22px rgba(0,0,0,.6),0 0 24px rgba(198,255,61,.4)}
-.tmc-time{font-family:Anton,sans-serif;font-size:16px;color:var(--volt);letter-spacing:1px;font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:6px}
-.tmc-time::before{content:"⏱️";font-size:14px}
+.tmc-time{font-family:Anton,sans-serif;font-size:16px;color:var(--volt);letter-spacing:1px;font-variant-numeric:tabular-nums;display:flex;align-items:center}
 .tmc-btn.tmc-close{background:var(--surface2);border:1px solid rgba(255,84,104,.3);color:var(--coral);border-radius:999px;font-size:12px;font-weight:800;padding:4px 8px;cursor:pointer;transition:all .15s ease;display:grid;place-items:center}
 .tmc-btn.tmc-close:hover{background:var(--coral);color:#FFF;border-color:var(--coral)}
-.timer-adjust button{width:64px;height:64px;border-radius:50%;background:var(--surface);border:1px solid var(--border);font-family:Anton,sans-serif;font-size:16px;color:var(--text);transition:.15s}
-.timer-adjust button:hover{background:var(--surface2);border-color:var(--volt-dim)}
-.timer-adjust button:active{transform:scale(.92)}
-.timer-skip{margin-top:26px;padding:15px 40px;border-radius:999px;background:var(--volt);color:#0A0A0F;font-weight:800;font-size:16px;transition:.15s}
-.timer-skip:active{transform:scale(.96)}
-.timer-pause{margin-top:14px;color:var(--muted);font-weight:700;font-size:13px}
 #toast{position:fixed;bottom:calc(92px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(20px);z-index:90;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:12px 20px;border-radius:999px;font-weight:700;font-size:13.5px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:.3s;display:flex;align-items:center;gap:9px}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 #toast svg{width:17px;height:17px;stroke:var(--volt)}
@@ -545,7 +547,7 @@ body.kb #fabSave,body.kb #fabAddMeas{display:none!important}
 @media print {
   @page {
     size: A4 portrait;
-    margin: 5mm !important;
+    margin: 6mm !important;
   }
   html, body {
     background: #FFFFFF !important;
@@ -565,60 +567,65 @@ body.kb #fabSave,body.kb #fabAddMeas{display:none!important}
     display: block !important;
     position: static !important;
     width: 100% !important;
+    height: auto !important;
     margin: 0 !important;
     padding: 0 !important;
     background: #FFFFFF !important;
     color: #111827 !important;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
   }
-  #printArea * {
-    visibility: visible !important;
-  }
   .print-page {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    height: 270mm !important;
+    max-height: 270mm !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    page-break-before: always !important;
+    break-before: page !important;
     page-break-after: always !important;
     break-after: page !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
-    padding: 0 !important;
-    box-sizing: border-box !important;
-    height: auto !important;
-    min-height: 0 !important;
-    max-height: none !important;
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: space-between !important;
+  }
+  .print-page:first-child,
+  .print-page:first-of-type {
+    page-break-before: avoid !important;
+    break-before: avoid !important;
   }
   .print-page:last-child,
   .print-page:last-of-type {
-    page-break-after: auto !important;
-    break-after: auto !important;
     page-break-after: avoid !important;
     break-after: avoid !important;
   }
 
-  /* Header Premium */
+  /* Header Compact */
   .print-header {
     display: flex !important;
     justify-content: space-between !important;
     align-items: center !important;
-    border-bottom: 3px solid #111827 !important;
-    padding-bottom: 12px !important;
-    margin-bottom: 16px !important;
+    border-bottom: 2.5px solid #111827 !important;
+    padding-bottom: 8px !important;
+    margin-bottom: 10px !important;
   }
   .print-brand-group {
     display: flex !important;
     align-items: center !important;
-    gap: 12px !important;
+    gap: 10px !important;
   }
   .print-logo-badge {
     background: #111827 !important;
     color: #FFFFFF !important;
     font-family: 'Anton', Arial, sans-serif !important;
-    font-size: 24pt !important;
+    font-size: 20pt !important;
     line-height: 1 !important;
-    padding: 6px 14px !important;
-    border-radius: 6px !important;
-    letter-spacing: 2px !important;
+    padding: 4px 10px !important;
+    border-radius: 5px !important;
+    letter-spacing: 1.5px !important;
   }
   .print-brand-text {
     display: flex !important;
@@ -626,39 +633,39 @@ body.kb #fabSave,body.kb #fabAddMeas{display:none!important}
   }
   .print-brand-title {
     font-weight: 900 !important;
-    font-size: 13pt !important;
-    letter-spacing: 1px !important;
+    font-size: 11pt !important;
+    letter-spacing: 0.5px !important;
     color: #111827 !important;
   }
   .print-brand-sub {
-    font-size: 8pt !important;
+    font-size: 7.5pt !important;
     font-weight: 700 !important;
     color: #6B7280 !important;
     text-transform: uppercase !important;
-    letter-spacing: 1.5px !important;
+    letter-spacing: 1px !important;
   }
 
   .print-meta-group {
     text-align: right !important;
   }
   .print-day-badge {
-    font-size: 16pt !important;
+    font-size: 14pt !important;
     font-weight: 900 !important;
     color: #111827 !important;
-    margin-bottom: 4px !important;
+    margin-bottom: 2px !important;
     text-transform: uppercase !important;
   }
   .print-meta-chips {
     display: flex !important;
-    gap: 8px !important;
+    gap: 6px !important;
     justify-content: flex-end !important;
-    font-size: 8.5pt !important;
+    font-size: 8pt !important;
     color: #374151 !important;
   }
   .print-chip {
     background: #F3F4F6 !important;
     border: 1px solid #E5E7EB !important;
-    padding: 3px 8px !important;
+    padding: 2px 6px !important;
     border-radius: 4px !important;
     font-weight: 600 !important;
   }
@@ -667,22 +674,22 @@ body.kb #fabSave,body.kb #fabAddMeas{display:none!important}
   .print-table {
     width: 100% !important;
     border-collapse: collapse !important;
-    margin-bottom: 16px !important;
+    margin-bottom: 10px !important;
   }
   .print-table th {
     background: #111827 !important;
     color: #FFFFFF !important;
     font-weight: 800 !important;
     text-transform: uppercase !important;
-    font-size: 8.5pt !important;
-    padding: 8px 6px !important;
+    font-size: 8pt !important;
+    padding: 6px 5px !important;
     letter-spacing: 0.5px !important;
     border: 1px solid #111827 !important;
   }
   .print-table td {
     border: 1px solid #D1D5DB !important;
-    padding: 7px 6px !important;
-    font-size: 9.5pt !important;
+    padding: 5px 5px !important;
+    font-size: 8.5pt !important;
     vertical-align: middle !important;
   }
   .print-table tr:nth-child(even) td {
@@ -693,15 +700,15 @@ body.kb #fabSave,body.kb #fabAddMeas{display:none!important}
   .print-boxes-wrap {
     display: flex !important;
     flex-wrap: wrap !important;
-    gap: 4px !important;
+    gap: 3px !important;
   }
   .print-set-box {
     display: inline-flex !important;
     align-items: center !important;
     border: 1px solid #9CA3AF !important;
-    border-radius: 4px !important;
-    padding: 2px 6px !important;
-    font-size: 8pt !important;
+    border-radius: 3px !important;
+    padding: 1px 4px !important;
+    font-size: 7.5pt !important;
     font-family: monospace !important;
     background: #FFFFFF !important;
     color: #111827 !important;
@@ -711,31 +718,30 @@ body.kb #fabSave,body.kb #fabAddMeas{display:none!important}
 
   /* Notes & Footer */
   .print-notes-section {
-    border: 1.5px dashed #9CA3AF !important;
-    border-radius: 8px !important;
-    padding: 10px 12px !important;
-    margin-bottom: 14px !important;
+    border: 1px dashed #9CA3AF !important;
+    border-radius: 6px !important;
+    padding: 8px 10px !important;
+    margin-bottom: 8px !important;
     background: #FAFAFA !important;
-    flex-grow: 1 !important;
   }
   .print-notes-title {
     font-weight: 800 !important;
-    font-size: 9pt !important;
+    font-size: 8.5pt !important;
     text-transform: uppercase !important;
     color: #374151 !important;
-    margin-bottom: 8px !important;
+    margin-bottom: 4px !important;
     letter-spacing: 0.5px !important;
   }
   .print-notes-line {
     border-bottom: 1px solid #E5E7EB !important;
-    height: 20px !important;
-    margin-bottom: 4px !important;
+    height: 16px !important;
+    margin-bottom: 3px !important;
   }
 
   .print-footer {
     border-top: 1px solid #E5E7EB !important;
-    padding-top: 8px !important;
-    font-size: 8pt !important;
+    padding-top: 6px !important;
+    font-size: 7.5pt !important;
     color: #6B7280 !important;
     display: flex !important;
     justify-content: space-between !important;
@@ -1047,10 +1053,6 @@ body.kb #fabSave,body.kb #fabAddMeas{display:none!important}
 <div class="timer-overlay" id="timerOverlay">
   <div class="timer-top-bar">
     <div class="label">Recupero</div>
-    <button class="timer-min-btn" id="timerMinimize" data-testid="timer-minimize" title="Riduci a pillola fluttuante">
-      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M4 14h6v6M20 10h-6V4"></path></svg>
-      Riduci
-    </button>
   </div>
   <div class="next" id="timerNext"></div>
   <div class="timer-ring">
@@ -1061,10 +1063,16 @@ body.kb #fabSave,body.kb #fabAddMeas{display:none!important}
     <div class="num"><div class="t" id="timerText">90</div><small>secondi</small></div>
   </div>
   <div class="timer-adjust">
-    <button id="timerMinus" data-testid="timer-minus">−15</button>
-    <button id="timerPlus" data-testid="timer-plus">+15</button>
+    <button id="timerMinus" data-testid="timer-minus" title="Riduci di 15s">−15</button>
+    <button id="timerPlus" data-testid="timer-plus" title="Aumenta di 15s">+15</button>
   </div>
-  <button class="timer-skip" id="timerSkip" data-testid="timer-skip">Salta recupero</button>
+  <div class="timer-action-btns">
+    <button class="timer-min-btn" id="timerMinimize" data-testid="timer-minimize" title="Riduci a pillola fluttuante">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M4 14h6v6M20 10h-6V4"></path></svg>
+      Riduci timer
+    </button>
+    <button class="timer-skip" id="timerSkip" data-testid="timer-skip">Salta pausa</button>
+  </div>
   <button class="timer-pause" id="timerPause" data-testid="timer-pause">Pausa</button>
 </div>
 
@@ -1183,6 +1191,7 @@ const EXERCISE_LIBRARY = [
 
 /* ── stato ── */
 let state = load();
+window.state = state;
 
 function getSingleRepNumber(repsStr) {
   if (!repsStr) return '';
@@ -1266,7 +1275,10 @@ function updateCloudDot(status) {
   }
 }
 
+window.getState = () => state;
+
 function save(skipCloud) {
+  window.state = state;
   try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (_) {}
   if (!skipCloud && window.FORGE_CLOUD && FORGE_CLOUD.getUser()) {
     updateCloudDot('syncing');
@@ -1632,7 +1644,6 @@ function toggleSet(i, j, btn) {
   updateFabSave();
 
   if (l.done) {
-    buzz(20);
     const c = dayCounts();
     if (c.tot > 0 && c.done === c.tot) {
       // intera giornata completata: niente recupero, si festeggia
@@ -1830,9 +1841,7 @@ function paintTimer() {
   $('timerArc').style.strokeDashoffset = C_full * (1 - Math.max(0, T.remain) / Math.max(1, T.total));
 
   if ($('timerMiniText')) {
-    const mins = Math.floor(remSec / 60);
-    const secs = remSec % 60;
-    $('timerMiniText').textContent = mins > 0 ? `${mins}:${String(secs).padStart(2, '0')}` : `${remSec}s`;
+    $('timerMiniText').textContent = `${remSec}s`;
   }
 
   updateMediaSession();
@@ -2024,8 +2033,10 @@ $('dayBar').addEventListener('click', e => {
 });
 
 /* ── modali ── */
-function openModal(title, bodyHTML) {
+function openModal(title, bodyHTML, isWide) {
   const m = $('modal');
+  if (isWide) m.classList.add('modal-wide');
+  else m.classList.remove('modal-wide');
   m.innerHTML = `<div class="modal-head"><h3>${esc(title)}</h3>
     <button class="icon-btn" id="modalClose">${ICONS.close}</button></div>
     <div class="modal-body">${bodyHTML}</div>`;
@@ -2038,7 +2049,10 @@ function openModal(title, bodyHTML) {
   $('modalClose').onclick = closeModal;
   return m.querySelector('.modal-body');
 }
-function closeModal() { $('overlay').classList.remove('open'); }
+function closeModal() {
+  $('overlay').classList.remove('open');
+  setTimeout(() => $('modal').classList.remove('modal-wide'), 250);
+}
 let overlayMouseDownTarget = null;
 $('overlay').addEventListener('mousedown', e => { overlayMouseDownTarget = e.target; });
 $('overlay').addEventListener('click', e => {
@@ -2340,19 +2354,25 @@ function openExMenu(i) {
     if (w > maxW) maxW = w;
   });
 
+  const isCompact = $('exList') && $('exList').classList.contains('compact');
   const b = openModal(ex.name, `<div style="display:flex;flex-direction:column;gap:4px">
     <button class="sheet-btn" id="mEdit"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"></path></svg>Modifica esercizio</button>
     <button class="sheet-btn" id="m1RM"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"></path></svg>🔥 Massimale Teorico (1RM)</button>
-    ${i > 0 ? `<button class="sheet-btn" id="mUp"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"></path></svg>Sposta su</button>` : ''}
-    ${i < n - 1 ? `<button class="sheet-btn" id="mDown"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"></path></svg>Sposta giù</button>` : ''}
+    <button class="sheet-btn" id="mReorder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>${isCompact ? '✨ Fine Riordino' : '🪟 Ordina Scheda'}</button>
     <button class="sheet-btn" id="mDup"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>Duplica esercizio</button>
     <button class="sheet-btn" id="mClear"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 4v4h4"></path></svg>Azzera serie completate</button>
     <button class="sheet-btn danger" id="mDel"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path></svg>Elimina esercizio</button>
   </div>`);
   b.querySelector('#mEdit').onclick = () => { closeModal(); openExerciseForm(i); };
   b.querySelector('#m1RM').onclick = () => { closeModal(); open1RMModal(ex.name, maxW || 60, 8); };
-  const up = b.querySelector('#mUp'); if (up) up.onclick = () => moveExercise(i, -1);
-  const dn = b.querySelector('#mDown'); if (dn) dn.onclick = () => moveExercise(i, 1);
+  b.querySelector('#mReorder').onclick = () => {
+    closeModal();
+    const active = $('exList').classList.toggle('compact');
+    if (active) $('exList').dataset.manualCompact = 'true';
+    else delete $('exList').dataset.manualCompact;
+    buzz(15);
+    renderList();
+  };
   b.querySelector('#mDup').onclick = () => {
     const copy = JSON.parse(JSON.stringify(ex));
     copy.log.forEach(l => { l.done = false; l.reps = ''; l.weight = ''; });
@@ -2894,10 +2914,11 @@ function executePrint(scope, userName) {
   });
 
   printContainer.innerHTML = html;
+  void printContainer.offsetHeight;
 
   setTimeout(() => {
     window.print();
-  }, 150);
+  }, 200);
 }
 
 window.addEventListener('afterprint', () => {
@@ -3516,6 +3537,7 @@ async function openCloudProgramSelector() {
 
 /* ═══════════════ PANNELLO ADMIN / COACH — DASHBOARD COMPLETA ═══════════════ */
 
+window._adminActiveTab = 'panoramica';
 let _adminActiveTab = 'panoramica';
 
 async function openCoachDashboardModal() {
@@ -3550,7 +3572,7 @@ async function openCoachDashboardModal() {
 }
 
 function _renderAdminDashboard(user, coaches, clients, allUsers, stats, requests, pushedSchede, payments, isSuperAdmin) {
-  const tab = _adminActiveTab;
+  const tab = window._adminActiveTab || _adminActiveTab;
   const tabBtn = (id, label, icon) =>
     `<button class="adm-tab ${tab === id ? 'active' : ''}" data-admtab="${id}" style="flex-shrink:0;padding:8px 12px;border-radius:10px;font-size:11.5px;font-weight:800;border:1px solid ${tab === id ? 'var(--volt)' : 'var(--border)'};background:${tab === id ? 'var(--volt)' : 'var(--surface2)'};color:${tab === id ? '#0A0A0F' : 'var(--muted)'};cursor:pointer;white-space:nowrap;transition:.15s">${icon} ${label}</button>`;
 
@@ -3718,6 +3740,35 @@ function _renderAdminDashboard(user, coaches, clients, allUsers, stats, requests
       <div style="max-height:400px;overflow-y:auto">${schedeHTML}</div>`;
   }
 
+  if (tab === 'sheets') {
+    const curUrl = FORGE_CLOUD.getGoogleSheetsWebhookUrl ? FORGE_CLOUD.getGoogleSheetsWebhookUrl() : '';
+    content = `
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:14px">
+        <div style="font-size:14.5px;font-weight:800;color:var(--volt);margin-bottom:4px">📊 Sincronizzazione Live Google Fogli</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:12px">Inserisci l'URL Webhook del tuo Google Sheet per registrare in tempo reale incassi e richieste.</div>
+        
+        <div class="field" style="margin-bottom:10px">
+          <label>URL Webhook Google Apps Script</label>
+          <input type="text" id="admGsUrlInput" placeholder="https://script.google.com/macros/s/.../exec" value="${esc(curUrl)}" style="font-size:13px">
+        </div>
+
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button class="btn btn-primary btn-sm" id="btnSaveGsUrl" style="flex:1;font-size:12px">💾 Salva Webhook</button>
+          <button class="btn btn-ghost btn-sm" id="btnTestGsUrl" style="font-size:12px;border:1px solid var(--border)">🧪 Test Invio</button>
+        </div>
+      </div>
+
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:12px;font-size:12px;color:var(--muted)">
+        <div style="font-weight:800;color:var(--text);margin-bottom:6px">📖 Setup in 3 Passaggi:</div>
+        <ol style="margin-left:18px;display:flex;flex-direction:column;gap:4px;margin-bottom:10px">
+          <li>Crea un foglio su <b>Google Drive</b> (es. <i>"FORGE — Gestione Palestra"</i>).</li>
+          <li>Vai in <b>Estensioni ➔ Apps Script</b>, incolla il codice fornito e premi <b>Distribuisci ➔ Nuova distribuzione (Web App)</b>.</li>
+          <li>Copia l'URL Web App finale ed incollalo qui sopra.</li>
+        </ol>
+        <button class="btn btn-ghost btn-sm btn-block" id="btnShowScriptModal" style="font-size:11.5px;border:1px solid var(--border)">📋 Mostra Codice Script da Incollare su Google Drive</button>
+      </div>`;
+  }
+
   const b = openModal('🏋️ Admin Dashboard', `
     <div style="background:linear-gradient(145deg,rgba(198,255,61,.12),var(--surface));border:1px solid rgba(198,255,61,.3);border-radius:14px;padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:10px">
       <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1">
@@ -3736,9 +3787,10 @@ function _renderAdminDashboard(user, coaches, clients, allUsers, stats, requests
       ${tabBtn('clienti', 'Clienti', '👥')}
       ${tabBtn('richieste', 'Richieste', '📩')}
       ${tabBtn('schede', 'Schede', '📋')}
+      ${tabBtn('sheets', 'Google Fogli', '📈')}
     </div>
     <div id="admTabContent">${content}</div>
-  `);
+  `, true);
 
   if (b.querySelector('#btnAdminManual')) {
     b.querySelector('#btnAdminManual').onclick = () => { closeModal(); openForgeManualModal(); };
@@ -3789,6 +3841,140 @@ function _renderAdminDashboard(user, coaches, clients, allUsers, stats, requests
       });
     };
   });
+
+  if (b.querySelector('#btnSaveGsUrl')) {
+    b.querySelector('#btnSaveGsUrl').onclick = () => {
+      const url = b.querySelector('#admGsUrlInput').value;
+      if (FORGE_CLOUD.setGoogleSheetsWebhookUrl) {
+        const ok = FORGE_CLOUD.setGoogleSheetsWebhookUrl(url);
+        if (ok) toast('URL Webhook Google Fogli salvato! 💾');
+        else toast('⚠️ L\'URL Webhook deve iniziare con https://');
+      }
+    };
+  }
+  if (b.querySelector('#btnTestGsUrl')) {
+    b.querySelector('#btnTestGsUrl').onclick = () => {
+      const url = b.querySelector('#admGsUrlInput').value;
+      if (!url) { toast('Inserisci prima l\'URL Webhook'); return; }
+      if (FORGE_CLOUD.setGoogleSheetsWebhookUrl) FORGE_CLOUD.setGoogleSheetsWebhookUrl(url);
+      if (FORGE_CLOUD.syncToGoogleSheets) {
+        FORGE_CLOUD.syncToGoogleSheets('payment', {
+          clientName: 'TEST Cliente FORGE',
+          clientEmail: 'test@forge.app',
+          planName: 'Test Connessione Live',
+          amount: 49,
+          paymentMethod: 'paypal',
+          transactionId: 'TEST_' + Date.now(),
+          createdAt: new Date().toLocaleString('it-IT')
+        });
+        toast('Riga di test inviata a Google Fogli! 🚀 Controlla il tuo foglio.');
+      }
+    };
+  }
+  if (b.querySelector('#btnShowScriptModal')) {
+    b.querySelector('#btnShowScriptModal').onclick = () => {
+      closeModal();
+      openGoogleAppsScriptHelpModal();
+    };
+  }
+}
+
+function openGoogleAppsScriptHelpModal() {
+  const codeText = `/* ================================================================
+   FORGE — GOOGLE APPS SCRIPT FOR GOOGLE SHEETS LIVE SYNC
+   ================================================================
+   Istruzioni:
+   1. Incolla questo codice nel tuo Google Sheet in:
+      Estensioni -> Apps Script
+   2. Salva e fai clic su:
+      Distribuisci -> Nuova distribuzione
+   3. Seleziona tipo: "Applicazione Web" (Web App)
+      - Esegui come: Me (Il tuo account)
+      - Chi ha accesso: Chiunque (Anyone)
+   4. Clicca "Distribuisci" e copia l'URL della Web App.
+   ================================================================ */
+
+function doPost(e) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var data = JSON.parse(e.postData.contents);
+    var type = data.type || 'generic';
+    var payload = data.payload || {};
+
+    var sheetName = 'Incassi & Richieste';
+    if (type === 'payment') sheetName = 'Incassi';
+    else if (type === 'coach_request') sheetName = 'Richieste';
+    else if (type === 'coach') sheetName = 'Istruttori';
+
+    var sheet = ss.getSheetByName(sheetName);
+    if (!sheet) {
+      sheet = ss.insertSheet(sheetName);
+      if (sheetName === 'Incassi') {
+        sheet.appendRow(['Data', 'Cliente', 'Email', 'Piano', 'Importo (€)', 'Metodo', 'ID Transazione']);
+      } else if (sheetName === 'Richieste') {
+        sheet.appendRow(['Data', 'Cliente', 'Contatto', 'Piano', 'Obiettivo', 'Note']);
+      } else if (sheetName === 'Istruttori') {
+        sheet.appendRow(['Data', 'Nome Coach', 'Email', 'Note']);
+      } else {
+        sheet.appendRow(['Data', 'Tipo', 'Dettagli']);
+      }
+      sheet.getRange(1, 1, 1, 7).setFontWeight('bold').setBackground('#EFEFEF');
+    }
+
+    var nowStr = new Date().toLocaleString('it-IT');
+
+    if (type === 'payment') {
+      sheet.appendRow([
+        payload.createdAt || nowStr,
+        payload.clientName || '',
+        payload.clientEmail || '',
+        payload.planName || '',
+        payload.amount || 0,
+        payload.paymentMethod || '',
+        payload.transactionId || ''
+      ]);
+    } else if (type === 'coach_request') {
+      sheet.appendRow([
+        payload.createdAt || nowStr,
+        payload.clientName || '',
+        payload.contact || '',
+        payload.planName || '',
+        payload.goal || '',
+        payload.notes || ''
+      ]);
+    } else if (type === 'coach') {
+      sheet.appendRow([
+        payload.createdAt || nowStr,
+        payload.displayName || '',
+        payload.email || '',
+        payload.notes || ''
+      ]);
+    } else {
+      sheet.appendRow([nowStr, type, JSON.stringify(payload)]);
+    }
+
+    return ContentService.createTextOutput(JSON.stringify({ result: 'success' })).setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ result: 'error', error: err.toString() })).setMimeType(ContentService.MimeType.JSON);
+  }
+}`;
+
+  const b = openModal('📑 Codice Script per Google Drive', `
+    <p style="font-size:12.5px;color:var(--muted);margin-bottom:10px">Incolla questo codice nel tuo Google Sheet in <b>Estensioni ➔ Apps Script</b>, poi distribuisci come Web App ("Esegui come: Me", "Chi ha accesso: Chiunque"):</p>
+    <textarea id="gsScriptCodeText" readonly style="width:100%;height:220px;font-family:monospace;font-size:11px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px;color:var(--volt);resize:none">${esc(codeText)}</textarea>
+    <div class="modal-foot" style="margin-top:12px">
+      <button class="btn btn-primary btn-block" id="btnCopyGsScript">📋 Copia Codice negli Appunti</button>
+      <button class="btn btn-ghost btn-block" onclick="closeModal(); _adminActiveTab = 'sheets'; openCoachDashboardModal();">Torna all'Admin Dashboard</button>
+    </div>
+  `);
+
+  b.querySelector('#btnCopyGsScript').onclick = () => {
+    navigator.clipboard.writeText(codeText).then(() => {
+      toast('Codice copiato negli appunti! 📋');
+    }).catch(() => {
+      toast('Seleziona e copia il codice manualmente');
+    });
+  };
 }
 
 async function _openQuickAssignModal(clientUid, clientName) {
@@ -5165,7 +5351,7 @@ function setupPwaInstall() {
   const btnInstall = $('btnInstallPwa');
   if (!btnInstall) return;
 
-  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  const isStandalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
   if (isStandalone) {
     btnInstall.style.display = 'none';
     return;
@@ -5215,12 +5401,6 @@ const btnCSync = $('btnCloudSync');
 if (btnCSync) btnCSync.onclick = openCloudAccountModal;
 
 /* ── avvio ── */
-setupPwaInstall();
-render();
-setView('home');
-openMandatoryLegalGate();
-
-// Nascondi splash screen con temporizzazione morbida e stabile
 (function hideSplash() {
   const s = $('splash');
   if (!s) return;
@@ -5230,8 +5410,12 @@ openMandatoryLegalGate();
     setTimeout(() => { s.style.display = 'none'; }, 420);
   };
   s.addEventListener('click', dismiss);
-  setTimeout(dismiss, 600);
+  setTimeout(dismiss, 300);
 })();
+
+try { setupPwaInstall(); } catch (_) {}
+render();
+setView('home');
 
 // Inizializzazione Cloud in sicurezza
 try {
@@ -5240,6 +5424,8 @@ try {
   console.warn('Inizializzazione Cloud in fallback offline:', err);
   updateCloudDot('offline');
 }
+
+try { openMandatoryLegalGate(); } catch (err) { console.warn('Apertura banner legale:', err); }
 
 // Gate di Accettazione Vincolante & Condizionale al 1° avvio
 function openMandatoryLegalGate() {

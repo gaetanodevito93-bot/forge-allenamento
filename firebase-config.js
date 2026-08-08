@@ -623,6 +623,53 @@
     }
   }
 
+  const SHEETS_WEBHOOK_KEY = 'forge_gsheets_webhook_url';
+
+  function getGoogleSheetsWebhookUrl() {
+    try {
+      return localStorage.getItem(SHEETS_WEBHOOK_KEY) || '';
+    } catch (_) {
+      return '';
+    }
+  }
+
+  function setGoogleSheetsWebhookUrl(url) {
+    try {
+      const clean = String(url || '').trim();
+      if (clean && !clean.toLowerCase().startsWith('https://')) {
+        console.warn('Sicurezza Webhook: L\'URL deve utilizzare il protocollo sicuro HTTPS');
+        return false;
+      }
+      if (clean) localStorage.setItem(SHEETS_WEBHOOK_KEY, clean);
+      else localStorage.removeItem(SHEETS_WEBHOOK_KEY);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  async function syncToGoogleSheets(type, payload) {
+    const url = getGoogleSheetsWebhookUrl();
+    if (!url) return false;
+    try {
+      const bodyData = {
+        type: type,
+        timestamp: new Date().toISOString(),
+        payload: payload || {}
+      };
+      fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(bodyData),
+        mode: 'no-cors'
+      }).catch(err => console.warn('Avviso sync Google Fogli:', err));
+      return true;
+    } catch (err) {
+      console.warn('Errore chiamata webhook Google Fogli:', err);
+      return false;
+    }
+  }
+
   // Registra un pagamento completato (PayPal / Google Pay)
   async function recordPayment(paymentData) {
     if (!db) return { success: false, reason: 'Database Cloud non connesso' };
@@ -652,6 +699,17 @@
         paymentMethod: paymentData.paymentMethod,
         transactionId: paymentData.transactionId,
         createdAt: Date.now()
+      });
+
+      // Sincronizzazione automatica su Google Fogli
+      syncToGoogleSheets('payment', {
+        clientName: paymentData.clientName || 'Cliente FORGE',
+        clientEmail: paymentData.clientEmail || '',
+        planName: paymentData.planName || 'Piano Coaching',
+        amount: amount,
+        paymentMethod: paymentData.paymentMethod || 'paypal',
+        transactionId: paymentData.transactionId || '',
+        createdAt: new Date().toLocaleString('it-IT')
       });
 
       return { success: true, id: ref.id };
@@ -833,6 +891,9 @@
     updateCoachNotes,
     recordPayment,
     fetchPayments,
+    getGoogleSheetsWebhookUrl,
+    setGoogleSheetsWebhookUrl,
+    syncToGoogleSheets,
     getUser: () => currentUser,
     setUser: (u) => { currentUser = u; },
     getAuth: () => auth,
